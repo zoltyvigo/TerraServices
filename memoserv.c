@@ -90,7 +90,10 @@ void memoserv(const char *source, char *buf)
     } else if (stricmp(cmd, "\1PING") == 0) {
 	if (!(s = strtok(NULL, "")))
 	    s = "\1";
-	privmsg(s_MemoServ, source, "\1PING %s", s);
+	notice(s_MemoServ, source, "\1PING %s", s);
+    } else if (stricmp(cmd, "\1VERSION\1") == 0) {
+        notice(s_MemoServ, source, "\1VERSION ircservices-%s+Terra-1.0 %s :-- %s\1",
+                                  version_number, s_MemoServ, version_build);
     } else if (skeleton) {
 	notice_lang(s_MemoServ, u, SERVICE_OFFLINE, s_MemoServ);
     } else {

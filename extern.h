@@ -79,6 +79,7 @@ E ChannelInfo *cs_findchan(const char *chan);
 E int check_access(User *user, ChannelInfo *ci, int what);
 E void check_cs_access(User *u, NickInfo *ni);
 E void join_chanserv();
+E int is_services_bot(const char *nick);
 
 /**** compat.c ****/
 
@@ -126,6 +127,8 @@ E char *s_NickServ;
 E char *s_ChanServ;
 E char *s_MemoServ;
 E char *s_HelpServ;
+E char *s_CyberServ;
+E char *s_CregServ;
 E char *s_OperServ;
 E char *s_GlobalNoticer;
 E char *s_IrcIIHelp;
@@ -134,6 +137,8 @@ E char *desc_NickServ;
 E char *desc_ChanServ;
 E char *desc_MemoServ;
 E char *desc_HelpServ;
+E char *desc_CyberServ;
+E char *desc_CregServ;
 E char *desc_OperServ;
 E char *desc_GlobalNoticer;
 E char *desc_IrcIIHelp;
@@ -147,6 +152,8 @@ E char *ChanDBName;
 E char *OperDBName;
 E char *AutokillDBName;
 E char *NewsDBName;
+E char *IlineDBName;
+E char *CregDBName;
 
 E char *SendMailPatch;
 E char *SendFrom;
@@ -206,25 +213,21 @@ E int   MSSendDelay;
 E int   MSNotifyAll;
 
 E char *CanalOpers;
+E char *CanalHelp;
 E char *ServicesRoot;
 E int   LogMaxUsers;
 E int   LogMaxChans;
 E int   AutokillExpiry;
-E int   CheckClones;
-E int   CloneMinUsers;
-E int   CloneMaxDelay;
-E int   CloneWarningDelay;
-E int   KillClones;
 
 E int   KillClonesAkillExpire;
 
-E int   LimitSessions;
-E int   DefSessionLimit;
-E int   ExceptionExpiry;
-E int   MaxSessionLimit;
-E char *ExceptionDBName;
-E char *SessionLimitDetailsLoc;
-E char *SessionLimitExceeded;
+E char *CanalCyber;
+E int   ControlClones;
+E int   LimiteClones;
+E int   ExpIlineDefault;
+E int   MaximoClones;
+E char *MensajeClones;
+E char *WebClones;
 
 E int read_config(void);
 
@@ -233,7 +236,41 @@ E int read_config(void);
 
 E int send_mail(const char * destino, const char *subject, const char *body);
 
+/**** cregserv.c ****/
 
+#ifdef CREG
+E void get_cregserv_stats(long *nrec, long *memuse);
+
+E void creg_init(void);
+E void cregserv(const char *source, char *buf);
+E void load_creg_dbase(void);
+E void save_creg_dbase(void);
+E void expire_creg(void);
+#endif
+
+
+/**** cyberserv.c ****/
+
+#ifdef CYBER
+E void get_clones_stats(long *nrec, long *memuse);
+E void get_iline_stats(long *nrec, long *memuse);
+
+E void cyber_init(void);
+E void cyberserv(const char *source, char *buf);
+E void load_cyber_dbase(void);
+E void save_cyber_dbase(void);
+E void expire_ilines(void);
+
+E int add_clones(const char *nick, const char *host);
+E void del_clones(const char *host);
+
+E IlineInfo *find_iline_host(const char *host);
+E IlineInfo *find_iline_admin(const char *nick);
+E int is_cyber_admin(User *u);
+E int nick_is_cyber_admin(NickInfo *ni);
+E void cyber_remove_nick(const NickInfo *ni);
+E void check_ip_iline(User *u);
+#endif
 
 /**** helpserv.c ****/
 
@@ -463,9 +500,9 @@ E void disconn(int s);
 
 E char convert2y[];
 E unsigned int base64toint(const char *s);
-E const char *inttobase64(unsigned int i);
+E const char *inttobase64(char *buf, unsigned int v, unsigned int count);
 E void cifrado_tea(unsigned int v[], unsigned int k[], unsigned int x[]);
-E void make_virtualhost(const char *host);
+E const char *make_virtualhost(const char *host);
 
 
 /**** users.c ****/

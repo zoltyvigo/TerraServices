@@ -132,7 +132,12 @@ extern int toupper(char), tolower(char);
 #define NICK_VERSION    9
 #define OPER_VERSION    8
 #define NEWS_VERSION    7
-#define ILINE_VERSION   7
+#ifdef CYBER
+#define ILINE_VERSION   1
+#endif
+#ifdef CREG
+#define CREG_VERSION    1
+#endif
 
 /*************************************************************************/
 /* Estructura de los servidores */
@@ -201,6 +206,7 @@ struct nickinfo_ {
     char *last_quit;
     time_t time_registered;
     time_t last_seen;
+    time_t last_used_reg;      /* Ultimo REGISTRA/APOYO en Reg */
     int16 status;	/* See NS_* below */
     
     char *suspendby;           /* Quien lo suspendio */
@@ -261,6 +267,7 @@ struct nickinfo_ {
 #define NI_HIDE_QUIT	0x00000200  /* Don't show last quit message in INFO */
 #define NI_KILL_QUICK	0x00000400  /* Kill in 20 seconds instead of 60 */
 #define NI_KILL_IMMED	0x00000800  /* Kill immediately instead of in 60 sec */
+#define NI_REG_IGNORE	0x00001000  /* Nick IGNORADO para los apoyos/registros */
 
 /* Languages.  Never insert anything in the middle of this list, or
  * everybody will start getting the wrong language!  If you want to change
@@ -511,6 +518,114 @@ struct channel_ {
 #define CMODE_r 0x00000200		/* Set for all registered channels */
 
 
+/*************************************************************************/
+#ifdef CYBER
+/* CyberServ, Control de clones y ilines */
+
+typedef struct clones_ Clones;
+struct clones_ {
+    Clones *prev, *next;
+    char *host;                        /* Host */
+    int numeroclones;                  /* Numero de clones del host */
+};
+            
+#define IL_IPNOFIJA     0x0001  /* Ip no fija */
+#define IL_SUSPENDED	0x0002  /* Iline suspendida */
+#define IL_NO_EXPIRE	0x0004  /* Iline indefinida */
+
+typedef struct ilineinfo_ IlineInfo;
+struct ilineinfo_ {
+    IlineInfo *next, *prev;
+    char *host;                 /* Host de la iline */
+    char *host2;                /* Host 2º, para la ip numerica si hay Inversa */
+    NickInfo *admin;            /* Nick del administrador */
+    char *nombreadmin;          /* Nombre del admin */
+    char *dniadmin;             /* DNI del admin */
+    char *email;                /* Email del Admin */
+    char *telefono;             /* Telefono */
+    char *comentario;           /* Comentario */
+    char *vhost;                /* Virtual host del ciber */
+    char operwho[NICKMAX];      /* Admin que puso la iline */
+    int16 limite;               /* Limite Iline */
+    time_t time_concesion;
+    time_t time_expiracion;
+    int16 record_clones;
+    time_t time_record;
+    int16 estado;    
+};
+#endif
+/*************************************************************************/
+#ifdef CREG
+/* Estructura de peticiones de registro en canales en medio de CregServ */
+
+typedef struct {
+    char nickapoyo[NICKMAX];
+    char *emailapoyo;
+    time_t time_apoyo;
+} ApoyosCreg;
+            
+typedef struct {
+     char nickoper[NICKMAX];
+     char *marca;
+     time_t time_marca;
+} HistoryCreg;
+
+struct creginfo_ {
+    CregInfo *next, *prev;
+    char name[CHANMAX];          /* Nombre del canal */
+    char founder[NICKMAX];       /* Nick del founder */
+    char *desc;                  /* Descripcion del canal */
+    char *email;                 /* Email del founder */
+    time_t time_peticion;        /* Hora de la peticion */
+
+    char nickoper[NICKMAX];      /* Nick del OPER */
+    time_t time_motivo;          /* Hora del cambio de estado del canal */
+    char *motivo;                /* Motivo de la suspension, etc.. */
+            
+    char passapoyo[PASSMAX];     /* Contraseña de apoyo */
+    time_t time_lastapoyo;       /* Hora del ultimo apoyo realizado */
+
+    int32 estado;                /* Estado del canal :) CR_* */
+    
+    int16 apoyoscount;           /* Contador del numero de apoyos */
+    ApoyosCreg *apoyos;          /* Lista de los apoyos realizados */
+            
+    int16 historycount;          /* Contador de Históricos */
+    HistoryCreg *history;        /* Lista historico del canal */
+
+};
+
+/* Estados de las peticiones del canal  */
+/* Canal en proceso de registro */
+#define CR_PROCESO_REG  0x00000001
+/* Canal ha expirado */
+#define CR_EXPIRADO     0x00000002
+/* Canal pendiente de aceptacion */
+#define CR_PENDIENTE    0x00000004
+/* Canal denegado */
+#define CR_DENEGADO     0x00000008
+/* Canal rechazado */
+#define CR_RECHAZADO    0x00000010
+/* Canal prohibido */
+#define CR_PROHIBIDO    0x00000020
+/* Canal dropado */
+#define CR_DROPADO      0x00000040
+/* Canal suspendido */
+#define CR_SUSPENDIDO   0x00000080
+/* Canal en estado desconocido */
+#define CR_DESCONOCIDO  0x00000100
+/* Canal aceptado y registrado en Chanserv */
+#define CR_ACEPTADO     0x00000200
+/* Canal registrado comericial */
+#define CR_COMERCIAL    0x00000400
+/* Canal registrado sin usar a creg */
+#define CR_REGISTRADO   0x00000800
+/* Canal registrado histórico */
+#define CR_HISTORICO    0x00001000
+                                                                                    
+#endif                                                    
+
+
 /* Who sends channel MODE (and KICK) commands? */
 #if defined(IRC_DALNET) || (defined(IRC_UNDERNET) && !defined(IRC_UNDERNET_NEW))
 # define MODE_SENDER(service) service
@@ -518,7 +633,9 @@ struct channel_ {
 # define MODE_SENDER(service) ServerName
 #endif
 
+#define NUMNICKLOG 6
 #define NUMNICKBASE 64
+#define NUMNICKMASK 63
 #define NUMNICKMAXCHAR 'z'
 
 /*************************************************************************/

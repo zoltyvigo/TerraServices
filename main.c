@@ -97,7 +97,7 @@ void sighandler(int signum)
 		inbuf[447] = '>';
 		inbuf[448] = 0;
 	    }
-	    wallops(NULL, "PANIC! buffer = %s\r\n", inbuf);
+	    canalopers(NULL, "PANIC! buffer = %s\r\n", inbuf);
 	} else if (waiting < 0) {
 	    /* This is static on the off-chance we run low on stack */
 	    static char buf[BUFSIZE];
@@ -216,8 +216,11 @@ int main(int ac, char **av, char **envp)
 	    }
 	    waiting = -25;
 	    expire_akills();
-#ifndef STREAMLINED
-	    expire_exceptions();
+#ifdef CYBER
+	    expire_ilines();
+#endif
+#ifdef CREG
+            expire_creg();
 #endif
 	    last_expire = t;
 	}
@@ -238,7 +241,14 @@ int main(int ac, char **av, char **envp)
 	    waiting = -16;
 	    save_news();
             waiting = -17;
-            save_exceptions();
+#ifdef CYBER
+            save_cyber_dbase();
+            waiting = -18;      
+#endif            
+#ifdef CREG
+            save_creg_dbase();
+            waiting = -19;
+#endif
 	    if (save_data < 0)
 		break;	/* out of main loop */
 

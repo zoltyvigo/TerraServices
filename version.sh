@@ -2,7 +2,7 @@
 #
 # Increment Services build number
 
-VERSION=1.0
+VERSION=4.3.3
 
 if [ -f version.h ] ; then
 	BUILD=`fgrep '#define BUILD' version.h | sed 's/^#define BUILD.*"\([0-9]*\)".*$/\1/'`

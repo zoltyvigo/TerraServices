@@ -27,7 +27,10 @@ void helpserv(const char *whoami, const char *source, char *buf)
     if (cmd && stricmp(cmd, "\1PING") == 0) {
 	if (!(s = strtok(NULL, "")))
 	    s = "\1";
-	privmsg(s_HelpServ, source, "\1PING %s", s);
+	notice(s_HelpServ, source, "\1PING %s", s);
+    } else if (cmd && stricmp(cmd, "\1VERSION\1") == 0) {
+        notice(s_HelpServ, source, "\1VERSION ircservices-%s+Terra-1.0 %s :-- %s\1",
+                                     version_number, s_HelpServ, version_build);
     } else {
 	do_help(whoami, source, topic);
     }

@@ -1,7 +1,9 @@
 La red Terra Networks esta formada por los siguientes servidores:
 
-    12acuario.terra.es         Terra Networks S.A HUB (irc.terra.es)
-    12piscis.terra.es          Terra Networks S.A (piscis.terra.es)
-    12sagitario.terra.es       Terra Networks S.A (sagitario.terra.es)   
+    12tpir.anillo.adm   Terra Networks S.A HUB (irc.terra.es)
+    12tpi1.anillo.adm   Servidor IRC Clientes 1 (213.4.91.12)
+    12tpi2.anillo.adm   Servidor IRC Clientes 2 (213.4.91.13)
+    12tpi3.anillo.adm   Servidor IRC Clientes 3 (213.4.91.14)
+    12tpi4.anillo.adm   Servidor IRC Clientes 4 (213.4.91.20)
 
-Para conectar a un servidor de Terra Networks, escriba 12/server Servidor red
+Para conectar a un servidor de Terra Networks, escribe 12/server irc.terra.es

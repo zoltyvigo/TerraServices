@@ -221,6 +221,12 @@ void do_squit(const char *source, int ac, char **av)
  */
 
     Server *server, *tmpserver;
+
+/* Para evitar problemas de memoria
+ * en los squits a los bots se ignoran
+ */
+    if (stricmp(av[0], ServerName) == 0)
+        return;
     
     server = find_servername(av[0]);
 
@@ -263,10 +269,14 @@ void do_servers(User *u)
      int porcentaje = 0, media = 0;
      privmsg(s_OperServ, u->nick, "Nombre servidor                   Numerico   Usuarios  Porcentaje");
      for (server = serverlist; server; server = server->next) {     
-         if (server->name)
-              porcentaje = (server->users * 100 / usercnt);
+         if (server->name) {
+              if (server->users)
+                  porcentaje = (server->users * 100 / usercnt);
+              else
+                  porcentaje = 0;    
               privmsg(s_OperServ, u->nick, "12%-25s             12%-8s  %-8d  %d",
                 server->name, server->numeric, server->users, porcentaje);
+         }        
      }
      privmsg(s_OperServ, u->nick, "Hay 12%d usuarios en 12%d servidores conectados.", usercnt, servercnt);
      media = (usercnt / servercnt);

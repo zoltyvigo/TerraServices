@@ -18,10 +18,12 @@ int check_smtp(char buf[BUFSIZE]);
 #endif
 
 
-/**************** enviar_correo *******************************
-Esta funcion envia un correo con el email configurado del source k sea
-con el subject y body pertinentes al destino indicado.
-*************************************************************/
+/*
+ * Esta funcion envia un correo con el email configurado
+ * del source k sea con el subject y body pertinentes al
+ * destino indicado.
+ */
+ 
 int send_mail(const char * destino, const char *subject, const char *body)
 {
 #ifdef SMTP
@@ -136,7 +138,7 @@ int send_mail(const char * destino, const char *subject, const char *body)
         fprintf(p, "%s\n", body);
         fclose(p);
         
-        sprintf(cmd, "%s -f%s -t < %s ", RUTA_SENDMAIL, file);
+        sprintf(cmd, "%s -f%s -t < %s ", RUTA_SENDMAIL, Sendfrom, file);
         system(cmd);
         unlink(file):
         return 1;
@@ -151,9 +153,10 @@ int send_mail(const char * destino, const char *subject, const char *body)
 #ifdef SMTP
 int check_smtp(char buf[BUFSIZE])
 {
-/** Esta funcion recibe la contestacion k recibimos del smtp y nos
-devuelve si se ha producido un erro o no. Caso de ser asi, logea el
-error. ***/
+/* Esta funcion recibe la contestacion que recibimos
+ * del smtp y nos devuelve si se ha producido un error
+ * o no. Caso de ser asi, loguea el error.
+ */
 
     char cod[5];
     int codigo;
@@ -193,4 +196,3 @@ error. ***/
 #endif /* SMTP */
 
 #endif /* REG_NICK_MAIL */
-

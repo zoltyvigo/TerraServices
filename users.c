@@ -1,6 +1,3 @@
-
-
-
 /* Routines to maintain a list of online users.
  *
  * Services is copyright (c) 1996-1999 Andy Church.
@@ -160,7 +157,11 @@ void del_users_server(Server *server)
             usercnt--;    
             if (user->mode & UMODE_O)
                 opcnt--;
-                           
+
+#ifdef CYBER
+            if (ControlClones)
+                del_clones(user->host);                            
+#endif                           
             cancel_user(user);
             free(user->username);
             free(user->host);
@@ -394,9 +395,9 @@ void do_nick(const char *source, int ac, char **av)
 	if (check_akill(av[0], av[3], av[4]))
 	    return;
 
-#ifndef STREAMLINED
+#ifdef CYBER
         /* Now check for session limits */
-        if (LimitSessions && !add_session(av[0], av[4]))
+        if (ControlClones && !add_clones(av[0], av[4]))
             return;
 #endif
 
@@ -411,12 +412,10 @@ void do_nick(const char *source, int ac, char **av)
 	user->realname = sstrdup(av[6]);
 	user->my_signon = time(NULL);
 
-	if (CheckClones) {
-	    /* Check to see if it looks like clones. */
-	    check_clones(user);
-	}
 
-	display_news(user, NEWS_LOGON);
+    /* Para evitar lag de Reentrada de los bots */
+        if ((time(NULL) - start_time) > (2*60)) 
+            display_news(user, NEWS_LOGON);
 
     } else {
 	/* An old user changing nicks. */
@@ -504,17 +503,18 @@ void do_join(const char *source, int ac, char **av)
 	chan_adduser(user, s);
 /* Añadir soporte aviso de MemoServ si hay memos en el canal que entras */
         if ((ci = cs_findchan(s))) {        
-         /* Para evitar lag de Reentrada de los bots */
-//          if ((ci = cs_findchan(s)) && (time(NULL) - startupts) > (2*60)) {
-              if (ci->flags & CI_SUSPENDED) {
-                notice(s_ChanServ, user->nick, "El canal %s está SUSPENDIDO temporalmente. "
-                  "Motivo: %s", ci->name, ci->suspendreason);
-              } else {
-                check_cs_memos(user, ci);
-                if (ci->entry_message)
+         /* Para evitar lag de Reentrada de los bots */      
+            if ((ci = cs_findchan(s)) && (time(NULL) - start_time) > (2*60)) {
+                 if (ci->flags & CI_SUSPENDED) {
+                     notice(s_ChanServ, user->nick, "El canal %s está SUSPENDIDO temporalmente. "
+                            "Motivo: %s", ci->name, ci->suspendreason);
+                 } else {
+                     check_cs_memos(user, ci);
+                     if (ci->entry_message)
            /* Dejo un espacio ( " %s"), para arreglar bug del con\con */
-                notice(s_ChanServ, user->nick, " %s", ci->entry_message);
-              }   
+                         notice(s_ChanServ, user->nick, " %s", ci->entry_message);
+                 }    
+            }     
         }        
 	c = smalloc(sizeof(*c));
 	c->next = user->chans;
@@ -699,6 +699,7 @@ void do_umode(const char *source, int ac, char **av)
                             notice_lang(s_NickServ, user, NICK_IDENTIFY_X_MODE_R, user->nick);
                             if (!(new_ni->status & NS_RECOGNIZED))
                                 check_memos(user);
+                            check_ip_iline(user);    
                             strcpy(new_ni->nick, user->nick);                                
                         }
                     } else {
@@ -715,7 +716,7 @@ void do_umode(const char *source, int ac, char **av)
             case 'h': 
                 if (add) {
                     user->mode |= UMODE_H;
-                    display_news(user, NEWS_OPER);                    
+                    display_news(user, NEWS_OPER); 
                 } else {
                     user->mode &= ~UMODE_H;
                 }    
@@ -769,10 +770,11 @@ void do_quit(const char *source, int ac, char **av)
 	    free(ni->last_quit);
 	ni->last_quit = *av[0] ? sstrdup(av[0]) : NULL;
     }
-#ifndef STREAMLINED
-    if (LimitSessions)
-	del_session(user->host);
+#ifdef CYBER
+    if (ControlClones)
+        del_clones(user->host);
 #endif
+
     delete_user(user);
 }
 
@@ -802,9 +804,9 @@ void do_kill(const char *source, int ac, char **av)
 	ni->last_quit = *av[1] ? sstrdup(av[1]) : NULL;
 
     }
-#ifndef STREAMLINED
-    if (LimitSessions)
-	del_session(user->host);
+#ifdef CYBER
+    if (ControlClones)
+        del_clones(user->host);
 #endif
     delete_user(user);
 }
@@ -945,9 +947,8 @@ int match_virtualmask(const char *mask, User *user)
     }    
     
     strlower(host);
-/* Aqui calcular la ip virtual */
-    host2 = strlower(sstrdup(user->host));    
-//    host2 = make_virtualhost(sstrdup(user->host));
+/* Aqui calcular la ip virtual */  
+    host2 = make_virtualhost(user->host);
     
     if (nick) {
         nick2 = strlower(sstrdup(user->nick));

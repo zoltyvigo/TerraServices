@@ -80,6 +80,12 @@ static void m_kill(char *source, int ac, char **av)
         stricmp(av[0], s_OperServ) == 0 ||
         stricmp(av[0], s_MemoServ) == 0 ||
         stricmp(av[0], s_HelpServ) == 0 ||
+#ifdef CYBER
+        stricmp(av[0], s_CyberServ) == 0 ||
+#endif        
+#ifdef CREG
+        stricmp(av[0], s_CregServ) == 0 ||
+#endif
         (s_IrcIIHelp && stricmp(av[0], s_IrcIIHelp) == 0) ||
         (s_DevNull && stricmp(av[0], s_DevNull) == 0) ||
         stricmp(av[0], s_GlobalNoticer) == 0
@@ -134,7 +140,9 @@ static void m_motd(char *source, int ac, char **av)
      */
 
     send_cmd(ServerName, "372 %s :-", source);
-    send_cmd(ServerName, "372 %s :- Servicios de Terra es copyright (c) "
+    send_cmd(ServerName, "372 %s :- Servicies is copyright (c) "
+                    "1996-1999 Any Church.", source);                                        
+    send_cmd(ServerName, "372 %s :- Servicios de Terra es copyright (c) "        
                     "2000-2001 Terra Networks S.A..", source);		                  
     send_cmd(ServerName, "376 %s :End of /MOTD command.", source);
 }
@@ -217,6 +225,14 @@ static void m_privmsg(char *source, int ac, char **av)
 	memoserv(source, av[1]);
     } else if (stricmp(av[0], s_HelpServ) == 0) {
 	helpserv(s_HelpServ, source, av[1]);
+#ifdef CYBER
+    } else if (stricmp(av[0], s_CyberServ) == 0) {
+        cyberserv(source, av[1]);
+#endif
+#ifdef CREG
+    } else if (stricmp(av[0], s_CregServ) == 0) {
+        cregserv(source, av[1]);	
+#endif        
     } else if (s_IrcIIHelp && stricmp(av[0], s_IrcIIHelp) == 0) {
 	char buf[BUFSIZE];
 	snprintf(buf, sizeof(buf), "ircII %s", av[1]);
@@ -337,7 +353,7 @@ static void m_user(char *source, int ac, char **av)
 void m_version(char *source, int ac, char **av)
 {
     if (source)
-	send_cmd(ServerName, "351 %s Servicios de Terra %s %s :-- %s",
+	send_cmd(ServerName, "351 %s ircservices-%s+Terra-1.0 %s :-- %s",
 			source, version_number, ServerName, version_build);
 }
 
@@ -356,6 +372,14 @@ void m_whois(char *source, int ac, char **av)
 	    clientdesc = desc_MemoServ;
 	else if (stricmp(av[0], s_HelpServ) == 0)
 	    clientdesc = desc_HelpServ;
+#ifdef CYBER
+        else if (stricmp(av[0], s_CyberServ) == 0)
+            clientdesc = desc_CyberServ;
+#endif
+#ifdef CREG
+        else if (stricmp(av[0], s_CregServ) == 0)
+            clientdesc = desc_CregServ;
+#endif	    
 	else if (s_IrcIIHelp && stricmp(av[0], s_IrcIIHelp) == 0)
 	    clientdesc = desc_IrcIIHelp;
 	else if (stricmp(av[0], s_OperServ) == 0)

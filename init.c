@@ -34,7 +34,7 @@ void introduce_user(const char *user)
 
     if (!user || stricmp(user, s_NickServ) == 0) {
 	NICK(s_NickServ, desc_NickServ);
-	send_cmd(s_NickServ, "MODE %s +dkob", s_NickServ);
+	send_cmd(s_NickServ, "MODE %s +dkobB", s_NickServ);
         send_cmd(s_NickServ, "JOIN #%s", CanalOpers);
         send_cmd(ServerName, "MODE #%s +o %s", CanalOpers, s_NickServ);
     }
@@ -47,10 +47,12 @@ void introduce_user(const char *user)
     if (!user || stricmp(user, s_HelpServ) == 0) {
 	NICK(s_HelpServ, desc_HelpServ);
         send_cmd(s_HelpServ, "MODE %s +bdk", s_HelpServ);
+        send_cmd(s_HelpServ, "JOIN #%s", CanalHelp);
+        send_cmd(ServerName, "MODE #%s +v %s", CanalHelp, s_HelpServ);                        
     }
     if (s_IrcIIHelp && (!user || stricmp(user, s_IrcIIHelp) == 0)) {
 	NICK(s_IrcIIHelp, desc_IrcIIHelp);
-        send_cmd(s_IrcIIHelp, "MODE %s +bd", s_IrcIIHelp);	
+        send_cmd(s_IrcIIHelp, "MODE %s +bdk", s_IrcIIHelp);	
     }
     if (!user || stricmp(user, s_MemoServ) == 0) {
 	NICK(s_MemoServ, desc_MemoServ);
@@ -64,12 +66,28 @@ void introduce_user(const char *user)
     }
     if (s_DevNull && (!user || stricmp(user, s_DevNull) == 0)) {
 	NICK(s_DevNull, desc_DevNull);
-	send_cmd(s_DevNull, "MODE %s +ibBk", s_DevNull);
+	send_cmd(s_DevNull, "MODE %s +ibk", s_DevNull);
     }
     if (!user || stricmp(user, s_GlobalNoticer) == 0) {
 	NICK(s_GlobalNoticer, desc_GlobalNoticer);
 	send_cmd(s_GlobalNoticer, "MODE %s +oibdk", s_GlobalNoticer);
     }
+#ifdef CREG
+    if (!user || stricmp(user, s_CregServ) == 0) {
+        NICK(s_CregServ, desc_CregServ);
+        send_cmd(s_CregServ, "MODE %s +dkboB", s_CregServ);
+        send_cmd(s_CregServ, "JOIN #%s", CanalOpers);
+        send_cmd(ServerName, "MODE #%s +o %s", CanalOpers, s_CregServ);
+    }    
+#endif    
+#ifdef CYBER
+    if (!user || stricmp(user, s_CyberServ) == 0) {
+        NICK(s_CyberServ, desc_CyberServ);
+        send_cmd(s_CyberServ, "MODE %s +dkboB", s_CyberServ);
+        send_cmd(s_CyberServ, "JOIN #%s", CanalOpers);
+        send_cmd(ServerName, "MODE #%s +o %s", CanalOpers, s_CyberServ);
+    }
+#endif
 }
 
 #undef NICK
@@ -409,6 +427,12 @@ int init(int ac, char **av)
     cs_init();
     ms_init();
     os_init();
+#ifdef CYBER
+    cyber_init();
+#endif
+#ifdef CREG
+    creg_init();
+#endif            
 
     /* Load up databases */
     if (!skeleton) {
@@ -428,9 +452,16 @@ int init(int ac, char **av)
     load_news();
     if (debug)
 	log("debug: Loaded news database (5/6)");
-    load_exceptions();
+#ifdef CYBER
+    load_cyber_dbase();
     if (debug)
-        log("debug: Loaded exception database (6/6)");
+        log("debug: Loaded Cyber database (6/6)");
+#endif        
+#ifdef CREG
+    load_creg_dbase();
+    if (debug)
+        log("debug: Loaded Creg database (7/7)");
+#endif
     log("Databases loaded");
 
     /* Connect to the remote server */

@@ -1,0 +1,14 @@
+¿Que es la 12IP?
+
+Es un número que te asigna el servidor cada vez que conectes, como
+tu número de identidad (DNI). Es único, ningún otro usuario puede
+tener tu misma ip a menos que conecte a través de la misma linea que
+tu, en ese caso se dice que sois 12CLONES (ver CLONES).
+Suele cambiar cada vez que conectas, a menos que tengas contratada
+una IP FIJA.
+
+Una IP FIJA se contrata a nuestro ISP. Contratando la IP fija, se te
+reserva una determinada dirección (por ejemplo 123.4.45.67) y siempre
+entras con esa ip. Es de tu uso exclusivo. Este servicio lo cobra
+aparte el servidor ya que no puede disponer de tu ip para dejarsela a 
+otro usuario aún cuando tu no estes conectado.

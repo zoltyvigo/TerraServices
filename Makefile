@@ -39,14 +39,14 @@ CFLAGS = $(CDEFS) $(BASE_CFLAGS) $(MORE_CFLAGS)
 OBJS =	actions.o akill.o channels.o chanserv.o commands.o compat.o \
 	config.o datafiles.o encrypt.o helpserv.o init.o language.o \
 	list.o log.o main.o memory.o memoserv.o messages.o misc.o news.o \
-	nickserv.o operserv.o process.o send.o sessions.o sockutil.o \
-	timeout.o users.o servers.o terra.o correo.o \
+	nickserv.o operserv.o process.o send.o sockutil.o cyberserv.o \
+	timeout.o users.o servers.o terra.o correo.o cregserv.o \
 	$(VSNPRINTF_O)
 SRCS =	actions.c akill.c channels.c chanserv.c commands.c compat.c \
 	config.c datafiles.c encrypt.c helpserv.c init.c language.c \
 	list.c log.c main.c memory.c memoserv.c messages.c misc.c news.c \
-	nickserv.c operserv.c process.c send.c sessions.c sockutil.c \
-	timeout.c users.c servers.c terra.c correo.c \
+	nickserv.c operserv.c process.c send.c sockutil.c cyberserv.c \
+	timeout.c users.c servers.c terra.c correo.c cregserv.c \
 	$(VSNPRINTF_C)
 
 .c.o:
@@ -107,6 +107,8 @@ commands.o:	commands.c	services.h commands.h language.h
 compat.o:	compat.c	services.h
 config.o:	config.c	services.h
 correo.o:	correo.c	services.h
+cregserv.o:     cregserv.c      services.h pseudo.h
+cyberserv.o:    cyberserv.c     services.h pseudo.h
 datafiles.o:	datafiles.c	services.h datafiles.h
 encrypt.o:	encrypt.c	encrypt.h sysconf.h
 helpserv.o:	helpserv.c	services.h language.h

@@ -6,11 +6,11 @@ En esta red, los usuarios pueden tener los siguientes modos:
     12s          Recibir noticias del servidor
     12w          Recibir wallops
     12g          Recibir mensajes del servidor si esta en modo DEBUG
+    12d          Modo "Dead", no recibir mensajes de canales
 
 
 Modos sólo para IRCOPS o OPERS:
 
-    12d          (Coder) DEVELoper de la red
     12h          (Helper Operator) OPERador de los servicios de red
     12a          (Admin) ADMINistrador de los servicios de red
     12o          (IRC Operator) IRCop de la red

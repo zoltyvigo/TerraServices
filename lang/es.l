@@ -247,7 +247,7 @@ NICK_MAIL_TELELINE
 	Dirección E-mail inválida, Sólo se permiten cuentas de Terra.
 	Si tu mail es de 12teleline.es, cambia por 12terra.es, es decir
 	si el mail es 12ejemplo@teleline.es, usa 12ejemplo@terra.es para
-	registrar el nick.	
+	registrar el nick.
 NICK_MAIL_TERRA
 	Dirección E-mail inválida, Sólo se permiten cuentas de Terra.
 	Escribe 12/msg %s MAIL para más información.
@@ -281,6 +281,14 @@ NICK_IDENTIFY_EMAIL_REQUIRED
 	mandar tu contraseña en caso de que la pierdas..
 	Escribe 12/msg %S SET EMAIL <e-mail> para ajustarlo.
 	Este mensaje dejara de mostrarte cuando hayas ajustado tu email.
+NICK_IDENTIFY_FIRST
+	Recomiendo que cambies la contraseña que recibiste por email
+	por una que puedas recordar y que sea díficil para los demas.
+
+NICK_IDENTIFY_PASSWORD_CHANGED
+	Para tu mayor seguridad, recomiendo que cambies la contraseña
+	cada cierto tiempo. Este mensaje se mostrará cada mes como
+	recordatorio para que cambies la contraseña con frecuencia.
 
 
 # DROP responses
@@ -299,7 +307,7 @@ NICK_X_DROPPED
 NICK_SET_SYNTAX
 	12SET <opcion> <parametros>
 NICK_SET_SERVADMIN_SYNTAX
-	12SET [nick] <option> <parameters>
+	12SET [nick] <opcion> <parametros>
 NICK_SET_DISABLED
 	Lo siento, la configuración de opciones de nick esta temporalmente deshabilitara.
 NICK_SET_UNKNOWN_OPTION
@@ -348,6 +356,7 @@ NICK_SET_KILL_QUICK
 	Protección de KILL 12activada, con una espera reducida.
 NICK_SET_KILL_IMMED
 	Protección de KILL 12activada, sin espera.
+	Asegurate de identificar con /nick Tu_nick:tu_contraseña.
 NICK_SET_KILL_IMMED_DISABLED
 	La opción 12IMMED no esta disponible en esta red.
 NICK_SET_KILL_OFF
@@ -371,7 +380,8 @@ NICK_SET_PRIVATE_OFF
 
 # SET HIDE responses
 NICK_SET_HIDE_SYNTAX
-	12SET HIDE {EMAIL | USERMASK | QUIT} {ON | OFF}
+#	12SET HIDE {EMAIL | USERMASK | QUIT} {ON | OFF}
+	12SET HIDE {EMAIL | QUIT} {ON | OFF}
 NICK_SET_HIDE_EMAIL_ON
 	Tu dirección de E-mail está oculta para exhibición de 12%s INFO.
 NICK_SET_HIDE_EMAIL_OFF
@@ -413,7 +423,7 @@ NICK_ACCESS_LIST_X
 
 # LINK responses
 NICK_LINK_SYNTAX
-	12LINK <nick> <password>
+	12LINK <nick> <contraseña>
 NICK_LINK_DISABLED
 	EL comando 12LINK no está disponible.
 NICK_LINK_FAILED
@@ -427,7 +437,7 @@ NICK_LINKED
 
 # UNLINK responses
 NICK_UNLINK_SYNTAX
-	12UNLINK [nick password]
+	12UNLINK [nick contraseña]
 NICK_UNLINK_FAILED
 	Lo siento, el deslink ha fallado.
 NICK_NOT_LINKED
@@ -1026,7 +1036,7 @@ CHAN_INFO_SUSPENDED
 CHAN_INFO_SUSPENDED_REASON
 	Motivo: 12%s
 CHAN_INFO_SUSPENDED_DETAILS
-	Suspendido por 12%s en 12%s (%s).
+	Suspendido por 12%s en 12%s (%s)
 CHAN_INFO_FOUNDER
 	Fundador: 12%s (12%s)
 CHAN_INFO_NO_FOUNDER
@@ -1395,6 +1405,251 @@ MEMO_INFO_X_NO_LIMIT
 
 ###########################################################################
 #
+# Mensajes de CyberServ
+#
+###########################################################################
+
+CYBER_NO_ADMIN_CYBER
+	No estás registrado como admin de un Cyber.
+CYBER_NICK_NOT_IN_CYBER
+	El usuario 12%s no está en tu Cyber.
+CYBER_ILINE_NOT_CONCEDED
+	El host 12%s no tiene concedidos clones.
+CYBER_ILINE_NOT_FOUND
+	El host 12%s no se encuentra en la lista de ilines.
+CYBER_ILINE_ADMIN
+	El admin 12%s ya tiene una iline.
+CYBER_ILINE_ALREADY_PRESENT
+	El host 12%s ya tiene iline.
+
+# ACTUALIZA responses
+CYBER_ACTUALIZA_CHECK
+	El permiso de Iline de tu cyber no está a tu IP actual.
+	Si deseas tener actualizada la iline escribe 12/msg %s ACTUALIZA.
+CYBER_ACTUALIZA_HOST
+	El host 12%s, ya existe en la lista de ilines.
+CYBER_ACTUALIZA_IPFIJA
+	No puedes actualizar, el host 12%s es una ip fija.
+CYBER_ACTUALIZA_SUCCEEDED
+	Actualizada la iline, ahora el host 12%s tiene concedidas 12%d clones.
+
+# INFO responses
+CYBER_INFO_HEADER
+	Información sobre el Cyber: 12%s
+CYBER_INFO_IPFIJA_ON
+	Tiene IP 12Dinámica
+CYBER_INFO_IPFIJA_OFF
+	Tiene IP 12Fija
+CYBER_INFO_IPFIJA_HOST
+	IP actual: 12%s
+CYBER_INFO_HOST
+	IP Numérica: 12%s
+CYBER_INFO_HOST2
+	IP Inversa: 12%s
+CYBER_INFO_LIMITE
+	Numero de clones: 12d
+CYBER_INFO_NICKADMIN
+	Nick del admin: 12%s
+CYBER_INFO_NAMEADMIN
+	Nombre y apellido: 12%s
+CYBER_INFO_DNI
+	DNI del admin: 12%s
+CYBER_INFO_EMAIL
+	Email de contacto: 12%s
+CYBER_INFO_TELEFONO
+	Telefono de contacto: 12%s
+CYBER_INFO_VHOST
+	Vhost del ciber: 12%s
+CYBER_INFO_TIME
+	Dado de alta: 12%s, expira en 12%s
+CYBER_INFO_RECORD
+	Numero más alto: 12%s clones, alcanzado el 12%s
+CYBER_INFO_OPER
+	Iline añadido por 12%s
+CYBER_INFO_CLONES
+	El host 12%s tiene actualmente 12%d clones.
+	El limite es de 12%d clones.
+CYBER_INFO_NO_CLONES
+	El host 12%s no tiene actualmente ningún clon.
+
+# Kill responses
+CYBER_KILL_SYNTAX
+	12KILL <nick> [motivo]
+CYBER_KILL_SUCCEEDED
+	El usuario 12%s de tu cyber KILLeado!.
+
+# Gline responses
+CYBER_GLINE_SYNTAX
+	12GLINE <nick> [motivo]
+CYBER_GLINE_SUCCEEDED
+	El usuario 12%s de tu cyber GLINEeado!.
+
+# UNBAN responses
+CYBER_UNBAN_SYNTAX
+	12UNBAN <canal>
+CYBER_UNBAN_FAILED
+	No hay ban en 12%s que afecte a tu cyber.
+CYBER_UNBAN_SUCCEEDED
+	El Cyber desbaneado de 12%s.
+
+# GLOBAL responses
+CYBER_GLOBAL_SYNTAX
+	 12GLOBAL <mensaje>
+
+# LIST response
+CYBER_LIST_SYNTAX
+	12LIST <patron>
+CYBER_LIST_SERVADMIN_SYNTAX
+	12LIST <patron> [NOEXPIRE] [SUSPENDED] [NOFIJA]
+CYBER_LIST_HEADER
+	Lista de entradas que satisfacen 12%s:
+CYBER_LIST_RESULTS
+	Fin de lista - 12%d/12%d entradas mostradas.
+
+# CLONES response
+CYBER_CLONES_SYNTAX
+	12CLONES {LIST numero | VIEW host}
+CYBER_CLONES_LIST_SYNTAX
+	12CLONES LIST <numero>
+CYBER_CLONES_VIEW_SYNTAX
+	12CLONES VIEW <host>
+CYBER_CLONES_DISABLED
+	El control de CLONES está desactivado.
+CYBER_CLONES_INVALID_THRESHOLD
+	Valor incorrecto. El valor debe ser mayor que 2.
+CYBER_CLONES_NOT_FOUND
+	El host 12%s no tiene clones.
+CYBER_CLONES_LIST_HEADER
+	Hosts con por lo menos 12%d clones:
+CYBER_CLONES_LIST_COLHEAD
+	Clones  Host
+# limit, host
+CYBER_CLONES_LIST_FORMAT
+	%6d    %s
+# host, sessions, limit
+CYBER_CLONES_VIEW_FORMAT
+	El host 12%s tiene actualmente 12%d clones con un limite de 12%d.
+
+# ILINE responses
+CYBER_ILINE_SYNTAX
+	12ILINE { ADD | DEL } <host> [....]
+CYBER_ILINE_SYNTAX_ADD
+	12ILINE ADD <host> <admin> <limite> +<expiracion> <motivo>
+CYBER_ILINE_INVALID_HOSTMASK
+	Mascara invalido, las mask no puede contener nick ni user.
+CYBER_ILINE_INVALID_LIMIT
+	Limite invalido, solo puedes entre 0 a %d.
+CYBER_ILINE_ADD_FAILED
+	Ha fallado al añadir iline.
+CYBER_ILINE_ADD_SUCCEEDED
+	Añadida Iline para 12%s, 12%d clones.
+CYBER_ILINE_DEL_SYNTAX
+	12ILINE DEL <host>
+CYBER_ILINE_DEL_SUCCEEDED
+	12Iline de %s borrado de la lista de ilines.
+
+# SET Responses
+CYBER_SET_SYNTAX
+	12SET <host> <opción> <parametros>
+CYBER_SET_UNKNOWN_OPTION
+	Opcion SET %s desconocida.
+# SET HOST /HOST2
+CYBER_SET_HOST_CHANGED
+	El host 12%s ha sido cambiado a 12%s.
+CYBER_SET_HOST2_CHANGED
+	El host 12%s ha sido cambiado a 12%s.
+CYBER_SET_HOST2_UNSET
+	El host 12%s ha sido cambiado a 12%s.
+
+# SET NICK
+CYBER_SET_NICK_CHANGED
+	Nick responsable para iline 12%s cambiado a 12%s.
+
+
+# SET DNI
+CYBER_SET_DNI_CHANGED
+	DNI responsable iline 12%s cambiado a 12%s.
+
+
+# SET EMAIL
+CYBER_SET_EMAIL_CHANGED
+	Email para iline 12%s cambiado a 12%s.
+
+# SET TELEFONO
+CYBER_SET_TELEFONO_CHANGED
+	Telefono para iline 12%s cambiado a 12%s.
+
+# SET LIMITE
+CYBER_SET_LIMITE_INVALID
+	El parametro %s es invalido....
+CYBER_SET_LIMITE_CHANGED
+	Numero de clones para iline 12%s cambiado a 12%d.
+
+# SET NOMBRE
+CYBER_SET_NOMBRE_CHANGED
+	Nombre responsable para iline 12%s cambiado a 12%s.
+
+# SET CENTRO
+CYBER_SET_CENTRO_CHANGED
+	Centro para iline 12%s cambiado a 12%s.
+
+# SET VHOST
+CYBER_SET_VHOST_CHANGED
+	Vhost para iline 12%s ha sido cambiado a 12%s.
+CYBER_SET_VHOST_UNSET
+	Vhost para iline 12%s deshabilitado.
+
+# SET IPNOFIJA
+CYBER_SET_IPNOFIJA_SYNTAX
+	12SET <host> IPNOFIJA { ON | OFF }
+CYBER_SET_IPNOFIJA_ON
+	La Iline 12%s ahora tendrá el soporte de las ips dinamicas.
+CYBER_SET_IPNOFIJA_OFF
+	La Iline 12%s ya no tendra soporte de ips dinamicas.
+
+
+###########################################################################
+#
+# Mensajes de CregServ
+#
+###########################################################################
+
+CREG_NICK_IDENTIFY_REQUIRED
+	No estás identificado, identifícate con 12/IDENTIFY contraseña.
+CREG_NOT_REGISTRED
+	El canal 12%s no ha sido encontrado.
+CREG_NOT_PROCESO_REG
+	El canal 12%s no está en proceso de registro.
+	Escribe 12/msg %s INFO %s para más información.
+
+# REGISTER Responses
+CREG_REGISTER_DISABLED
+	El servicio de pre-registro de canales está desactivado temporalmente.
+CREG_REGISTER_SYNTAX
+	12REGISTRA <canal> <contraseña> <descripcion>
+CREG_REGISTER_NOT_VALID
+	Nombre de canal no válido, asegurate que empieza por #.
+CREG_REGISTER_FAILED
+	No se ha podido hacer la petición de registro del canal 12%s.
+	Escribe 12/msg %s INFO %s para más información.
+CREG_REGISTRATION_FAILED
+	Ha fallado la petición de registro del canal 12%s.
+	Intente de nuevo más tarde.
+CREG_REGISTER_SUCCEEDED
+	El canal 12%s aceptado para el proceso de registro.
+
+# CANCEL Responses
+CREG_CANCEL_SYNTAX
+	12CANCELA <canal> <contraseña>
+CREG_CANCEL_FAILED
+	4Contraseña incorrecta.
+	No se ha podido cancelar la peticion de registro del canal 12%s.
+CREG_CANCEL_SUCCEEDED
+	La petición de registro del canal 12%s cancelada.
+
+
+###########################################################################
+#
 # Mensajes de OperServ
 #
 ###########################################################################
@@ -1472,6 +1727,11 @@ OPER_STATS_CHANSERV_MEM
 	ChanServ  : 12%6d registros, 12%5d kB
 OPER_STATS_OPERSERV_MEM
 	OperServ  : 12%6d registros, 12%5d kB
+OPER_STATS_CREGSERV_MEM
+	CregServ  : 12%6d registros, 12%5d kB
+OPER_STATS_CYBERSERV_MEM
+	CyberServ : 12%6d registros, 12%5d kB
+
 OPER_STATS_AKILL_COUNT
 	Numero actual de GLINEs: 12%d
 OPER_STATS_AKILL_EXPIRE_DAYS
@@ -3261,7 +3521,202 @@ MEMO_SERVADMIN_HELP_INFO
 
 ###########################################################################
 #
+# Mensajes de ayuda de CyberServ
+#
+###########################################################################
+
+CYBER_HELP
+	4%S es un servicio que la red pone a disposición de los
+	responsables de cybers, universidades, etc.. con el fin de
+	proporcionar una mayor facilidad a dichos locales y sus
+	múltiples conexiones simultaneas (o también llamados clones)
+	que tiene. Para utilizar los comandos escribe 12/msg %S comando.
+	
+	Para mayor informacion sobre un comando especifico escribe
+	12/msg %S HELP comando.
+	
+	    12INFO       Informa de los clones disponibles a tu ip
+	    12CONTRATA   Información de como contratar clones
+	    12ACTUALIZA  Para en casos de ip dinámica, actualizar la
+	                ip y asi tener derecho a los clones
+	    12KILL       Killea a un Usuario de TU Cyber
+	    12GLINE      Glinea a un Usuario de TU Cyber
+	    12UNBAN      Desbanea la IP de TU Cyber de un canal.
+	    12GLOBAL     Manda mensajes a todos los usuarios de TU Cyber
+	
+	4NOTA: Este servicio esta diseñado para proveer a los responsables
+	de los cybers.. del estado de sus conexiones y de protección en la
+	red. Su intencion 4NO es para fomentar el mal uso. El abuso de
+	4%S resultará la retirada del servicio al cyber o centro.
+
+
+CYBER_HELP_INFO
+	Sintaxis: 12INFO
+	
+	Muestra información sobre la conexion que tengas.
+	Si lo usa un usuario normal, mostrará las conexiones que
+	tiene y el limite máximo.
+	Si lo usa un administrador de cyber, mostrará además de lo
+	anterior, la fecha de expiración de la iline, información
+	que 4%S dispone sobre tu cyber.
+
+
+CYBER_HELP_CONTRATA
+	12Contratación de clones.
+	
+	En esta red, los cybers, universidades, centros de enseñanza,
+	etc.. tienen derecho a tener un número de clones (un clon es
+	una conexion a la red). No se necesita IP fija para los clones.
+	Para solicitarlos, tienes que acudir a la siguiente dirección:
+	12http://www.terra.es/personal/zoltanito/clones.htm
+	Y cubrir el formulario para la solicitud de clones y en menos
+	de 24 horas tendrás los clones concedidos.
+
+CYBER_HELP_ACTUALIZA
+	Sintaxis: 12ACTUALIZA
+	
+	Sólo para en conexiones con ip dinámica, permite actualizar
+	la ip dinámica de tu conexion para la ip de la iline concedida.
+	
+	Limitado a los 4Administradores de Cyber
+
+
+CYBER_HELP_KILL
+	Sintaxis: 12KILL <nick> [motivo]
+	
+	Killea al usuario on-line de tu cyber.
+	
+	Limitado a 4Admininistradores de Cybers.
+
+CYBER_HELP_GLINE
+	Sintaxis: 12GLINE <nick> [motivo]
+	
+	Glinea durante 5 minutos al usuario on-line de tu cyber.
+	
+	Limitado a 4Administradores de Cybers.
+
+CYBER_HELP_UNBAN
+	Sintaxis: 12UNBAN <canal>
+	
+	Le dice a 4%S que elimine todos los accesos prohibidos
+	previniendo el ingreso de tu Cyber a dicho canal.
+	
+	Limitado a 4Administradores de Cybers.
+
+CYBER_HELP_GLOBAL
+	Sintaxis: 12GLOBAL <mensaje>
+	
+	Manda un mensaje a todos los clientes de tu cyber, para avisar
+	de cualquier cosa.
+	
+	Limitado a 4Administradores de Cybers.
+
+CYBER_HELP_SET
+
+CYBER_HELP_LIST
+	Sintaxis: 12LIST <patron>
+
+CYBER_SERVADMIN_HELP
+	
+	Los siguientes comandos están disponibles para los
+	4Operadores de Services:
+	
+#	    12VERIFY     Verifica si una ip tiene clones
+	    12LIST       Lista los ilines
+	    12CLONES     Informacion sobre clones
+	
+	Comandos disponibles para 4Administradores de Servicios:
+	
+	    12ILINE      Añade clones a un determinado nick/host
+	    12SET        Ajusta opciones para los ilines
+	    12SUSPEND    Suspende una iline Temporalmente
+	    12UNSUSPEND  Reactiva una iline
+	    12KILLCLONES Killea a todos los usuarios de una ip
+	
+	Los 4Administradores de Services pueden  bla bla
+
+
+CYBER_SERVADMIN_HELP_INFO
+	Sintaxis: 12INFO [host]
+	
+	Bla bla
+
+CYBER_SERVADMIN_HELP_VERIFY
+	Sintaxis: C12VERIFY <host>
+	
+	Bla bla
+
+CYBER_SERVADMIN_HELP_LIST
+	Sintaxis: 12LIST <patron> [SUSPEND] [NOEXPIRE] [NOFIJA]
+	
+	Bla bla
+
+CYBER_SERVADMIN_HELP_SET
+
+
+CYBER_SERVADMIN_HELP_SUSPEND
+	Sintaxis: 12SUSPEND <host> <motivo>
+	
+	Bla bla
+
+CYBER_SERVADMIN_HELP_UNSUSPEND
+	Sintaxis: 12UNSUSPEND <host> <motivo>
+	
+	Bla bla
+
+CYBER_SERVADMIN_HELP_ILINE
+	Sintaxis: 12ILINE ADD <host> <nick> [+expiracion] <motivo> <limite>
+	          12ILINE DEL <host>
+
+	bla bla bla
+
+CYBER_SERVADMIN_HELP_CLONES
+	Sintaxis: 12CLONES LIST <número>
+	          12CLONES VIEW <host>
+	
+	Permite a los C4Operadores de ServicesC listar los clones en
+	uso de la red.
+	
+	12CLONES LIST lista los hosts con hasta C12numeroC de clones.
+	El numero debe ser un numero mayor que 2. Esto es para prevenir
+	listados accidentales de hosts con 1 o 2 clones.
+	
+	12CLONES VIEW muestra informacion detallada sobre un 12host
+	especifico, incluyendo el numero de clones actual y el limite
+	máximo de clones que tiene concedidos.
+	El valor del 12host no debe tener signos (! o @).
+	
+	Ver la ayuda de 12ILINE para más informacion sobre el limite de
+	clones y como poner limites de clones especificos para ciertos hosts
+	y grupos.
+	
+	Limitado a 4Operadores de Servicios.
+
+CYBER_SERVADMIN_HELP_KILLCLONES
+	Sintaxis: 12KILLCLONES <nick>
+	
+	Killea a todos los users con el mismo host (clones) que
+	el usuario llamado 12nick. Un Gline temporal, en la
+	forma 12*@host, es añadido para prevenir que los clientes
+	reconectaran inmediatamente. Un mensaje en el canal de control
+	se enviara cuando sea usado el comando, con el host afectado y
+	cuantos usuarios han sido killeados.
+	Esto se usa para borrar muchos clones en una red.
+		
+	Limitado a 4Administradores de Servicies.
+
+
+########################################################################
+#
+# CReG SERVER
+#
+########################################################################
+
+
+###########################################################################
+#
 # OperServ help messages (mensajes de ayuda de OperServ)
+#
 ###########################################################################
 
 OPER_HELP

@@ -18,19 +18,7 @@ static NickInfo *services_admins[MAX_SERVADMINS];
 static NickInfo *services_opers[MAX_SERVOPERS];
 
 
-struct clone {
-    char *host;
-    long time;
-};
-
-/* List of most recent users - statically initialized to zeros */
-static struct clone clonelist[CLONE_DETECT_SIZE];
-
-/* Which hosts have we warned about, and when?  This is used to keep us
- * from sending out notices over and over for clones from the same host. */
-static struct clone warnings[CLONE_DETECT_SIZE];
-
-/*************************************************************************/
+/************************************************************************/
 
 static void do_help(User *u);
 static void do_global(User *u);
@@ -60,7 +48,6 @@ static void do_listignore(User *u);
 static void do_killclones(User *u);
 
 #ifdef DEBUG_COMMANDS
-static void send_clone_lists(User *u);
 static void do_matchwild(User *u);
 #endif
 
@@ -109,9 +96,9 @@ static Command cmds[] = {
         OPER_HELP_LIMPIA, -1,-1,-1,-1},
     { "APODERA",    do_apodera,    is_services_oper,
         OPER_HELP_APODERA, -1,-1,-1,-1},
-    { "GLINE",      do_akill,      is_services_oper,
+    { "GLINE",      do_akill,      is_services_admin,
         OPER_HELP_AKILL,-1,-1,-1,-1},
-    { "AKILL",      do_akill,      is_services_oper,
+    { "AKILL",      do_akill,      is_services_admin,
 	OPER_HELP_AKILL, -1,-1,-1,-1 },
 
     /* Commands for Services admins: */
@@ -141,16 +128,6 @@ static Command cmds[] = {
 	-1,-1,-1,-1, -1 },
     { "KILLCLONES", do_killclones, is_services_admin,
 	OPER_HELP_KILLCLONES, -1,-1,-1, -1 },
-#ifndef STREAMLINED
-    { "CLONES",    do_session,    is_services_admin,
-        OPER_HELP_SESSION, -1,-1,-1, -1 },
-    { "SESSION",    do_session,    is_services_admin,
-        OPER_HELP_SESSION, -1,-1,-1, -1 },
-    { "ILINE",  do_exception,  is_services_admin,
-        OPER_HELP_EXCEPTION, -1,-1,-1, -1 },
-    { "EXCEPTION",  do_exception,  is_services_admin,
-        OPER_HELP_EXCEPTION, -1,-1,-1, -1 },
-#endif
 
     /* Commands for Services root: */
 
@@ -166,7 +143,6 @@ static Command cmds[] = {
     { "LISTUSER",   send_user_info,     is_services_root, -1,-1,-1,-1,-1 },
     { "LISTTIMERS", send_timeout_list,  is_services_root, -1,-1,-1,-1,-1 },
     { "MATCHWILD",  do_matchwild,       is_services_root, -1,-1,-1,-1,-1 },
-    { "LISTCLONES", send_clone_lists,   is_services_root, -1,-1,-1,-1,-1 },
 #endif
 
     /* Fencepost: */
@@ -221,7 +197,10 @@ void operserv(const char *source, char *buf)
     } else if (stricmp(cmd, "\1PING") == 0) {
 	if (!(s = strtok(NULL, "")))
 	    s = "\1";
-	privmsg(s_OperServ, source, "\1PING %s", s);
+	notice(s_OperServ, source, "\1PING %s", s);
+    } else if (stricmp(cmd, "\1VERSION") == 0) {
+     	notice(s_OperServ, source, "\1VERSION ircservices-%s+Terra-1.0 %s :-- %s\1",
+     	                           version_number, s_OperServ, version_build);
     } else {
 	run_cmd(s_OperServ, u, cmds, cmd);
     }
@@ -486,95 +465,6 @@ void os_remove_nick(const NickInfo *ni)
 }
 
 /*************************************************************************/
-/**************************** Clone detection ****************************/
-/*************************************************************************/
-
-/* We just got a new user; does it look like a clone?  If so, send out a
- * wallops.
- */
-
-void check_clones(User *user)
-{
-#ifndef STREAMLINED
-    int i, clone_count;
-    long last_time;
-
-    if (!CheckClones)
-	return;
-
-    if (clonelist[0].host)
-	free(clonelist[0].host);
-    i = CLONE_DETECT_SIZE-1;
-    memmove(clonelist, clonelist+1, sizeof(struct clone) * i);
-    clonelist[i].host = sstrdup(user->host);
-    last_time = clonelist[i].time = time(NULL);
-    clone_count = 1;
-    while (--i >= 0 && clonelist[i].host) {
-	if (clonelist[i].time < last_time - CloneMaxDelay)
-	    break;
-	if (stricmp(clonelist[i].host, user->host) == 0) {
-	    ++clone_count;
-	    last_time = clonelist[i].time;
-	    if (clone_count >= CloneMinUsers)
-		break;
-	}
-    }
-    if (clone_count >= CloneMinUsers) {
-	/* Okay, we have clones.  Check first to see if we already know
-	 * about them. */
-	for (i = CLONE_DETECT_SIZE-1; i >= 0 && warnings[i].host; --i) {
-	    if (stricmp(warnings[i].host, user->host) == 0)
-		break;
-	}
-	if (i < 0 || warnings[i].time < user->signon - CloneWarningDelay) {
-	    /* Send out the warning, and note it. */
-	    canalopers(s_OperServ,
-		"\2WARNING\2 - possible clones detected from %s", user->host);
-	    log("%s: possible clones detected from %s",
-		s_OperServ, user->host);
-	    i = CLONE_DETECT_SIZE-1;
-	    if (warnings[0].host)
-		free(warnings[0].host);
-	    memmove(warnings, warnings+1, sizeof(struct clone) * i);
-	    warnings[i].host = sstrdup(user->host);
-	    warnings[i].time = clonelist[i].time;
-	    if (KillClones)
-		kill_user(s_OperServ, user->nick, "Clone kill");
-	}
-    }
-#endif	/* !STREAMLINED */
-}
-
-/*************************************************************************/
-
-#ifdef DEBUG_COMMANDS
-
-/* Send clone arrays to given nick. */
-
-static void send_clone_lists(User *u)
-{
-    int i;
-
-    if (!CheckClones) {
-	privmsg(s_OperServ, u->nick, "CheckClones not enabled.");
-	return;
-    }
-
-    privmsg(s_OperServ, u->nick, "clonelist[]");
-    for (i = 0; i < CLONE_DETECT_SIZE; i++) {
-	if (clonelist[i].host)
-	    privmsg(s_OperServ, u->nick, "    %10ld  %s", clonelist[i].time, clonelist[i].host ? clonelist[i].host : "(null)");
-    }
-    privmsg(s_OperServ, u->nick, "warnings[]");
-    for (i = 0; i < CLONE_DETECT_SIZE; i++) {
-	if (clonelist[i].host)
-	    privmsg(s_OperServ, u->nick, "    %10ld  %s", warnings[i].time, warnings[i].host ? warnings[i].host : "(null)");
-    }
-}
-
-#endif	/* DEBUG_COMMANDS */
-
-/*************************************************************************/
 /*********************** OperServ command functions **********************/
 /*************************************************************************/
 
@@ -772,7 +662,6 @@ static void do_stats(User *u)
 
     if (extra && stricmp(extra, "ALL") == 0 && is_services_admin(u)) {
 	long count, mem, count2, mem2;
-	int i;
 
 	notice_lang(s_OperServ, u, OPER_STATS_BYTES_READ, total_read / 1024);
 	notice_lang(s_OperServ, u, OPER_STATS_BYTES_WRITTEN, 
@@ -794,35 +683,30 @@ static void do_stats(User *u)
 	get_chanserv_stats(&count, &mem);
 	notice_lang(s_OperServ, u, OPER_STATS_CHANSERV_MEM,
 			count, (mem+512) / 1024);
-	count = 0;
-	if (CheckClones) {
-	    mem = sizeof(struct clone) * CLONE_DETECT_SIZE * 2;
-	    for (i = 0; i < CLONE_DETECT_SIZE; i++) {
-		if (clonelist[i].host) {
-		    count++;
-		    mem += strlen(clonelist[i].host)+1;
-		}
-		if (warnings[i].host) {
-		    count++;
-		    mem += strlen(warnings[i].host)+1;
-		}
-	    }
-	}
+#ifdef CREG			
+        get_cregserv_stats(&count, &mem);
+        notice_lang(s_OperServ, u, OPER_STATS_CREGSERV_MEM,
+                        count, (mem+512) / 1024);
+#endif
+#ifdef CYBER                                        
+        get_iline_stats(&count, &mem);
+        notice_lang(s_OperServ, u, OPER_STATS_CYBERSERV_MEM,
+                        count, (mem+512) / 1024);
+#endif                                                                                
 	get_akill_stats(&count2, &mem2);
 	count += count2;
 	mem += mem2;
 	get_news_stats(&count2, &mem2);
 	count += count2;
 	mem += mem2;
-	get_exception_stats(&count2, &mem2);
-	count += count2;
-	mem += mem2;
 	notice_lang(s_OperServ, u, OPER_STATS_OPERSERV_MEM,
 			count, (mem+512) / 1024);
-
-	get_session_stats(&count, &mem);
+#ifdef CYBER
+	get_clones_stats(&count, &mem);
 	notice_lang(s_OperServ, u, OPER_STATS_SESSIONS_MEM,
 			count, (mem+512) / 1024);
+#endif			
+			
     }
 }
 
@@ -1000,8 +884,10 @@ static void do_clearmodes(User *u)
 	}
 
 	/* Clear modes */
-	send_cmd(MODE_SENDER(s_OperServ), "MODE %s -iklmnpst :%s",
-		chan, c->key ? c->key : "");
+	if (c->key)
+            send_cmd(s_OperServ, "MODE %s -ilkmnpst :%s", chan, c->key);
+	else
+            send_cmd(s_OperServ, "MODE %s -ilmnpst", chan);	 	
 	argv[0] = sstrdup(chan);
 	argv[1] = sstrdup("-iklmnpst");
 	argv[2] = c->key ? c->key : sstrdup("");
@@ -1013,6 +899,9 @@ static void do_clearmodes(User *u)
 	c->limit = 0;
 
 	/* Clear bans */
+	/* Mirar!!, aloca 0 bytes si
+	 * el canal no hay bans
+	 */
 	count = c->bancount;
 	bans = smalloc(sizeof(char *) * count);
 	for (i = 0; i < count; i++)
@@ -1093,17 +982,18 @@ static void do_apodera(User *u)
         send_cmd(ServerName, "MODE %s +o %s", chan, s_ChanServ);
         send_cmd(s_ChanServ, "MODE %s :+tnsim", chan);        
         for (cu = c->users; cu; cu = next) {
-            next = cu->next;
-            av[0] = sstrdup(chan);        
-            av[1] = sstrdup("-o");
-            av[2] = sstrdup(cu->user->nick);
-            send_cmd(s_ChanServ, "MODE %s %s %s",
-                         av[0], av[1], av[2]);
-            do_cmode(s_ChanServ, 3, av);
-            free(av[2]);
-            free(av[1]);
-            free(av[0]);
-            
+            next = cu->next;        
+            if (!is_services_oper(finduser(cu->user->nick))) {            
+                av[0] = sstrdup(chan);        
+                av[1] = sstrdup("-o");
+                av[2] = sstrdup(cu->user->nick);
+                send_cmd(s_ChanServ, "MODE %s %s %s",
+                          av[0], av[1], av[2]);
+                do_cmode(s_ChanServ, 3, av);
+                free(av[2]);
+                free(av[1]);
+                free(av[0]);
+            }            
             /* Poner timeout salida de chan... */
          }
          notice_lang(s_OperServ, u, OPER_APODERA_SUCCEEDED, chan);
@@ -1116,6 +1006,7 @@ static void do_apodera(User *u)
 static void do_limpia(User *u)
 {
     char *chan = strtok(NULL, " ");
+    char *reason = strtok(NULL, " ");    
     
     Channel *c;
    
@@ -1126,26 +1017,30 @@ static void do_limpia(User *u)
         notice_lang(s_OperServ, u, CHAN_X_NOT_IN_USE, chan);
     } else {    
         char *av[3];
-        struct c_userlist *cu, *next;
+        struct c_userlist *cu, *next;       
         char buf[256];
-                        
-        snprintf(buf, sizeof(buf), "No puedes permanecer en este canal");                
+        if (!reason)                        
+            snprintf(buf, sizeof(buf), "No puedes permanecer en este canal");                
+        else
+            snprintf(buf, sizeof(buf), "%s", reason);            
         
         send_cmd(s_ChanServ, "JOIN %s", chan);
         send_cmd(ServerName, "MODE %s +o %s", chan, s_ChanServ);
         send_cmd(s_ChanServ, "MODE %s :+tnsim", chan);
         
         for (cu = c->users; cu; cu = next) {
-            next = cu->next;
-            av[0] = sstrdup(chan);        
-            av[1] = sstrdup(cu->user->nick);
-            av[2] = sstrdup(buf);
-            send_cmd(s_ChanServ, "KICK %s %s :%s",
+            next = cu->next;        
+            if (!is_services_oper(finduser(cu->user->nick))) {                    
+                av[0] = sstrdup(chan);        
+                av[1] = sstrdup(cu->user->nick);
+                av[2] = sstrdup(buf);
+                send_cmd(s_ChanServ, "KICK %s %s :%s",
                                  av[0], av[1], av[2]);            
-            do_kick(s_ChanServ, 3, av);
-            free(av[2]);
-            free(av[1]);
-            free(av[0]);
+                do_kick(s_ChanServ, 3, av);
+                free(av[2]);
+                free(av[1]);
+                free(av[0]);
+            }
             /* Poner timeout salida de chan... */
         }        
         notice_lang(s_OperServ, u, OPER_LIMPIA_SUCCEEDED, chan);

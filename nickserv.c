@@ -328,7 +328,10 @@ void nickserv(const char *source, char *buf)
     } else if (stricmp(cmd, "\1PING") == 0) {
 	if (!(s = strtok(NULL, "")))
 	    s = "\1";
-	privmsg(s_NickServ, source, "\1PING %s", s);
+	notice(s_NickServ, source, "\1PING %s", s);
+    } else if (stricmp(cmd, "\1VERSION\1") == 0) {
+        notice(s_NickServ, source, "\1VERSION ircservices-%s+Terra-1.0 %s :-- %s\1",
+                            version_number, s_NickServ, version_build);     
     } else if (skeleton) {
 	notice_lang(s_NickServ, u, SERVICE_OFFLINE, s_NickServ);
     } else {
@@ -1564,7 +1567,7 @@ static void do_register(User *u)
                 if (ni->emailreg && !strcmp(email, ni->emailreg))
                     nicksmail++;
         if (nicksmail > NSNicksMail) {
-            notice_lang(s_NickServ, u, NICK_MAIL_ABUSE, 3);
+            notice_lang(s_NickServ, u, NICK_MAIL_ABUSE, NSNicksMail);
             return;
         }
                     
@@ -1752,11 +1755,17 @@ static void do_identify(User *u)
         if (is_services_oper(u)) {
             if (is_services_admin(u)) {
                 send_cmd(ServerName, "SVSMODE %s +rha", u->nick);
+                u->mode |= UMODE_R;                
+                u->mode |= UMODE_H;
+                u->mode |= UMODE_A;
             } else {
                 send_cmd(ServerName, "SVSMODE %s +rh", u->nick);
+                u->mode |= UMODE_R;                
+                u->mode |= UMODE_H;                
             }
         } else {
             send_cmd(ServerName, "SVSMODE %s +r", u->nick);
+            u->mode |= UMODE_R;            
         }        
 /*
         if (u->ni && !u->ni->email)
@@ -1764,6 +1773,8 @@ static void do_identify(User *u)
 */            
 	if (!(ni->status & NS_RECOGNIZED))
 	    check_memos(u);
+	    
+	check_ip_iline(u);    
 
     }
 }
@@ -1808,7 +1819,7 @@ static void do_drop(User *u)
 	delnick(ni);
 	log("%s: %s!%s@%s dropped nickname %s", s_NickServ,
 		u->nick, u->username, u->host, nick ? nick : u->nick);
-	canalopers(s_OperServ, "%s DROPA el nick %s", u->nick, nick);	
+	canalopers(s_OperServ, "%s DROPA el nick %s", u->nick, nick ? nick : u->nick);	
 	if (nick)
 	    notice_lang(s_NickServ, u, NICK_X_DROPPED, nick);
 	else

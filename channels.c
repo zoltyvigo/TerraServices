@@ -238,7 +238,7 @@ void chan_adduser(User *user, const char *chan)
             maxchancnt = chancnt;
             maxchantime = time(NULL);
             if (LogMaxChans)
-                log("user: New maximum Chan count: %d", maxchancnt);
+                log("Channel: New maximum Chan count: %d", maxchancnt);
         }                                                	
 	
     }
@@ -285,9 +285,7 @@ void chan_deluser(User *user, Channel *c)
 	u->prev->next = u->next;
     else
 	c->users = u->next;
-    free(u);
-/* Canales */    
-    chancnt--;
+    free(u);    
     for (u = c->chanops; u && u->user != user; u = u->next)
 	;
     if (u) {
@@ -313,6 +311,8 @@ void chan_deluser(User *user, Channel *c)
     if (!c->users) {
 	if (debug)
 	    log("debug: Borrando canal %s", c->name);
+/* Canales */
+        chancnt--;	    
 	if (c->ci)
 	    c->ci->c = NULL;
 	if (c->topic)
@@ -486,6 +486,10 @@ void do_cmode(const char *source, int ac, char **av)
 		}
 		chan->bans[chan->bancount++] = sstrdup(*av++);
 	    } else {
+	    
+	    /* Aqui el futuro soporte de SET NOUNBAN
+	     * para evitar unbans de cyber
+	     */
 		char **s = chan->bans;
 		int i = 0;
 		while (i < chan->bancount && strcmp(*s, *av) != 0) {

@@ -42,6 +42,8 @@
 
 /******* OperServ configuration *******/
 
+#define CYBER
+
 /* Registro de nicks vía mail */
 
 #define REG_NICK_MAIL

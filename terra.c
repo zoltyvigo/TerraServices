@@ -30,29 +30,26 @@ unsigned char convert2n[NUMNICKMAXCHAR + 1] = {
  49,50,51
 };
 
-unsigned int base64toint(const char *str)
+unsigned int base64toint(const char *s)
 {
-  register unsigned int i;
-  i = convert2n[(unsigned char)str[5]];
-  i += convert2n[(unsigned char)str[4]] << 6;
-  i += convert2n[(unsigned char)str[3]] << 12;
-  i += convert2n[(unsigned char)str[2]] << 18;
-  i += convert2n[(unsigned char)str[1]] << 24;
-  i += convert2n[(unsigned char)str[0]] << 30;
-  return i;
+  unsigned int i = convert2n[(unsigned char)*s++];
+  while (*s) 
+  {  
+    i <<= NUMNICKLOG;
+    i += convert2n[(unsigned char)*s++];
+  }
+  return i;  
 }
 
-const char *inttobase64(unsigned int i)
+const char *inttobase64(char *buf, unsigned int v, unsigned int count)
 {
-  static char base64buf[7];
-  base64buf[0] = convert2y[(i >> 30) & 0x3f];
-  base64buf[1] = convert2y[(i >> 24) & 0x3f];
-  base64buf[2] = convert2y[(i >> 18) & 0x3f];
-  base64buf[3] = convert2y[(i >> 12) & 0x3f];
-  base64buf[4] = convert2y[(i >> 6) & 0x3f];
-  base64buf[5] = convert2y[i & 0x3f];
-  base64buf[6] = 0; /* (static is initialized 0) */
-  return base64buf;
+  buf[count] = '\0';
+  while (count > 0)
+  {
+    buf[--count] = convert2y[(v & NUMNICKMASK)];
+    v >>= NUMNICKLOG;
+  }
+  return buf;      
 }
 
 /*
@@ -83,10 +80,9 @@ void cifrado_tea(unsigned int v[], unsigned int k[], unsigned int x[])
 
 #define CLAVE_CIFRADO "Fr3tSEt2QftW"
 
-void make_virtualhost(const char *host)
+const char *make_virtualhost(const char *host)
 {
 #define NICKLEN 9
-#ifdef LALA
   unsigned int v[2], k[2], x[2];
 //  int cont = (NICKLEN + 8) / 8, 
   int ts = 0;
@@ -116,10 +112,10 @@ void make_virtualhost(const char *host)
         
       cifrado_tea(v, k, x);      
      
-      /* formato direccion virtual: qWeRtYu.As.Terra */
-      inttobase64(virtualhost, x[0], 7);
-      virtualhost[7] = '.';
-      inttobase64(virtualhost + 8, x[1], 2);
+      /* formato direccion virtual: As.qWeRtYu.Terra */
+      inttobase64(virtualhost, x[0], 2);
+      virtualhost[2] = '.';
+      inttobase64(virtualhost + 3, x[1], 7);
       strcpy(virtualhost + 10, ".Terra");     
       
       /* el nombre de Host es correcto? */
@@ -135,8 +131,5 @@ void make_virtualhost(const char *host)
   }
   host = sstrdup(virtualhost);      
   return host;
-#endif
-  host = sstrdup("AB2Ymif.4v.Terra");
-//  return host;
   
 }  
