@@ -1485,22 +1485,22 @@ NICK_SERVADMIN_HELP_SET_NOEXPIRE
 	
 	Limitado a Administradores de Services.
 
-#NICK_SERVADMIN_HELP_LIST
-#	Sintaxis: LIST patrón
-#	
-#	Lista todos los nicks registrados que concuerden con el
-#	patrón definido, en formato nick!usuario@host .  Nicks
-#	con la opción PRIVATE activada solo serán mostrados a
-#	Administradores de Services.
-#	
-#	Ejemplos:
-#	
-#	    LIST *!joeuser@foo.com
-#	        Lista todos los nicks registrados por joeuser@foo.com.
-#	
-#	    LIST *Bot*!*@*
-#	        Lista todos los nicks registrados que contenga Bot
-#		en su nombre (no importa mayúsculas).
+NICK_SERVADMIN_HELP_LIST
+	Sintaxis: LIST patrón
+	
+	Lista todos los nicks registrados que concuerden con el
+	patrón definido, en formato nick!usuario@host .  Nicks
+	con la opción PRIVATE activada solo serán mostrados a
+	Administradores de Services.
+	
+	Ejemplos:
+	
+	    LIST *!joeuser@foo.com
+	        Lista todos los nicks registrados por joeuser@foo.com.
+	
+	    LIST *Bot*!*@*
+	        Lista todos los nicks registrados que contenga Bot
+		en su nombre (no importa mayúsculas).
 
 NICK_SERVADMIN_HELP_GETPASS
 	Sintaxis: GETPASS nick
@@ -1762,35 +1762,35 @@ CHAN_HELP_SET_SECUREOPS
 	usuarios que NO estén en la lista de usuarios del canal NO
 	podrán obtener status de operadores
 
-#CHAN_HELP_ACCESS
-#	Sintaxis: ACCESS canal ADD nick nivel
-#	          ACCESS canal DEL {nick | posición-numero}
-#	          ACCESS canal LIST [mask]
-#	
-#	Mantiene la lista de accesos del canal.  La lista de accesos
-#	establece que usuarios están habilitados a ser operadores
-#	del canal o acceder a comandos de %S en el canal.  Se pueden
-#	establecer diferentes niveles de usuarios para acceder a
-#	diferentes privilegios; utilice /msg %S HELP ACCESS LEVELS
-#	para obtener información mas específica.  Cualquier nick que
-#	no esté en la lista de acceso tiene nivel de usuario 0
-#	(cero).
-#	
-#	El comando ACCESS ADD agrega al nick con el nivel dado a la
-#	lista de acceso; si el usuario ya existe en la lista, se
-#	reemplazará su nivel.  El nivel especificado debe ser menor
-#	que el que tiene el usuario que está ingresando el comando,
-#	y si el nick está actualmente en la lista, el nivel actual
-#	de dicho nick debe ser menor que el nivel del usuario que
-#	está ingresando el comando.
-#	
-#	El comando ACCESS DEL elimina un usuario de la lista de
-#	accesos.  Se puede eliminar un usuario ingresando el nick o
-#	ingresando el número que ocupa en la lista de accesos.
-#	
-#	El comando ACCESS LIST muestra la lista de accesos al canal;
-#	se pueden utilizar caracteres comodines o mascaras, en cuyo
-#	caso solo las coincidencias concurrentes serán listadas.
+CHAN_HELP_ACCESS
+	Sintaxis: ACCESS canal ADD nick nivel
+	          ACCESS canal DEL {nick | posición-numero}
+	          ACCESS canal LIST [mask]
+	
+	Mantiene la lista de accesos del canal.  La lista de accesos
+	establece que usuarios están habilitados a ser operadores
+	del canal o acceder a comandos de %S en el canal.  Se pueden
+	establecer diferentes niveles de usuarios para acceder a
+	diferentes privilegios; utilice /msg %S HELP ACCESS LEVELS
+	para obtener información mas específica.  Cualquier nick que
+	no esté en la lista de acceso tiene nivel de usuario 0
+	(cero).
+	
+	El comando ACCESS ADD agrega al nick con el nivel dado a la
+	lista de acceso; si el usuario ya existe en la lista, se
+	reemplazará su nivel.  El nivel especificado debe ser menor
+	que el que tiene el usuario que está ingresando el comando,
+	y si el nick está actualmente en la lista, el nivel actual
+	de dicho nick debe ser menor que el nivel del usuario que
+	está ingresando el comando.
+	
+	El comando ACCESS DEL elimina un usuario de la lista de
+	accesos.  Se puede eliminar un usuario ingresando el nick o
+	ingresando el número que ocupa en la lista de accesos.
+	
+	El comando ACCESS LIST muestra la lista de accesos al canal;
+	se pueden utilizar caracteres comodines o mascaras, en cuyo
+	caso solo las coincidencias concurrentes serán listadas.
 
 CHAN_HELP_ACCESS_LEVELS
 	Niveles de acceso para usuarios
@@ -2023,29 +2023,29 @@ CHAN_SERVADMIN_HELP_STATUS
 #
 ###########################################################################
 
-#MEMO_HELP
-#	%S es una útileria que permite a usuarios de IRC
-#	enviar mensajes cortos a otros usuarios de IRC,
-#	independientemente de si están en línea o no, igualmente se
-#	puede enviar mensajes a canales(*).  Ambos nicks (remitente
-#	y destinatario) deben de estar registrados, así mismo el
-#	canal debe de estar registrado si se desea enviar un mensaje
-#	a este.
-#	
-#	Comandos de %S incluyen:
-#	
-#	    SEND   Envía un mensaje a un nick/canal
-#	    LIST   Lista todos tus mensajes
-#	    READ   Lee un mensaje
-#	    DEL    Borra un mensaje (o todos)
-#	    SET    Define opciones relacionadas con mensajes
-#	
-#	Escriba /msg %S HELP comando para ayuda mas especifica
-#	de los comandos arriba mencionados.
-#	
-#	(*) Por default, cualquier usuario con al menos nivel 10 de
-#	    acceso en un canal puede leer los mensajes de ese canal.
-#	    Esto puede ser cambiado con el comando %s LEVELS.
+MEMO_HELP
+	%S es una útileria que permite a usuarios de IRC
+	enviar mensajes cortos a otros usuarios de IRC,
+	independientemente de si están en línea o no, igualmente se
+	puede enviar mensajes a canales(*).  Ambos nicks (remitente
+	y destinatario) deben de estar registrados, así mismo el
+	canal debe de estar registrado si se desea enviar un mensaje
+	a este.
+	
+	Comandos de %S incluyen:
+	
+	    SEND   Envía un mensaje a un nick/canal
+	    LIST   Lista todos tus mensajes
+	    READ   Lee un mensaje
+	    DEL    Borra un mensaje (o todos)
+	    SET    Define opciones relacionadas con mensajes
+	
+	Escriba /msg %S HELP comando para ayuda mas especifica
+	de los comandos arriba mencionados.
+	
+	(*) Por default, cualquier usuario con al menos nivel 10 de
+	    acceso en un canal puede leer los mensajes de ese canal.
+	    Esto puede ser cambiado con el comando %s LEVELS.
 
 MEMO_HELP_SEND
 	Sintaxis: SEND nick memo-texto
@@ -2057,38 +2057,38 @@ MEMO_HELP_SEND
 	
 	Ejemplo: /msg %S SEND joselito Muy bueno tu trabajo de traducción! ;)
 
-#MEMO_HELP_LIST
-#	Sintaxis: LIST [NEW]
-#	
-#	Lista los memos que usted tenga actualmente.
-#	Si se indica el parámetro NEW, solo los nuevos memos (los no
-#	leídos) serán mostrados. Los memos no leídos están marcados
-#	con un "*" a la izquierda del numero de memo.
+MEMO_HELP_LIST
+	Sintaxis: LIST [NEW]
+	
+	Lista los memos que usted tenga actualmente.
+	Si se indica el parámetro NEW, solo los nuevos memos (los no
+	leídos) serán mostrados. Los memos no leídos están marcados
+	con un "*" a la izquierda del numero de memo.
 
-#MEMO_HELP_READ
-#	Sintaxis: READ {numero | LAST}
-#	
-#	Muestra el contenido del memo indicado en numero, o el
-#	ultimo memo (por ejemplo, el recibido mas recientemente) si el
-#	parámetro LAST es dado EN VEZ DE numero.
+MEMO_HELP_READ
+	Sintaxis: READ {numero | LAST}
+	
+	Muestra el contenido del memo indicado en numero, o el
+	ultimo memo (por ejemplo, el recibido mas recientemente) si el
+	parámetro LAST es dado EN VEZ DE numero.
 
-#MEMO_HELP_DEL
-#	Sintaxis: DEL {num[-num][,num...] | ALL}
-#	
-#	Si un numero num es dado, elimina dicho memo.  Usted puede
-#	reemplazar un único numero por un rango de números para
-#	eliminar múltiples memos simultáneamente, tal como se verá
-#	en el segundo ejemplo.
-#	
-#	Si se ingresa ALL se eliminaran TODOS los memos.
-#	
-#	Ejemplos:
-#	
-#	   DEL 1
-#	      Elimina su primer memo.
-#	
-#	   DEL 2-5,7-9
-#	      Elimina los memos 2 a 5 y 7 a 9.
+MEMO_HELP_DEL
+	Sintaxis: DEL {num[-num][,num...] | ALL}
+	
+	Si un numero num es dado, elimina dicho memo.  Usted puede
+	reemplazar un único numero por un rango de números para
+	eliminar múltiples memos simultáneamente, tal como se verá
+	en el segundo ejemplo.
+	
+	Si se ingresa ALL se eliminaran TODOS los memos.
+	
+	Ejemplos:
+	
+	   DEL 1
+	      Elimina su primer memo.
+	
+	   DEL 2-5,7-9
+	      Elimina los memos 2 a 5 y 7 a 9.
 
 MEMO_HELP_SET
 	Sintaxis: SET opción parámetros
@@ -2158,16 +2158,16 @@ MEMO_SERVADMIN_HELP_SET_LIMIT
 	límites, no pueden establecer límites superiores a %d, y no
 	pueden establecer el limite HARD.
 
-#MEMO_SERVADMIN_HELP_INFO
-#	Sintaxis: INFO [usuario]
-#	
-#	Sin parámetros, muestra información del número de memos que
-#	tu tienes, cuantos están sin leer, y cuantos memos puedes
-#	recibir.
-#	
-#	Con el parámetro usuario, muestra la misma información, pero
-#	del usuario especificado. Esta opción está limitada
-#	únicamente a los Administradores de Servicios.
+MEMO_SERVADMIN_HELP_INFO
+	Sintaxis: INFO [usuario]
+	
+	Sin parámetros, muestra información del número de memos que
+	tu tienes, cuantos están sin leer, y cuantos memos puedes
+	recibir.
+	
+	Con el parámetro usuario, muestra la misma información, pero
+	del usuario especificado. Esta opción está limitada
+	únicamente a los Administradores de Servicios.
 
 ###########################################################################
 #
@@ -2175,39 +2175,39 @@ MEMO_SERVADMIN_HELP_SET_LIMIT
 #
 ###########################################################################
 
-#OPER_HELP
-#	Comandos de %S:
-#	    GLOBAL      Envía un mensaje a TODOS los usuarios
-#	    STATS       Muestra el estado de los servicios y de la red
-#	    OPER LIST   Lista todos los Operadores de los Servicios
-#	    ADMIN LIST  Lista todos los Administradores de Servicios
-#	
-#	Comandos disponibles solo para Operadores de Servicios y
-#	administradores:
-#	    MODE        Cambia los modos de un canal
-#	    KICK        Patea a un usuario de un canal
-#	    AKILL       Manipula la lista de AKILL
-#	
-#	Comandos disponibles solo para los Administradores de
-#	Servicios:
-#	    OPER        Modifica la lista de Operadores de Servicios
-#	    JUPE        "Jupiter" un servidor
-#	    RAW         envía un código RAW al servidor IRC
-#	    SET         Establece varias opciones globales de los
-#	                    servicios
-#	    UPDATE      Fuerza a la base de datos de los Servicios a
-#			    ser actualizada inmediatamente en el disco
-#	    QUIT        Da por finalizada la ejecución del programa
-#	                    de Servicios
-#	    RESTART     Graba la base de datos y reinicializa los
-#	                    Servicios
-#	
-#	Comandos disponibles únicamente para los súper-usuarios de los
-#	servicios:
-#	    ADMIN       Modifica la lista de Administradores de Servicios
-#	
-#	Aviso: TODOS los comandos enviados a %S son
-#	registrados! (log)
+OPER_HELP
+	Comandos de %S:
+	    GLOBAL      Envía un mensaje a TODOS los usuarios
+	    STATS       Muestra el estado de los servicios y de la red
+	    OPER LIST   Lista todos los Operadores de los Servicios
+	    ADMIN LIST  Lista todos los Administradores de Servicios
+	
+	Comandos disponibles solo para Operadores de Servicios y
+	administradores:
+	    MODE        Cambia los modos de un canal
+	    KICK        Patea a un usuario de un canal
+	    AKILL       Manipula la lista de AKILL
+	
+	Comandos disponibles solo para los Administradores de
+	Servicios:
+	    OPER        Modifica la lista de Operadores de Servicios
+	    JUPE        "Jupiter" un servidor
+	    RAW         envía un código RAW al servidor IRC
+	    SET         Establece varias opciones globales de los
+	                    servicios
+	    UPDATE      Fuerza a la base de datos de los Servicios a
+			    ser actualizada inmediatamente en el disco
+	    QUIT        Da por finalizada la ejecución del programa
+	                    de Servicios
+	    RESTART     Graba la base de datos y reinicializa los
+	                    Servicios
+	
+	Comandos disponibles únicamente para los súper-usuarios de los
+	servicios:
+	    ADMIN       Modifica la lista de Administradores de Servicios
+	
+	Aviso: TODOS los comandos enviados a %S son
+	registrados! (log)
 
 OPER_HELP_GLOBAL
 	Sintaxis: GLOBAL mensaje

@@ -11,7 +11,7 @@
 #define HASH(nick)	(((nick)[0]&31)<<5 | ((nick)[1]&31))
 static User *userlist[1024];
 
-int32 usercnt = 0, opcnt = 0, maxusercnt = 0;
+int  servercnt = 0, usercnt = 0, opcnt = 0, maxusercnt = 0;
 time_t maxusertime;
 
 /*************************************************************************/
@@ -95,6 +95,8 @@ static void delete_user(User *user)
     cancel_user(user);
     if (debug >= 2)
 	log("debug: delete_user(): free user data");
+//    free(user->signon);
+//    free(user->numeric);	
     free(user->username);
     free(user->host);
     free(user->realname);
@@ -131,6 +133,61 @@ static void delete_user(User *user)
 	log("debug: delete_user() done");
 }
 
+/*************************************************************************/
+
+void del_users_server(Server *server)
+{
+    int i;
+    User *user, *u2;
+    struct u_chanlist *c, *c2;
+    struct u_chaninfolist *ci, *ci2;
+                
+    for (i = 0;i < 1024;i++) {
+        user=userlist[i];
+        while(user) {
+            if (stricmp(user->server, server->name) != 0) {
+                user=user->next;
+                continue;
+            }
+            usercnt--;    
+
+            if (user->mode & UMODE_O)
+                opcnt--;
+                       
+            cancel_user(user);
+            free(user->username);
+            free(user->host);
+            free(user->realname);
+            c = user->chans;            
+            
+            while (c) {
+                c2 = c->next;
+                chan_deluser(user, c->chan);
+                free(c);
+                c = c2;
+            }
+            ci = user->founder_chans;            
+            
+            while (ci) {
+                ci2 = ci->next;
+                free(ci);
+                ci = ci2;
+            }
+            u2 = user->next;            
+            
+            if (user->prev)
+                user->prev->next = user->next;
+            else
+                userlist[i] = user->next;
+            if (user->next)
+                user->next->prev = user->prev;
+
+            free (user);
+                  user = u2; /* Usuario siguiente */
+        } // while...
+    }  // fin del for de users.
+}                                                                                                                 
+                                                         
 /*************************************************************************/
 /*************************************************************************/
 
@@ -182,7 +239,7 @@ void send_user_list(User *user)
 	struct u_chanlist *c;
 	struct u_chaninfolist *ci;
 
-	notice(s_OperServ, source, "%s!%s@%s +%s%s%s%s%s %ld %s :%s",
+	privmsg(s_OperServ, user->numeric, "%s!%s@%s +%s%s%s%s%s %ld %s :%s",
 		u->nick, u->username, u->host,
 		(u->mode&UMODE_G)?"g":"", (u->mode&UMODE_I)?"i":"",
 		(u->mode&UMODE_O)?"o":"", (u->mode&UMODE_S)?"s":"",
@@ -191,12 +248,12 @@ void send_user_list(User *user)
 	s = buf;
 	for (c = u->chans; c; c = c->next)
 	    s += snprintf(s, sizeof(buf)-(s-buf), " %s", c->chan->name);
-	notice(s_OperServ, source, "%s%s", u->nick, buf);
+	notice(s_OperServ, source, "%s está en%s", u->nick, buf);
 	buf[0] = 0;
 	s = buf;
 	for (ci = u->founder_chans; ci; ci = ci->next)
 	    s += snprintf(s, sizeof(buf)-(s-buf), " %s", ci->chan->name);
-	notice(s_OperServ, source, "%s%s", u->nick, buf);
+	privmsg(s_OperServ, user->numeric, "%s es founder en%s", u->nick, buf);
     }
 }
 
@@ -211,14 +268,13 @@ void send_user_info(User *user)
     char buf[BUFSIZE], *s;
     struct u_chanlist *c;
     struct u_chaninfolist *ci;
-    const char *source = user->nick;
 
     if (!u) {
-	notice(s_OperServ, source, "User %s not found!",
+	notice(s_OperServ, user->numeric, "User %s not found!",
 		nick ? nick : "(null)");
 	return;
     }
-    notice(s_OperServ, source, "%s!%s@%s +%s%s%s%s%s %ld %s :%s",
+    privmsg(s_OperServ, user->numeric, "%s!%s@%s +%s%s%s%s%s %ld %s :%s",
 		u->nick, u->username, u->host,
 		(u->mode&UMODE_G)?"g":"", (u->mode&UMODE_I)?"i":"",
 		(u->mode&UMODE_O)?"o":"", (u->mode&UMODE_S)?"s":"",
@@ -227,12 +283,12 @@ void send_user_info(User *user)
     s = buf;
     for (c = u->chans; c; c = c->next)
 	s += snprintf(s, sizeof(buf)-(s-buf), " %s", c->chan->name);
-    notice(s_OperServ, source, "%s%s", u->nick, buf);
+    privmsg(s_OperServ, user->numeric, "%s%s", u->nick, buf);
     buf[0] = 0;
     s = buf;
     for (ci = u->founder_chans; ci; ci = ci->next)
 	s += snprintf(s, sizeof(buf)-(s-buf), " %s", ci->chan->name);
-    notice(s_OperServ, source, "%s%s", u->nick, buf);
+    privmsg(s_OperServ, user->numeric, "%s%s", u->nick, buf);
 }
 
 #endif	/* DEBUG_COMMANDS */
@@ -252,9 +308,36 @@ User *finduser(const char *nick)
 	user = user->next;
     if (debug >= 3)
 	log("debug: finduser(%s) -> %p", nick, user);
-    return user;
+    if (user)
+        return user;
+    else
+        return finduserP10(sstrdup(nick));
 }
 
+/*************************************************************************/
+/* Buscar nicks por el numerico :) P10
+ * zoltan 24-09-2000
+ */
+
+User *finduserP10(const char *numeric)
+{
+    User *user;
+    int n;
+          
+    if (debug)
+        log("debug: Buscando numerico: (%s)", numeric);
+                     
+    for (n=0 ; n<1024; n++) {
+        for (user = userlist[n]; user; user = user->next) {
+            if (strcmp(user->numeric, numeric) == 0)
+                return user;
+        }
+    }
+    if (debug)
+        log("debug: No se encuentra el numerico(%s)", numeric);
+        return NULL;
+}    
+    
 /*************************************************************************/
 
 /* Iterate over all users in the user list.  Return NULL at end of list. */
@@ -291,26 +374,35 @@ User *nextuser(void)
 /*************************************************************************/
 
 /* Handle a server NICK command.
- *	av[0] = nick
- *	If a new user:
- *		av[1] = hop count
- *		av[2] = signon time
- *		av[3] = username
- *		av[4] = hostname
- *		av[5] = user's server
- *		av[6] = user's real name
- *	Else:
- *		av[1] = time of change
- */
+ *
+ *  En Undernet P10
+ *     Si  source = Numerico servidor , es un usuario nuevo
+ *              av[0] = nick
+ *              av[1] = distancia
+ *              av[2] = hora entrada
+ *              av[3] = User name
+ *              av[4] = Host
+ *              av[5] = Modos (Puede no llevar!)
+ *              av[6|5] = IP en base 64
+ *              av[7|6] = Numerico
+ *              av[8|7] = Realname
+ *
+ *     Si source = Trio de nick, esta cambiando el nick
+ *              av[0] = nick
+ *              av[1] = hora cambio
+ */               
+
 
 void do_nick(const char *source, int ac, char **av)
 {
     User *user;
+    Server *server;    
+    char **av_umode;
 
     NickInfo *new_ni;	/* New master nick */
     int ni_changed = 1;	/* Did master nick change? */
 
-    if (!*source) {
+    if (ac != 2) {
 	/* This is a new user; create a User structure for it. */
 
 	if (debug)
@@ -323,25 +415,58 @@ void do_nick(const char *source, int ac, char **av)
 	 * on the result of an identd lookup.
 	 */
 
-	/* First check for AKILLs. */
-	if (check_akill(av[0], av[3], av[4]))
-	    return;
+
+/* He cambiado el av[0] (nick) al av del numerico :)
+ * a los chequeos de akill y clones
+ * zoltan 24-10-2000
+ */
+        /* First check for AKILLs. */
+        if (ac > 7) {
+            if (check_akill(av[ac-2], av[3], av[4]))
+                return;                
+        }
 
 #ifndef STREAMLINED
         /* Now check for session limits */
-        if (LimitSessions && !add_session(av[0], av[4]))
-            return;
+        if (ac > 7) {
+            if (LimitSessions && !add_session(av[ac-2], av[4]))
+                return;
+        }                    
 #endif
+        if (ac != 8 && ac > 7) {
+        /* Lleva los modos en ac[5] */
+            server = find_servernumeric(source);
+            user = new_user(av[0]);
+            user->numeric = sstrdup(av[7]);
+            user->signon = atol(av[2]);
+            user->username = sstrdup(av[3]);
+            user->host = sstrdup(av[4]);
+            user->server = sstrdup(server->name);
+            server->users++;
+            user->realname = sstrdup(av[8]);
+        /* Ajusta los modos para el nuevo usuario */
+            av_umode = smalloc(sizeof(char *) *2);
+            av_umode[0] = av[0];
+            av_umode[1] = av[5];
+            do_umode(av[0], 2, av_umode);
+            free(av_umode);
+//          user->timestamp = user->signon;
+            user->my_signon = time(NULL);
 
-	/* Allocate User structure and fill it in. */
-	user = new_user(av[0]);
-	user->signon = atol(av[2]);
-	user->username = sstrdup(av[3]);
-	user->host = sstrdup(av[4]);
-	user->server = sstrdup(av[5]);
-	user->realname = sstrdup(av[6]);
-	user->my_signon = time(NULL);
-
+        } else {
+        /* Cuando no lleva los modos */
+            server = find_servernumeric(source);
+            user = new_user(av[0]);
+            user->numeric = sstrdup(av[6]);
+            user->signon = atol(av[2]);                                                                                                                                                                                          
+            user->username = sstrdup(av[3]);
+            user->host = sstrdup(av[4]);
+            user->server = sstrdup(server->name);
+            server->users++;
+            user->realname = sstrdup(av[7]);
+//          user->timestamp = user->signon;
+            user->my_signon = time(NULL);
+        }                                                                        
 	if (CheckClones) {
 	    /* Check to see if it looks like clones. */
 	    check_clones(user);
@@ -359,13 +484,14 @@ void do_nick(const char *source, int ac, char **av)
 	    return;
 	}
 	if (debug)
-	    log("debug: %s changes nick to %s", source, av[0]);
+	    log("debug: %s changes nick to %s", user->nick, av[0]);
 
 	/* Changing nickname case isn't a real change.  Only update
 	 * my_signon if the nicks aren't the same, case-insensitively. */
 	if (stricmp(av[0], user->nick) != 0)
 	    user->my_signon = time(NULL);
 
+//      user->timestamp = atol(av[1]);
 	new_ni = findnick(av[0]);
 	if (new_ni)
 	    new_ni = getlink(new_ni);
@@ -379,11 +505,6 @@ void do_nick(const char *source, int ac, char **av)
     if (ni_changed) {
 	if (validate_user(user))
 	    check_memos(user);
-#ifdef IRC_DAL4_4_15
-	if (nick_identified(user)) {
-	    send_cmd(ServerName, "SVSMODE %s +r", av[0]);
-	}
-#endif
     }
 }
 
@@ -402,7 +523,7 @@ void do_join(const char *source, int ac, char **av)
 
     user = finduser(source);
     if (!user) {
-	log("user: JOIN from nonexistent user %s: %s", source,
+	log("user: JOIN from nonexistent user %s: %s", user->nick,
 							merge_args(ac, av));
 	return;
     }
@@ -413,6 +534,8 @@ void do_join(const char *source, int ac, char **av)
 	    *t++ = 0;
 	if (debug)
 	    log("debug: %s joins %s", source, s);
+
+/* Soporte para JOIN #,0 */
 
 	if (*s == '0') {
 	    c = user->chans;
@@ -431,8 +554,12 @@ void do_join(const char *source, int ac, char **av)
 	if (check_kick(user, s))
 	    continue;
 	chan_adduser(user, s);
-	if ((ci = cs_findchan(s)) && ci->entry_message)
-	    notice(s_ChanServ, user->nick, "%s", ci->entry_message);
+/* Añadir soporte aviso de MemoServ si hay memos en el canal que entras */
+        if ((ci = cs_findchan(s))) {
+//             check_cs_memos(user, ci);
+            if (ci->entry_message)	
+                notice(s_ChanServ, user->numeric, "%s", ci->entry_message);
+        }        
 	c = smalloc(sizeof(*c));
 	c->next = user->chans;
 	c->prev = NULL;
@@ -458,7 +585,7 @@ void do_part(const char *source, int ac, char **av)
 
     user = finduser(source);
     if (!user) {
-	log("user: PART from nonexistent user %s: %s", source,
+	log("user: PART from nonexistent user %s: %s", user->nick,
 							merge_args(ac, av));
 	return;
     }
@@ -508,14 +635,14 @@ void do_kick(const char *source, int ac, char **av)
 	t = s + strcspn(s, ",");
 	if (*t)
 	    *t++ = 0;
-	user = finduser(s);
+	user = finduserP10(s);
 	if (!user) {
-	    log("user: KICK for nonexistent user %s on %s: %s", s, av[0],
+	    log("user: KICK for nonexistent user %s on %s: %s", user->nick, av[0],
 						merge_args(ac-2, av+2));
 	    continue;
 	}
 	if (debug)
-	    log("debug: kicking %s from %s", s, av[0]);
+	    log("debug: kicking %s from %s", user->nick, av[0]);
 	for (c = user->chans; c && stricmp(av[0], c->chan->name) != 0;
 								c = c->next)
 	    ;
@@ -553,7 +680,7 @@ void do_umode(const char *source, int ac, char **av)
     }
     user = finduser(source);
     if (!user) {
-	log("user: MODE %s for nonexistent nick %s: %s", av[1], source,
+	log("user: MODE %s for nonexistent nick %s: %s", av[1], user->nick,
 							merge_args(ac, av));
 	return;
     }
@@ -564,13 +691,6 @@ void do_umode(const char *source, int ac, char **av)
 	switch (*s++) {
 	    case '+': add = 1; break;
 	    case '-': add = 0; break;
-#ifdef IRC_DAL4_4_15
-	    case 'r': 
-	    	if (add && !nick_identified(user)) {
-		    send_cmd(ServerName, "SVSMODE %s -r", av[0]);
-		}
-		break;
-#endif
 	    case 'i': add ? (user->mode |= UMODE_I) : (user->mode &= ~UMODE_I);
 	              break;
 	    case 'w': add ? (user->mode |= UMODE_W) : (user->mode &= ~UMODE_W);
@@ -613,7 +733,7 @@ void do_quit(const char *source, int ac, char **av)
 	/* Reportedly Undernet IRC servers will sometimes send duplicate
 	 * QUIT messages for quitting users, so suppress the log warning. */
 #ifndef IRC_UNDERNET
-	log("user: QUIT from nonexistent user %s: %s", source,
+	log("user: QUIT from nonexistent user %s: %s", user->nick,
 							merge_args(ac, av));
 #endif
 	return;
@@ -646,7 +766,8 @@ void do_kill(const char *source, int ac, char **av)
 {
     User *user;
     NickInfo *ni;
-
+    
+/* es p10 o no? */
     user = finduser(av[0]);
     if (!user)
 	return;

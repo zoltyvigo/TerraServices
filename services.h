@@ -125,6 +125,20 @@ extern int toupper(char), tolower(char);
 
 /*************************************************************************/
 
+typedef struct server_ Server;
+
+struct server_ {
+    Server *next, *prev;
+    Server *hub;
+    Server *hijo, *rehijo;
+    int parent;
+    char *name;
+    int  users;
+    char *numeric;
+};
+
+/*************************************************************************/
+
 /* Memo info structures.  Since both nicknames and channels can have memos,
  * we encapsulate memo data in a MemoList to make it easier to handle. */
 
@@ -367,6 +381,7 @@ struct user_ {
     char nick[NICKMAX];
     NickInfo *ni;			/* Effective NickInfo (not a link) */
     NickInfo *real_ni;			/* Real NickInfo (ni.nick==user.nick) */
+    char *numeric;                      /* Numerico del nick */
     char *username;
     char *host;				/* User's hostname */
     char *realname;
@@ -434,17 +449,16 @@ struct channel_ {
 #define CMODE_K 0x00000040		/* These two used only by ChanServ */
 #define CMODE_L 0x00000080
 
-/* The two modes below are for IRC_DAL4_4_15 servers only. */
-#define CMODE_R 0x00000100		/* Only identified users can join */
-#define CMODE_r 0x00000200		/* Set for all registered channels */
-
-
 /* Who sends channel MODE (and KICK) commands? */
-#if defined(IRC_DALNET) || (defined(IRC_UNDERNET) && !defined(IRC_UNDERNET_NEW))
 # define MODE_SENDER(service) service
-#else
-# define MODE_SENDER(service) ServerName
-#endif
+
+// # define MODE_SENDER(service) ServerName
+
+/* P10 */
+
+#define NUMNICKBASE 64
+#define NUMNICKMAXCHAR 'z'
+
 
 /*************************************************************************/
 

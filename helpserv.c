@@ -21,15 +21,19 @@ static void do_help(const char *whoami, const char *source, char *topic);
 void helpserv(const char *whoami, const char *source, char *buf)
 {
     char *cmd, *topic, *s;
+    User *u = finduser(source);
 
+    if (!u)
+        return;
+        
     topic = buf ? sstrdup(buf) : NULL;
     cmd = strtok(buf, " ");
     if (cmd && stricmp(cmd, "\1PING") == 0) {
 	if (!(s = strtok(NULL, "")))
 	    s = "\1";
-	notice(s_HelpServ, source, "\1PING %s", s);
-    } else {
-	do_help(whoami, source, topic);
+	notice(s_HelpServ, u->numeric, "\1PING %s", s);
+    } else {        
+	do_help(whoami, u->numeric, topic);
     }
     if (topic)
 	free(topic);
@@ -92,7 +96,7 @@ static void do_help(const char *whoami, const char *source, char *topic)
 	if (u) {
 	    notice_lang(whoami, u, NO_HELP_AVAILABLE, old_topic);
 	} else {
-	    notice(whoami, source,
+	    privmsg(whoami, source,
 			"Sorry, no help available for \2%s\2.", old_topic);
 	}
 	free(old_topic);
@@ -104,7 +108,7 @@ static void do_help(const char *whoami, const char *source, char *topic)
 	 * doing weird stuff to the output.  Also replace blank lines by
 	 * spaces (see send.c/notice_list() for an explanation of why).
 	 */
-	notice(whoami, source, "%s", s ? s : " ");
+	privmsg(whoami, u->numeric, "%s", s ? s : " ");
     }
     fclose(f);
     free(old_topic);

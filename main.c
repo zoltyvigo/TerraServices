@@ -278,7 +278,7 @@ int main(int ac, char **av, char **envp)
 	log("Restarting");
 	if (!quitmsg)
 	    quitmsg = "Restarting";
-	send_cmd(ServerName, "SQUIT %s :%s", ServerName, quitmsg);
+	send_cmd(ServerName, "SQ %s 0 :%s", ServerName, quitmsg);
 	disconn(servsock);
 	close_log();
 	execve(SERVICES_BIN, av, envp);
@@ -297,8 +297,9 @@ int main(int ac, char **av, char **envp)
     if (!quitmsg)
 	quitmsg = "Terminating, reason unknown";
     log("%s", quitmsg);
-    if (started)
-	send_cmd(ServerName, "SQUIT %s :%s", ServerName, quitmsg);
+    if (started) { 
+	send_cmd(ServerName, "SQ %s 0 :%s", ServerName, quitmsg);
+    }	
     disconn(servsock);
     return 0;
 }

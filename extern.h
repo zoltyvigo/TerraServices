@@ -46,6 +46,7 @@ E Channel *nextchan(void);
 E void chan_adduser(User *user, const char *chan);
 E void chan_deluser(User *user, Channel *c);
 
+E void do_burst(const char *source, int ac, char **av);
 E void do_cmode(const char *source, int ac, char **av);
 E void do_topic(const char *source, int ac, char **av);
 
@@ -114,6 +115,8 @@ E int   LocalPort;
 
 E char *ServerName;
 E char *ServerDesc;
+E int  ServerNumeric;
+E char *ServerHUB;
 E char *ServiceUser;
 E char *ServiceHost;
 
@@ -125,6 +128,14 @@ E char *s_OperServ;
 E char *s_GlobalNoticer;
 E char *s_IrcIIHelp;
 E char *s_DevNull;
+E char s_NickServP10[4];
+E char s_ChanServP10[4];
+E char s_MemoServP10[4];
+E char s_HelpServP10[4];
+E char s_OperServP10[4];
+E char s_GlobalNoticerP10[4];
+E char s_IrcIIHelpP10[4];
+E char s_DevNullP10[4];
 E char *desc_NickServ;
 E char *desc_ChanServ;
 E char *desc_MemoServ;
@@ -304,7 +315,7 @@ E void ms_init(void);
 E void memoserv(const char *source, char *buf);
 E void load_old_ms_dbase(void);
 E void check_memos(User *u);
-
+E void check_cs_memos(User *u, ChannelInfo *ci);
 
 /**** misc.c ****/
 
@@ -313,6 +324,7 @@ E char *stristr(char *s1, char *s2);
 E char *strupper(char *s);
 E char *strlower(char *s);
 E char *strnrepl(char *s, int32 size, const char *old, const char *new);
+E char *strtoken(char **save, char *str, char *fs);
 
 E char *merge_args(int argc, char **argv);
 
@@ -398,6 +410,20 @@ E void notice_help(const char *source, User *dest, int message, ...);
 E void privmsg(const char *source, const char *dest, const char *fmt, ...)
 	FORMAT(printf,3,4);
 
+
+/**** servers.c ****/
+
+E void do_server(const char *source, int ac, char **av);
+E void do_squit(const char *source, int ac, char **av);
+E Server *find_servername(const char *servername);
+E Server *find_servernumeric(const char *numeric);
+E Server *add_server(const char *servername);
+E void del_server(Server *server);
+E void recursive_squit(Server *parent, const char *reason);
+E void del_users_server(Server *server);
+E void do_servers(User *u);
+
+
 /**** sessions.c ****/
 
 E void get_session_stats(long *nrec, long *memuse);
@@ -427,10 +453,16 @@ E int sockprintf(int s, char *fmt,...);
 E int conn(const char *host, int port, const char *lhost, int lport);
 E void disconn(int s);
 
+/**** undernetp10.c ****/
+
+E char convert2y[];
+E unsigned int base64toint(const char *s);
+E const char *inttobase64(unsigned int i);
+
 
 /**** users.c ****/
 
-E int32 usercnt, opcnt, maxusercnt;
+E int usercnt, opcnt, maxusercnt, servercnt;
 E time_t maxusertime;
 
 #ifdef DEBUG_COMMANDS
@@ -440,10 +472,12 @@ E void send_user_info(User *user);
 
 E void get_user_stats(long *nusers, long *memuse);
 E User *finduser(const char *nick);
+E User *finduserP10(const char *numeric);
 E User *firstuser(void);
 E User *nextuser(void);
 
 E void do_nick(const char *source, int ac, char **av);
+E void do_create(const char *source, int ac, char **av);
 E void do_join(const char *source, int ac, char **av);
 E void do_part(const char *source, int ac, char **av);
 E void do_kick(const char *source, int ac, char **av);

@@ -153,9 +153,8 @@ DATDEST=/usr/local/lib/services
 RUNGROUP=
 UMASK=
 NETWORK_DOMAIN=
-IRCTYPE="no default"
+IRCTYPE="10"
 IRCTYPE_DEF=
-IRCTYPE_DEF2=
 ENCRYPTION=
 
 INSTALL=
@@ -428,12 +427,9 @@ echo ""
 ok=0
 echo "Which of the following is closest to the type of server on your IRC"
 echo "network?"
-echo "     1) Base irc2 distribution (RFC 1459 compliant)"
-echo "     2) irc2 with TS8 protocol"
-echo "    11) Undernet (ircu) 2.9.32 or earlier"
-#echo "    12) Undernet (ircu) 2.10.x (version 9 protocol support required)"
-echo "    21) DALnet (ircd.dal) prior to 4.4.15"
-echo "    22) DALnet (ircd.dal) 4.4.15 or later"
+echo " Estos Services SOLO SOPORTAN UndernetP10...."
+echo " "
+echo "    10) Undernet (ircu) 2.10.x SOPORTE P10 !!!!!!!!"
 while [ $ok -eq 0 ] ; do
 	echo2 "[$IRCTYPE] "
 	if read INPUT ; then : ; else echo "" ; exit 1 ; fi
@@ -445,30 +441,8 @@ while [ $ok -eq 0 ] ; do
 			echo "You must specify your IRC server type in order for Services to function"
 			echo "correctly."
 			;;
-		1)
-			IRCTYPE_DEF="IRC_CLASSIC"
-			ok=1
-			;;
-		2)
-			IRCTYPE_DEF="IRC_TS8"
-			ok=1
-			;;
-		11)
+		10)
 			IRCTYPE_DEF="IRC_UNDERNET"
-			ok=1
-			;;
-#		12)
-#			IRCTYPE_DEF="IRC_UNDERNET"
-#			IRCTYPE_DEF2="IRC_UNDERNET_NEW"
-#			ok=1
-#			;;
-		21)
-			IRCTYPE_DEF="IRC_DALNET"
-			ok=1
-			;;
-		22)
-			IRCTYPE_DEF="IRC_DALNET"
-			IRCTYPE_DEF2="IRC_DAL4_4_15"
 			ok=1
 			;;
 		*)

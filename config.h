@@ -37,7 +37,7 @@
  * old databases); see services.h for available languages (search for
  * "LANG_").  Unless you're running a regional network, you should probably
  * leave this at LANG_EN_US. */
-#define DEF_LANGUAGE	LANG_EN_US
+#define DEF_LANGUAGE	LANG_ES
 
 
 /******* OperServ configuration *******/
@@ -55,7 +55,7 @@
 
 /* Define this to enable OperServ's debugging commands (Services root
  * only).  These commands are undocumented; "use the source, Luke!" */
-/* #define DEBUG_COMMANDS */
+#define DEBUG_COMMANDS /* */
 
 
 /******************* END OF USER-CONFIGURABLE SECTION ********************/
@@ -72,7 +72,7 @@
 /* Maximum length of a channel name, including the trailing null.  Any
  * channels with a length longer than (CHANMAX-1) including the leading #
  * will not be usable with ChanServ. */
-#define CHANMAX		64
+#define CHANMAX		256
 
 /* Maximum length of a nickname, including the trailing null.  This MUST be
  * at least one greater than the maximum allowable nickname length on your

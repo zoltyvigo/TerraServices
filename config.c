@@ -20,18 +20,28 @@ int   LocalPort;
 
 char *ServerName;
 char *ServerDesc;
+int  ServerNumeric;
+char *ServerHUB;
 char *ServiceUser;
 char *ServiceHost;
 static char *temp_userhost;
 
 char *s_NickServ;
+char s_NickServP10[4];
 char *s_ChanServ;
+char s_ChanServP10[4];
 char *s_MemoServ;
+char s_MemoServP10[4];
 char *s_HelpServ;
+char s_HelpServP10[4];
 char *s_OperServ;
+char s_OperServP10[4];
 char *s_GlobalNoticer;
+char s_GlobalNoticerP10[4];
 char *s_IrcIIHelp;
+char s_IrcIIHelpP10[4];
 char *s_DevNull;
+char s_DevNullP10[4];
 char *desc_NickServ;
 char *desc_ChanServ;
 char *desc_MemoServ;
@@ -255,6 +265,8 @@ Directive directives[] = {
                             { PARAM_STRING, 0, &RemotePassword } } },
     { "ServerDesc",       { { PARAM_STRING, 0, &ServerDesc } } },
     { "ServerName",       { { PARAM_STRING, 0, &ServerName } } },
+    { "ServerNumeric",    { { PARAM_POSINT, 0, &ServerNumeric } } },
+    { "ServerHUB",        { { PARAM_STRING, 0, &ServerHUB } } },    
     { "ServicesRoot",     { { PARAM_STRING, 0, &ServicesRoot } } },
     { "ServiceUser",      { { PARAM_STRING, 0, &temp_userhost } } },
     { "SessionLimitDetailsLoc",{{PARAM_STRING, 0, &SessionLimitDetailsLoc}}},
@@ -508,6 +520,8 @@ int read_config()
 
     CHECK(RemoteServer);
     CHECK(ServerName);
+    CHECK(ServerNumeric);
+    CHECK(ServerHUB);    
     CHECK(ServerDesc);
     CHEK2(temp_userhost, ServiceUser);
     CHEK2(s_NickServ, NickServName);

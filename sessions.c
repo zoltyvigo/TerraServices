@@ -225,10 +225,11 @@ static Session *findsession(const char *host)
 
 int add_session(const char *nick, const char *host)
 {
+/* He cambiado antes en do_umode, en vez de pillar nicks, pilla trios :) */
+
     Session *session, **list;
     Exception *exception;
     int sessionlimit = 0;
-
     session = findsession(host);
 
     if (session) {
@@ -237,15 +238,16 @@ int add_session(const char *nick, const char *host)
 
 	if (sessionlimit != 0 && session->count >= sessionlimit) {
     	    if (SessionLimitExceeded)
-		notice(s_OperServ, nick, SessionLimitExceeded, host);
+		privmsg(s_OperServ, nick, SessionLimitExceeded, host);
 	    if (SessionLimitDetailsLoc)
-		notice(s_OperServ, nick, SessionLimitDetailsLoc);
+		privmsg(s_OperServ, nick, SessionLimitDetailsLoc);
 
 	    /* We don't use kill_user() because a user stucture has not yet
 	     * been created. Simply kill the user. -TheShadow
 	     */
-            send_cmd(s_OperServ, "KILL %s :%s (Session limit exceeded)",
-                        	nick, s_OperServ);
+	     
+            send_cmd(NULL, "%c D %s :%s (Sólo se permiten %d clones para tu ip (%s))",
+                        convert2y[ServerNumeric], nick, ServerName, sessionlimit, host);
 	    return 0;
 	} else {
 	    session->count++;

@@ -214,6 +214,7 @@ void save_akill(void)
 
 int check_akill(const char *nick, const char *username, const char *host)
 {
+/* He cambiado antes en do_umode, en vez de pillar nicks, pilla trios :) */
     char buf[512];
     int i;
     char *host2, *username2;
@@ -224,16 +225,15 @@ int check_akill(const char *nick, const char *username, const char *host)
     strlower(strscpy(buf+i, host, sizeof(buf)-i));
     for (i = 0; i < nakill; i++) {
 	if (match_wild_nocase(akills[i].mask, buf)) {
-#ifndef IRC_DALNET
-	    time_t now = time(NULL);
-#endif
+            time_t now = time(NULL);
 	    /* Don't use kill_user(); that's for people who have already
 	     * signed on.  This is called before the User structure is
 	     * created.
-	     */
-	    send_cmd(s_OperServ,
-			"KILL %s :%s (You are banned from this network)",
-			nick, s_OperServ);
+	     */	   
+
+            send_cmd(s_OperServ, "D %s :%s (Estás BANEADO de esta RED)",
+                                nick, s_OperServ);	  
+            
 	    username2 = sstrdup(akills[i].mask);
 	    host2 = strchr(username2, '@');
 	    if (!host2) {
@@ -245,18 +245,14 @@ int check_akill(const char *nick, const char *username, const char *host)
 		continue;
 	    }
 	    *host2++ = 0;
-#ifdef IRC_DALNET
-	    send_cmd(ServerName,
-		    "AKILL %s %s :You are banned from this network",
-		    host2, username2);
-#else
-	    send_cmd(ServerName,
-		    "GLINE * +%ld %s@%s :You are banned from this network",
-		    akills[i].expires && akills[i].expires>now
-				? akills[i].expires-time(NULL)
-				: 999999999,
-		    username2, host2);
-#endif
+
+            send_cmd(NULL,
+                 "%c GL * +%s@%s %ld :Estas Baneado de esta RED",
+                 convert2y[ServerNumeric], username2, host2,
+                 akills[i].expires && akills[i].expires>now
+                           ? akills[i].expires-time(NULL)
+                           : 999999999);                          
+
 	    free(username2);
 	    return 1;
 	}
@@ -272,25 +268,18 @@ void expire_akills(void)
 {
     int i;
     time_t now = time(NULL);
-#ifdef IRC_DALNET
-    char *s;
-#endif
 
     for (i = 0; i < nakill; i++) {
 	if (akills[i].expires == 0 || akills[i].expires > now)
 	    continue;
 	if (WallAkillExpire)
 	    wallops(s_OperServ, "AKILL on %s has expired", akills[i].mask);
-#ifdef IRC_DALNET
-	s = strchr(akills[i].mask, '@');
-	if (s) {
-	    *s++ = 0;
-	    strlower(s);
-	    send_cmd(ServerName, "RAKILL %s %s", s, akills[i].mask);
-	}
-#endif
+
+        send_cmd(NULL,"%c GL * -%s", convert2y[ServerNumeric], akills[i].mask);                                                  
+                                                                                                               
 	free(akills[i].mask);
 	free(akills[i].reason);
+	
 	nakill--;
 	if (i < nakill)
 	    memmove(akills+i, akills+i+1, sizeof(*akills) * (nakill-i));
@@ -414,9 +403,17 @@ void do_akill(User *u)
 		notice_lang(s_OperServ, u, BAD_USERHOST_MASK);
 		return;
 	    }
+            if (stricmp("*@*", mask) == 0) {
+                notice_lang(s_OperServ, u, ACCESS_DENIED);
+                wallops(s_OperServ, "El LAMER %s intenta meter un GLINE *@*", u->nick);
+                return;
+            }	    
 	    if (strchr(mask, '!'))
 		notice_lang(s_OperServ, u, OPER_AKILL_NO_NICK);
 	    add_akill(mask, reason, u->nick, expires);
+            send_cmd(NULL,"%c GL * +%s %lu :%s", convert2y[ServerNumeric],
+                    mask, expires-time(NULL), reason);
+         
 	    notice_lang(s_OperServ, u, OPER_AKILL_ADDED, mask);
 	    if (WallOSAkill) {
 		char buf[128], *s = NULL;
@@ -449,23 +446,11 @@ void do_akill(User *u)
     } else if (stricmp(cmd, "DEL") == 0) {
 	mask = strtok(NULL, " ");
 	if (mask) {
-#ifdef IRC_DALNET
-	    s = strchr(mask, '@');
-	    if (s)
-		strlower(s);
-#endif
 	    if (del_akill(mask)) {
 		notice_lang(s_OperServ, u, OPER_AKILL_REMOVED, mask);
-#ifdef IRC_DALNET
-		if (s) {
-		    *s++ = 0;
-		    send_cmd(ServerName, "RAKILL %s %s", s, mask);
-		} else {
-		    /* We lose... can't figure out what's a username and what's
-		     * a hostname.  Ah well.
-		     */
-		}
-#endif
+                send_cmd(NULL,"%c GL * -%s", convert2y[ServerNumeric],
+                          mask);
+        
 		if (readonly)
 		    notice_lang(s_OperServ, u, READ_ONLY_MODE);
 	    } else {

@@ -13,44 +13,17 @@
 /* Send a NICK command for the given pseudo-client.  If `user' is NULL,
  * send NICK commands for all the pseudo-clients. */
 
-#if defined(IRC_DALNET)
-# ifdef IRC_DAL4_4_15
-#  define NICK(nick,name) \
+
+# define NICK(nick,modes,numeric,name) \
     do { \
-	send_cmd(NULL, "NICK %s 1 %ld %s %s %s 0 :%s", (nick), time(NULL), \
-		ServiceUser, ServiceHost, ServerName, (name)); \
+	send_cmd(NULL, "%c N %s 1 %lu %s %s %s AAAAAA %s :%s", convert2y[ServerNumeric], (nick), time(NULL),\
+                ServiceUser, ServiceHost, (modes), (numeric), (name)); \
     } while (0)
-# else
-#  define NICK(nick,name) \
-    do { \
-	send_cmd(NULL, "NICK %s 1 %ld %s %s %s :%s", (nick), time(NULL), \
-		ServiceUser, ServiceHost, ServerName, (name)); \
-    } while (0)
-# endif
-#elif defined(IRC_UNDERNET)
-# define NICK(nick,name) \
-    do { \
-	send_cmd(ServerName, "NICK %s 1 %ld %s %s %s :%s", (nick), time(NULL),\
-		ServiceUser, ServiceHost, ServerName, (name)); \
-    } while (0)
-#elif defined(IRC_TS8)
-# define NICK(nick,name) \
-    do { \
-	send_cmd(NULL, "NICK %s :1", (nick)); \
-	send_cmd((nick), "USER %ld %s %s %s :%s", time(NULL), \
-		ServiceUser, ServiceHost, ServerName, (name)); \
-    } while (0)
-#else
-# define NICK(nick,name) \
-    do { \
-	send_cmd(NULL, "NICK %s :1", (nick)); \
-	send_cmd((nick), "USER %s %s %s :%s", \
-		ServiceUser, ServiceHost, ServerName, (name)); \
-    } while (0)
-#endif
+    
 
 void introduce_user(const char *user)
 {
+    char *modes=NULL;
     /* Watch out for infinite loops... */
 #define LTSIZE 20
     static int lasttimes[LTSIZE];
@@ -60,35 +33,61 @@ void introduce_user(const char *user)
     lasttimes[LTSIZE-1] = time(NULL);
 #undef LTSIZE
 
-    if (!user || stricmp(user, s_NickServ) == 0) {
-	NICK(s_NickServ, desc_NickServ);
-	send_cmd(s_NickServ, "MODE %s +o", s_NickServ);
+    if (!user || stricmp(user, s_NickServ) == 0 || stricmp(user, s_NickServP10) == 0) {
+        s_NickServP10[0]=convert2y[ServerNumeric];
+        s_NickServP10[1]='\0';
+        strcat(s_NickServP10, "AA");
+        modes="+okd";
+        NICK(s_NickServ, modes, s_NickServP10, desc_NickServ);     
     }
-    if (!user || stricmp(user, s_ChanServ) == 0) {
-	NICK(s_ChanServ, desc_ChanServ);
-	send_cmd(s_ChanServ, "MODE %s +o", s_ChanServ);
+    if (!user || stricmp(user, s_ChanServ) == 0 || stricmp(user, s_ChanServP10) == 0) {
+        s_ChanServP10[0]=convert2y[ServerNumeric];
+        s_ChanServP10[1]='\0';
+        strcat(s_ChanServP10, "AB");
+        modes="+okd";
+        NICK(s_ChanServ, modes, s_ChanServP10, desc_ChanServ);
     }
-    if (!user || stricmp(user, s_HelpServ) == 0) {
-	NICK(s_HelpServ, desc_HelpServ);
+    if (!user || stricmp(user, s_HelpServ) == 0 || stricmp(user, s_HelpServP10) == 0) {
+       s_HelpServP10[0]=convert2y[ServerNumeric];
+       s_HelpServP10[1]='\0';
+       strcat(s_HelpServP10, "AF");
+       modes="+kd";
+       NICK(s_HelpServ, modes, s_HelpServP10, desc_HelpServ);
     }
-    if (s_IrcIIHelp && (!user || stricmp(user, s_IrcIIHelp) == 0)) {
-	NICK(s_IrcIIHelp, desc_IrcIIHelp);
+    if (s_IrcIIHelp && (!user || stricmp(user, s_IrcIIHelp) == 0 || stricmp(user, s_IrcIIHelpP10) == 0)) {
+        s_IrcIIHelpP10[0]=convert2y[ServerNumeric];
+        s_IrcIIHelpP10[1]='\0';
+        strcat(s_IrcIIHelpP10, "AG");
+        modes="+kd";
+        NICK(s_IrcIIHelp, modes, s_IrcIIHelpP10, desc_IrcIIHelp);                                              
     }
-    if (!user || stricmp(user, s_MemoServ) == 0) {
-	NICK(s_MemoServ, desc_MemoServ);
-	send_cmd(s_MemoServ, "MODE %s +o", s_MemoServ);
+    if (!user || stricmp(user, s_MemoServ) == 0 || stricmp(user, s_MemoServP10) == 0) {
+        s_MemoServP10[0]=convert2y[ServerNumeric];
+        s_MemoServP10[1]='\0';
+        strcat(s_MemoServP10, "AC");
+        modes="+okd";
+        NICK(s_MemoServ, modes, s_MemoServP10, desc_MemoServ);
     }
-    if (!user || stricmp(user, s_OperServ) == 0) {
-	NICK(s_OperServ, desc_OperServ);
-	send_cmd(s_OperServ, "MODE %s +oi", s_OperServ);
+    if (!user || stricmp(user, s_OperServ) == 0 || stricmp(user, s_OperServP10) == 0) {
+        s_OperServP10[0]=convert2y[ServerNumeric];
+        s_OperServP10[1]='\0';
+        strcat(s_OperServP10, "AD");
+        modes="+okid";
+        NICK(s_OperServ, modes, s_OperServP10, desc_OperServ);                     
     }
-    if (s_DevNull && (!user || stricmp(user, s_DevNull) == 0)) {
-	NICK(s_DevNull, desc_DevNull);
-	send_cmd(s_DevNull, "MODE %s +i", s_DevNull);
+    if (s_DevNull && (!user || stricmp(user, s_DevNull) == 0 || stricmp(user, s_DevNullP10) == 0)) {
+        s_DevNullP10[0]=convert2y[ServerNumeric];
+        s_DevNullP10[1]='\0';
+        strcat(s_DevNullP10, "AH");
+        modes="+kid";
+        NICK(s_DevNull, modes, s_DevNullP10, desc_DevNull);
     }
-    if (!user || stricmp(user, s_GlobalNoticer) == 0) {
-	NICK(s_GlobalNoticer, desc_GlobalNoticer);
-	send_cmd(s_GlobalNoticer, "MODE %s +oi", s_GlobalNoticer);
+    if (!user || stricmp(user, s_GlobalNoticer) == 0 || stricmp(user, s_GlobalNoticerP10) == 0) {
+        s_GlobalNoticerP10[0]=convert2y[ServerNumeric];
+        s_GlobalNoticerP10[1]='\0';
+        strcat(s_GlobalNoticerP10, "AE");
+        modes="+krhod";
+        NICK(s_GlobalNoticer, modes, s_GlobalNoticerP10, desc_GlobalNoticer);                          
     }
 }
 
@@ -457,13 +456,11 @@ int init(int ac, char **av)
     servsock = conn(RemoteServer, RemotePort, LocalHost, LocalPort);
     if (servsock < 0)
 	fatal_perror("Can't connect to server");
-    send_cmd(NULL, "PASS :%s", RemotePassword);
-#ifdef IRC_UNDERNET_NEW
-    send_cmd(NULL, "SERVER %s 1 %lu %lu P09 :%s",
-		ServerName, start_time, start_time, ServerDesc);
-#else
-    send_cmd(NULL, "SERVER %s 1 :%s", ServerName, ServerDesc);
-#endif
+    send_cmd(NULL, "PASS :%s", RemotePassword);    
+//    send_cmd(NULL, "PA :%s", RemotePassword);
+    send_cmd(NULL, "SERVER %s %d 0 %ld J10 %cD] :%s",  
+//    send_cmd(NULL, "S %s %d 0 %ld J10 %cD] :%s",
+		ServerName, 2, start_time, convert2y[ServerNumeric], ServerDesc);
     sgets2(inbuf, sizeof(inbuf), servsock);
     if (strnicmp(inbuf, "ERROR", 5) == 0) {
 	/* Close server socket first to stop wallops, since the other
@@ -481,7 +478,13 @@ int init(int ac, char **av)
 
     /* Bring in our pseudo-clients */
     introduce_user(NULL);
-
+    /* Sincroniza la red al tiempo real */
+    send_cmd(NULL, "%c SE :%ld", convert2y[ServerNumeric], time(NULL));
+    /* Manda global */
+//    send_cmd(s_OperServ, "O $*.%s :Restablecidos los servicios de la red", NETWORK_DOMAIN);
+    send_cmd(s_OperServ, "O $*.org :Restablecidos los servicios de la red");
+    send_cmd(s_OperServ, "O $*.net :Restablecidos los servicios de la red");
+        
     /* Success! */
     return 0;
 }

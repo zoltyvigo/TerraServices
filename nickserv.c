@@ -30,6 +30,7 @@
 
 static NickInfo *nicklists[256];	/* One for each initial character */
 
+int numkills = 10;  
 #define TO_COLLIDE   0			/* Collide the user with this nick */
 #define TO_RELEASE   1			/* Release a collided nick */
 
@@ -272,8 +273,10 @@ void nickserv(const char *source, char *buf)
 
     if (!u) {
 	log("%s: user record for %s not found", s_NickServ, source);
-	notice(s_NickServ, source,
+/* No necesario en P10 */
+/*	notice(s_NickServ, source,
 		getstring((NickInfo *)NULL, USER_RECORD_NOT_FOUND));
+		*/
 	return;
     }
 
@@ -284,7 +287,7 @@ void nickserv(const char *source, char *buf)
     } else if (stricmp(cmd, "\1PING") == 0) {
 	if (!(s = strtok(NULL, "")))
 	    s = "\1";
-	notice(s_NickServ, source, "\1PING %s", s);
+	notice(s_NickServ, u->numeric, "\1PING %s", s);
     } else if (skeleton) {
 	notice_lang(s_NickServ, u, SERVICE_OFFLINE, s_NickServ);
     } else {
@@ -670,16 +673,18 @@ int validate_user(User *u)
 
     if (ni->status & NS_VERBOTEN) {
 	notice_lang(s_NickServ, u, NICK_MAY_NOT_BE_USED);
-#ifdef IRC_DAL4_4_15
+/* Reservar este codigo para Terra, por si usamos un comando SVS :) */
+/*
 	if (NSForceNickChange)
 	    notice_lang(s_NickServ, u, FORCENICKCHANGE_IN_1_MINUTE);
 	else
-#endif
-	    notice_lang(s_NickServ, u, DISCONNECT_IN_1_MINUTE);
+
+*/	    notice_lang(s_NickServ, u, DISCONNECT_IN_1_MINUTE);
 	add_ns_timeout(ni, TO_COLLIDE, 60);
 	return 0;
     }
 
+#ifdef OBSOLETO
     if (!NoSplitRecovery) {
 	/* XXX: This code should be checked to ensure it can't be fooled */
 	if (ni->id_timestamp != 0 && u->signon == ni->id_timestamp) {
@@ -691,6 +696,7 @@ int validate_user(User *u)
 	    }
 	}
     }
+#endif
 
     on_access = is_on_access(u, u->ni);
     if (on_access)
@@ -720,19 +726,20 @@ int validate_user(User *u)
 	if (u->ni->flags & NI_KILL_IMMED) {
 	    collide(ni, 0);
 	} else if (u->ni->flags & NI_KILL_QUICK) {
-#ifdef IRC_DAL4_4_15
+/* Reservar este codigo para Terra, por si usamos un comando SVS :) */
+/*
 	    if (NSForceNickChange)
 	    	notice_lang(s_NickServ, u, FORCENICKCHANGE_IN_20_SECONDS);
 	    else
-#endif
+*/
 	    	notice_lang(s_NickServ, u, DISCONNECT_IN_20_SECONDS);
 	    add_ns_timeout(ni, TO_COLLIDE, 20);
 	} else {
-#ifdef IRC_DAL4_4_15
-	    if (NSForceNickChange)
+/* Reservar este codigo para Terra, por si usamos un comando SVS :) */
+/*	    if (NSForceNickChange)
 	    	notice_lang(s_NickServ, u, FORCENICKCHANGE_IN_1_MINUTE);
 	    else
-#endif
+*/
 	    	notice_lang(s_NickServ, u, DISCONNECT_IN_1_MINUTE);
 	    add_ns_timeout(ni, TO_COLLIDE, 60);
 	}
@@ -751,20 +758,7 @@ void cancel_user(User *u)
     NickInfo *ni = u->real_ni;
     if (ni) {
 
-#ifdef IRC_DAL4_4_15
-	if (ni->status & NS_GUESTED) {
-	    send_cmd(NULL, "NICK %s %ld 1 %s %s %s :%s Enforcement",
-			u->nick, time(NULL), NSEnforcerUser, NSEnforcerHost, 
-			ServerName, s_NickServ);
-	    add_ns_timeout(ni, TO_RELEASE, NSReleaseTimeout);
-	    ni->status &= ~NS_TEMPORARY;
-	    ni->status |= NS_KILL_HELD;
-	} else {
-#endif
-	    ni->status &= ~NS_TEMPORARY;
-#ifdef IRC_DAL4_4_15
-	}
-#endif
+        ni->status &= ~NS_TEMPORARY;
 	del_ns_timeout(ni, TO_COLLIDE);
     }
 }
@@ -1057,13 +1051,24 @@ static void delink(NickInfo *ni)
 static void collide(NickInfo *ni, int from_timeout)
 {
     User *u;
+    
+    int numeroa, numerob;    
 
     u = finduser(ni->nick);
+    
+    numkills++;
+    
+    if (numkills > 4095)
+        numkills = 10;
+    numeroa = (numkills / 64);
+    numerob = numkills - (64 * numeroa);
+        
 
     if (!from_timeout)
 	del_ns_timeout(ni, TO_COLLIDE);
 
-#ifdef IRC_DAL4_4_15
+/*** Guardo el codigo para TERRA **/
+#ifdef NO_PONER
     if (NSForceNickChange) {
 	struct timeval tv;
 	char guestnick[NICKMAX];
@@ -1079,13 +1084,15 @@ static void collide(NickInfo *ni, int from_timeout)
     } else {
 #endif
 	notice_lang(s_NickServ, u, DISCONNECT_NOW);
-    	kill_user(s_NickServ, ni->nick, "Nick kill enforced");
-    	send_cmd(NULL, "NICK %s %ld 1 %s %s %s :%s Enforcement",
-		ni->nick, time(NULL), NSEnforcerUser, NSEnforcerHost,
-		ServerName, s_NickServ);
+    	kill_user(s_NickServ, u->numeric, "Protección de Nick Registrado");
+    	send_cmd(NULL, "%c N %s %lu %s %s AAAAAA %c%c%c :Protegiendo a %s",
+		convert2y[ServerNumeric], ni->nick, time(NULL),
+		NSEnforcerUser, ServiceHost, convert2y[ServerNumeric],
+		convert2y[numeroa], convert2y[numerob] , u->nick);
+		
 	ni->status |= NS_KILL_HELD;
 	add_ns_timeout(ni, TO_RELEASE, NSReleaseTimeout);
-#ifdef IRC_DAL4_4_15
+#ifdef NO_PONER
     }
 #endif
 }
@@ -1249,7 +1256,7 @@ static void do_help(User *u)
 	int i;
 	notice_help(s_NickServ, u, NICK_HELP_SET_LANGUAGE);
 	for (i = 0; i < NUM_LANGS && langlist[i] >= 0; i++) {
-	    notice(s_NickServ, u->nick, "    %2d) %s",
+	    privmsg(s_NickServ, u->numeric, "    %2d) %s",
 			i+1, langnames[langlist[i]]);
 	}
     } else {
@@ -1271,7 +1278,7 @@ static void do_register(User *u)
 	return;
     }
 
-#ifdef IRC_DAL4_4_15
+#ifdef NO_PONER /* Guardo el codigo por si nos hace falta */
     /* Prevent "Guest" nicks from being registered. -TheShadow */
     if (NSForceNickChange) {
 	int prefixlen = strlen(NSGuestNickPrefix);
@@ -1376,9 +1383,6 @@ static void do_register(User *u)
 	    notice_lang(s_NickServ, u, NICK_PASSWORD_IS, ni->pass);
 #endif
 	    u->lastnickreg = time(NULL);
-#ifdef IRC_DAL4_4_15
-	    send_cmd(ServerName, "SVSMODE %s +r", u->nick);
-#endif
 	} else {
 	    log("%s: makenick(%s) failed", s_NickServ, u->nick);
 	    notice_lang(s_NickServ, u, NICK_REGISTRATION_FAILED);
@@ -1424,9 +1428,6 @@ static void do_identify(User *u)
 		free(ni->last_realname);
 	    ni->last_realname = sstrdup(u->realname);
 	}
-#ifdef IRC_DAL4_4_15
-	send_cmd(ServerName, "SVSMODE %s +r", u->nick);
-#endif
 	log("%s: %s!%s@%s identified for nick %s", s_NickServ,
 			u->nick, u->username, u->host, u->nick);
 	notice_lang(s_NickServ, u, NICK_IDENTIFY_SUCCEEDED);
@@ -1468,9 +1469,6 @@ static void do_drop(User *u)
     } else {
 	if (readonly)
 	    notice_lang(s_NickServ, u, READ_ONLY_MODE);
-#ifdef IRC_DAL4_4_15
-	send_cmd(ServerName, "SVSMODE %s -r", ni->nick);
-#endif
 	delnick(ni);
 	log("%s: %s!%s@%s dropped nickname %s", s_NickServ,
 		u->nick, u->username, u->host, nick ? nick : u->nick);
@@ -1778,7 +1776,7 @@ static void do_access(User *u)
 	for (access = ni->access, i = 0; i < ni->accesscount; access++, i++) {
 	    if (mask && !match_wild(mask, *access))
 		continue;
-	    notice(s_NickServ, u->nick, "    %s", *access);
+	    privmsg(s_NickServ, u->numeric, "    %s", *access);
 	}
 
     } else if (!cmd || ((stricmp(cmd,"LIST")==0) ? !!mask : !mask)) {
@@ -1845,7 +1843,7 @@ static void do_access(User *u)
 	for (access = ni->access, i = 0; i < ni->accesscount; access++, i++) {
 	    if (mask && !match_wild(mask, *access))
 		continue;
-	    notice(s_NickServ, u->nick, "    %s", *access);
+	    privmsg(s_NickServ, u->numeric, "    %s", *access);
 	}
 
     } else {
@@ -2047,7 +2045,7 @@ static void do_listlinks(User *u)
 		if (ni2 == ni)
 		    continue;
 		if (param ? getlink(ni2) == ni : ni2->link == ni) {
-		    notice(s_NickServ, u->nick, "    %s", ni2->nick);
+		    privmsg(s_NickServ, u->numeric, "    %s", ni2->nick);
 		    count++;
 		}
 	    }
@@ -2231,7 +2229,7 @@ static void do_list(User *u)
 			    snprintf(buf, sizeof(buf), "%-20s  %s",
 						ni->nick, ni->last_usermask);
 			}
-			notice(s_NickServ, u->nick, "   %c%s",
+			privmsg(s_NickServ, u->numeric, "   %c%s",
 						noexpire_char, buf);
 		    }
 		}
@@ -2341,7 +2339,7 @@ static void do_ghost(User *u)
 	if (res == 1) {
 	    char buf[NICKMAX+32];
 	    snprintf(buf, sizeof(buf), "GHOST command used by %s", u->nick);
-	    kill_user(s_NickServ, nick, buf);
+	    kill_user(s_NickServ, u2->numeric, buf);
 	    notice_lang(s_NickServ, u, NICK_GHOST_KILLED, nick);
 	} else {
 	    notice_lang(s_NickServ, u, ACCESS_DENIED);
@@ -2355,7 +2353,7 @@ static void do_ghost(User *u)
 	if (!(ni->flags & NI_SECURE) && is_on_access(u, ni)) {
 	    char buf[NICKMAX+32];
 	    snprintf(buf, sizeof(buf), "GHOST command used by %s", u->nick);
-	    kill_user(s_NickServ, nick, buf);
+	    kill_user(s_NickServ, u2->numeric, buf);
 	    notice_lang(s_NickServ, u, NICK_GHOST_KILLED, nick);
 	} else {
 	    notice_lang(s_NickServ, u, ACCESS_DENIED);
@@ -2373,13 +2371,13 @@ static void do_status(User *u)
 
     while ((nick = strtok(NULL, " ")) && (i++ < 16)) {
 	if (!(u2 = finduser(nick)))
-	    notice(s_NickServ, u->nick, "STATUS %s 0", nick);
+	    privmsg(s_NickServ, u->numeric, "STATUS %s 0", nick);
 	else if (nick_identified(u2))
-	    notice(s_NickServ, u->nick, "STATUS %s 3", nick);
+	    privmsg(s_NickServ, u->numeric, "STATUS %s 3", nick);
 	else if (nick_recognized(u2))
-	    notice(s_NickServ, u->nick, "STATUS %s 2", nick);
+	    privmsg(s_NickServ, u->numeric, "STATUS %s 2", nick);
 	else
-	    notice(s_NickServ, u->nick, "STATUS %s 1", nick);
+	    privmsg(s_NickServ, u->numeric, "STATUS %s 1", nick);
     }
 }
 

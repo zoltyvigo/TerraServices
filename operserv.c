@@ -60,6 +60,7 @@ static void do_matchwild(User *u);
 static Command cmds[] = {
     { "HELP",       do_help,       NULL,  -1,                   -1,-1,-1,-1 },
     { "GLOBAL",     do_global,     NULL,  OPER_HELP_GLOBAL,     -1,-1,-1,-1 },
+    { "SERVERS",    do_servers,    NULL,  -1,                   -1,-1,-1,-1 },    
     { "STATS",      do_stats,      NULL,  OPER_HELP_STATS,      -1,-1,-1,-1 },
     { "UPTIME",     do_stats,      NULL,  OPER_HELP_STATS,      -1,-1,-1,-1 },
 
@@ -162,8 +163,11 @@ void operserv(const char *source, char *buf)
 
     if (!u) {
 	log("%s: user record for %s not found", s_OperServ, source);
+/* No es necesario en P10 */
+/*
 	notice(s_OperServ, source,
 		getstring((NickInfo *)NULL, USER_RECORD_NOT_FOUND));
+		*/
 	return;
     }
 
@@ -175,7 +179,7 @@ void operserv(const char *source, char *buf)
     } else if (stricmp(cmd, "\1PING") == 0) {
 	if (!(s = strtok(NULL, "")))
 	    s = "\1";
-	notice(s_OperServ, source, "\1PING %s", s);
+	notice(s_OperServ, u->numeric, "\1PING %s", s);
     } else {
 	run_cmd(s_OperServ, u, cmds, cmd);
     }
@@ -462,7 +466,7 @@ void check_clones(User *user)
 	    warnings[i].host = sstrdup(user->host);
 	    warnings[i].time = clonelist[i].time;
 	    if (KillClones)
-		kill_user(s_OperServ, user->nick, "Clone kill");
+		kill_user(s_OperServ, user->numeric, "Clone kill");
 	}
     }
 #endif	/* !STREAMLINED */
@@ -479,19 +483,19 @@ static void send_clone_lists(User *u)
     int i;
 
     if (!CheckClones) {
-	notice(s_OperServ, u->nick, "CheckClones not enabled.");
+	privmsg(s_OperServ, u->numeric, "CheckClones not enabled.");
 	return;
     }
 
     notice(s_OperServ, u->nick, "clonelist[]");
     for (i = 0; i < CLONE_DETECT_SIZE; i++) {
 	if (clonelist[i].host)
-	    notice(s_OperServ, u->nick, "    %10ld  %s", clonelist[i].time, clonelist[i].host ? clonelist[i].host : "(null)");
+	    privmsg(s_OperServ, u->numeric, "    %10ld  %s", clonelist[i].time, clonelist[i].host ? clonelist[i].host : "(null)");
     }
-    notice(s_OperServ, u->nick, "warnings[]");
+    privmsg(s_OperServ, u->numeric, "warnings[]");
     for (i = 0; i < CLONE_DETECT_SIZE; i++) {
 	if (clonelist[i].host)
-	    notice(s_OperServ, u->nick, "    %10ld  %s", warnings[i].time, warnings[i].host ? warnings[i].host : "(null)");
+	    privmsg(s_OperServ, u->numeric, "    %10ld  %s", warnings[i].time, warnings[i].host ? warnings[i].host : "(null)");
     }
 }
 
@@ -742,7 +746,7 @@ static void do_os_mode(User *u)
 #endif
 	return;
     } else {
-	send_cmd(s_OperServ, "MODE %s %s", chan, modes);
+	send_cmd(s_OperServ, "M %s %s", chan, modes);
 	if (WallOSMode)
 	    wallops(s_OperServ, "%s used MODE %s on %s", u->nick, modes, chan);
 	*s = ' ';
@@ -797,8 +801,8 @@ static void do_clearmodes(User *u)
 		next = cu->next;
 		argv[0] = sstrdup(chan);
 		argv[1] = sstrdup("-o");
-		argv[2] = sstrdup(cu->user->nick);
-		send_cmd(MODE_SENDER(s_ChanServ), "MODE %s %s :%s",
+		argv[2] = sstrdup(cu->user->numeric);
+		send_cmd(MODE_SENDER(s_ChanServ), "M %s %s :%s",
 			argv[0], argv[1], argv[2]);
 		do_cmode(s_ChanServ, 3, argv);
 		free(argv[2]);
@@ -811,8 +815,8 @@ static void do_clearmodes(User *u)
 		next = cu->next;
 		argv[0] = sstrdup(chan);
 		argv[1] = sstrdup("-v");
-		argv[2] = sstrdup(cu->user->nick);
-		send_cmd(MODE_SENDER(s_ChanServ), "MODE %s %s :%s",
+		argv[2] = sstrdup(cu->user->numeric);
+		send_cmd(MODE_SENDER(s_ChanServ), "M %s %s :%s",
 			argv[0], argv[1], argv[2]);
 		do_cmode(s_ChanServ, 3, argv);
 		free(argv[2]);
@@ -822,12 +826,12 @@ static void do_clearmodes(User *u)
 	}
 
 	/* Clear modes */
-	send_cmd(MODE_SENDER(s_OperServ), "MODE %s -iklmnpst :%s",
+	send_cmd(MODE_SENDER(s_ChanServ), "M %s -iklmnpst :%s",
 		chan, c->key ? c->key : "");
 	argv[0] = sstrdup(chan);
 	argv[1] = sstrdup("-iklmnpst");
 	argv[2] = c->key ? c->key : sstrdup("");
-	do_cmode(s_OperServ, 2, argv);
+	do_cmode(s_ChanServ, 2, argv);
 	free(argv[0]);
 	free(argv[1]);
 	free(argv[2]);
@@ -843,9 +847,9 @@ static void do_clearmodes(User *u)
 	    argv[0] = sstrdup(chan);
 	    argv[1] = sstrdup("-b");
 	    argv[2] = bans[i];
-	    send_cmd(MODE_SENDER(s_OperServ), "MODE %s %s :%s",
+	    send_cmd(MODE_SENDER(s_ChanServ), "M %s %s :%s",
 			argv[0], argv[1], argv[2]);
-	    do_cmode(s_OperServ, 3, argv);
+	    do_cmode(s_ChanServ, 3, argv);
 	    free(argv[2]);
 	    free(argv[1]);
 	    free(argv[0]);
@@ -860,7 +864,6 @@ static void do_clearmodes(User *u)
 
 static void do_os_kick(User *u)
 {
-    char *argv[3];
     char *chan, *nick, *s;
     Channel *c;
 
@@ -874,23 +877,25 @@ static void do_os_kick(User *u)
     if (!(c = findchan(chan))) {
 	notice_lang(s_OperServ, u, CHAN_X_NOT_IN_USE, chan);
     } else if (c->bouncy_modes) {
-#if defined(IRC_DALNET) || defined(IRC_UNDERNET)
-	notice_lang(s_OperServ, u, OPER_BOUNCY_MODES_U_LINE);
-#else
-	notice_lang(s_OperServ, u, OPER_BOUNCY_MODES);
-#endif
-	return;
-    }
-    send_cmd(s_OperServ, "KICK %s %s :%s (%s)", chan, nick, u->nick, s);
-    if (WallOSKick)
-	wallops(s_OperServ, "%s used KICK on %s/%s", u->nick, nick, chan);
-    argv[0] = sstrdup(chan);
-    argv[1] = sstrdup(nick);
-    argv[2] = sstrdup(s);
-    do_kick(s_OperServ, 3, argv);
-    free(argv[2]);
-    free(argv[1]);
-    free(argv[0]);
+	notice_lang(s_OperServ, u, OPER_BOUNCY_MODES_U_LINE);	
+    } else {
+        User *u2 = finduser(nick);
+        char *argv[3];
+        if (u2) {
+            send_cmd(s_ChanServ, "K %s %s :%s (%s)", chan, u2->numeric, u->nick, s);
+            if (WallOSKick)
+	        wallops(s_OperServ, "%s used KICK on %s/%s", u->nick, nick, chan);
+            argv[0] = sstrdup(chan);
+            argv[1] = sstrdup(u2->numeric);
+            argv[2] = sstrdup(s);
+            do_kick(s_ChanServ, 3, argv);
+            free(argv[2]);
+            free(argv[1]);
+            free(argv[0]);
+        } else {     
+            notice_lang(s_OperServ, u, NICK_X_NOT_IN_USE, nick);
+        }        
+   }     
 }
 
 /*************************************************************************/
@@ -971,7 +976,7 @@ static void do_admin(User *u)
 	notice_lang(s_OperServ, u, OPER_ADMIN_LIST_HEADER);
 	for (i = 0; i < MAX_SERVADMINS; i++) {
 	    if (services_admins[i])
-		notice(s_OperServ, u->nick, "%s", services_admins[i]->nick);
+		privmsg(s_OperServ, u->numeric, "%s", services_admins[i]->nick);
 	}
 
     } else {
@@ -1057,7 +1062,7 @@ static void do_oper(User *u)
 	notice_lang(s_OperServ, u, OPER_OPER_LIST_HEADER);
 	for (i = 0; i < MAX_SERVOPERS; i++) {
 	    if (services_opers[i])
-		notice(s_OperServ, u->nick, "%s", services_opers[i]->nick);
+		privmsg(s_OperServ, u->numeric, "%s", services_opers[i]->nick);
 	}
 
     } else {
@@ -1133,6 +1138,8 @@ static void do_jupe(User *u)
     char *jserver = strtok(NULL, " ");
     char *reason = strtok(NULL, "");
     char buf[NICKMAX+16];
+    Server *server;
+    char *argv[3];
 
     if (!jserver) {
 	syntax_error(s_OperServ, u, "JUPE", OPER_JUPE_SYNTAX);
@@ -1143,12 +1150,24 @@ static void do_jupe(User *u)
 	    snprintf(buf, sizeof(buf), "Jupitered by %s", u->nick);
 	    reason = buf;
 	}
-#ifdef IRC_UNDERNET_NEW
-	send_cmd(NULL, "SERVER %s 1 %lu %lu P09 :%s",
-		jserver, time(NULL), time(NULL), reason);
-#else
-	send_cmd(NULL, "SERVER %s 2 :%s", jserver, reason);
-#endif
+        server = find_servername(jserver);
+    
+        if (!server) {
+            privmsg(s_OperServ, u->numeric, "No encuentro a %s para JUPE", jserver);
+            return;
+        } else {
+            send_cmd(NULL, "%c SQ %s 0 :%s", convert2y[ServerNumeric], jserver, reason);
+            argv[0] = sstrdup(server->name);
+            argv[1] = sstrdup("0");
+            argv[2] = sstrdup(reason);
+            do_squit(s_OperServ, 3, argv);
+            free(argv[2]);
+            free(argv[1]);
+            free(argv[0]);                                       
+            send_cmd(NULL, "%c SERVER %s 1 %lu %lu P10 %s 0 :%s", convert2y[ServerNumeric],
+                    jserver, time(NULL), time(NULL), server->numeric, reason);
+                                            
+        }
     }
 }
 
@@ -1275,7 +1294,7 @@ static void do_killclones(User *u)
     User *cloneuser, *user, *tempuser;
     char *clonemask, *akillmask;
     char killreason[NICKMAX+32];
-    char akillreason[] = "Temporary KILLCLONES akill.";
+    char akillreason[] = "GLINE Temporal por KILLCLONES.";
 
     if (!clonenick) {
 	notice_lang(s_OperServ, u, OPER_KILLCLONES_SYNTAX);
@@ -1297,7 +1316,7 @@ static void do_killclones(User *u)
 		count++;
 		snprintf(killreason, sizeof(killreason), 
 					"Cloning [%d]", count);
-		kill_user(NULL, user->nick, killreason);
+		kill_user(NULL, user->numeric, killreason);
 		user = tempuser;
 	    } else {
 		user = nextuser();

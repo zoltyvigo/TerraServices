@@ -69,8 +69,10 @@ void memoserv(const char *source, char *buf)
 
     if (!u) {
 	log("%s: user record for %s not found", s_MemoServ, source);
-	notice(s_MemoServ, source,
+/* No necesario en P10 */
+/*	notice(s_MemoServ, source,
 		getstring((NickInfo *)NULL, USER_RECORD_NOT_FOUND));
+		*/
 	return;
     }
 
@@ -80,7 +82,7 @@ void memoserv(const char *source, char *buf)
     } else if (stricmp(cmd, "\1PING") == 0) {
 	if (!(s = strtok(NULL, "")))
 	    s = "\1";
-	notice(s_MemoServ, source, "\1PING %s", s);
+	notice(s_MemoServ, u->numeric, "\1PING %s", s);
     } else if (skeleton) {
 	notice_lang(s_MemoServ, u, SERVICE_OFFLINE, s_MemoServ);
     } else {

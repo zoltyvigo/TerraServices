@@ -135,6 +135,8 @@ void process()
     int ac;			/* Parameters for the command */
     char **av;
     Message *m;
+    User *u=NULL;
+        
 
 
     /* If debugging, log the buffer. */
@@ -156,7 +158,25 @@ void process()
 	strscpy(source, buf+1, sizeof(source));
 	memmove(buf, s, strlen(s)+1);
     } else {
-	*source = 0;
+        if (strncmp(buf, "SERVER" ,strlen("SERVER"))==0) {
+            s = strdup(buf);
+            source[0] = '\0';
+        } else {
+            s = strpbrk(buf, " ");
+            if (!s)
+                return;
+            *s = 0;
+            while (isspace(*++s));
+            strscpy(source, buf, sizeof(source));
+            if (strlen(source) == 3) {
+                u = finduserP10(source);
+                if(u != NULL)
+                   strscpy(source, u->nick, sizeof(source));
+                else
+                   return;
+            }
+            memmove(buf, s, strlen(s)+1);
+        }                                                                                                                                                                                                          
     }
     if (!*buf)
 	return;
@@ -177,6 +197,7 @@ void process()
 	    m->func(source, ac, av);
     } else {
 	log("unknown message from server (%s)", inbuf);
+	send_cmd(ServerName, "P #devels :DEBUG: %s", inbuf);
     }
 
     /* Free argument list we created */
