@@ -183,7 +183,7 @@ void listchans(int count_only, const char *chan)
 	    for (ci = chanlists[i]; ci; ci = ci->next)
 		count++;
 	}
-	printf("%d channels registered.\n", count);
+	printf("%d canales registrados.\n", count);
 
     } else if (chan) {
 
@@ -191,48 +191,48 @@ void listchans(int count_only, const char *chan)
 	char *s, buf[BUFSIZE];
 
 	if (!(ci = cs_findchan(chan))) {
-	    printf("Channel %s not registered.\n", chan);
+	    printf("El canal %s no está registrado.\n", chan);
 	    return;
 	}
 	if (ci->flags & CI_VERBOTEN) {
-	    printf("Channel %s is FORBIDden.\n", ci->name);
+	    printf("El canal %s está FORBIDeado (Prohibido).\n", ci->name);
 	} else {
-	    printf("Information about channel %s:\n", ci->name);
+	    printf("Información sobre el canal %s:\n", ci->name);
 	    s = ci->founder->last_usermask;
-	    printf("        Founder: %s%s%s%s\n",
+	    printf("       Fundador: %s%s%s%s\n",
 			ci->founder->nick,
 			s ? " (" : "", s ? s : "", s ? ")" : "");
-	    printf("    Description: %s\n", ci->desc);
+	    printf("    Descripción: %s\n", ci->desc);
 	    tm = localtime(&ci->time_registered);
 	    strftime(buf, sizeof(buf), getstring(NULL,STRFTIME_DATE_TIME_FORMAT), tm);
-	    printf("     Registered: %s\n", buf);
+	    printf("     Registrado: %s\n", buf);
 	    tm = localtime(&ci->last_used);
 	    strftime(buf, sizeof(buf), getstring(NULL,STRFTIME_DATE_TIME_FORMAT), tm);
-	    printf("      Last used: %s\n", buf);
+	    printf("     Último uso: %s\n", buf);
 	    if (ci->last_topic) {
-		printf("     Last topic: %s\n", ci->last_topic);
-		printf("   Topic set by: %s\n", ci->last_topic_setter);
+		printf("      Ultimo topic: %s\n", ci->last_topic);
+		printf("Topic ajustado por: %s\n", ci->last_topic_setter);
 	    }
 	    if (ci->url)
-		printf("            URL: %s\n", ci->url);
+		printf("     Dirección URL: %s\n", ci->url);
 	    if (ci->email)
-		printf(" E-mail address: %s\n", ci->email);
-	    printf("        Options: ");
+		printf("  Dirección e-mail: %s\n", ci->email);
+	    printf("        Opciones: ");
 	    if (!ci->flags) {
-		printf("None\n");
+		printf("Ninguna\n");
 	    } else {
 		int need_comma = 0;
 		static const char commastr[] = ", ";
 		if (ci->flags & CI_PRIVATE) {
-		    printf("Private");
+		    printf("Privacidad");
 		    need_comma = 1;
 		}
 		if (ci->flags & CI_KEEPTOPIC) {
-		    printf("%sTopic Retention", need_comma ? commastr : "");
+		    printf("%sRetención de topic", need_comma ? commastr : "");
 		    need_comma = 1;
 		}
 		if (ci->flags & CI_TOPICLOCK) {
-		    printf("%sTopic Lock", need_comma ? commastr : "");
+		    printf("%sCandado de topic", need_comma ? commastr : "");
 		    need_comma = 1;
 		}
 		if (ci->flags & CI_SECUREOPS) {
@@ -248,16 +248,16 @@ void listchans(int count_only, const char *chan)
 		    need_comma = 1;
 		}
 		if (ci->flags & CI_SECURE) {
-		    printf("%sSecure", need_comma ? commastr : "");
+		    printf("%sSeguridad", need_comma ? commastr : "");
 		    need_comma = 1;
 		}
 		if (ci->flags & CI_NO_EXPIRE) {
-		    printf("%sNo Expire", need_comma ? commastr : "");
+		    printf("%sNo expirará", need_comma ? commastr : "");
 		    need_comma = 1;
 		}
 		printf("\n");
 	    }
-	    printf("      Mode lock: ");
+	    printf("Candado de modos: ");
 	    if (ci->mlock_on || ci->mlock_key || ci->mlock_limit) {
 		printf("+%s%s%s%s%s%s%s%s",
 			(ci->mlock_on & CMODE_I) ? "i" : "",
@@ -294,11 +294,11 @@ void listchans(int count_only, const char *chan)
 		printf("  %s %-20s  %s\n", ci->flags & CI_NO_EXPIRE ? "!" : " ",
 			    ci->name,
 			    ci->flags & CI_VERBOTEN ? 
-				    "Disallowed (FORBID)" : ci->desc);
+				    "Inactivo (FORBID)" : ci->desc);
 		count++;
 	    }
 	}
-	printf("%d channels registered.\n", count);
+	printf("%d canales registrados.\n", count);
 
     }
 }
@@ -413,7 +413,7 @@ void chanserv(const char *source, char *buf)
 #define SAFE(x) do {					\
     if ((x) < 0) {					\
 	if (!forceload)					\
-	    fatal("Read error on %s", ChanDBName);	\
+	    fatal("Error de lectura en %s", ChanDBName);	\
 	failed = 1;					\
 	break;						\
     }							\
@@ -480,7 +480,7 @@ static void load_old_cs_dbase(dbFILE *f, int ver)
 		fatal("Invalid format in %s", ChanDBName);
 	    SAFE(read_variable(old_channelinfo, f));
 	    if (debug >= 3)
-		log("debug: load_old_cs_dbase: read channel %s",
+		log("debug: load_old_cs_dbase: leyendo canal %s",
 			old_channelinfo.name);
 	    ci = scalloc(1, sizeof(ChannelInfo));
 	    strscpy(ci->name, old_channelinfo.name, CHANMAX);
@@ -500,10 +500,10 @@ static void load_old_cs_dbase(dbFILE *f, int ver)
 #ifdef USE_ENCRYPTION
 	    if (!(ci->flags & (CI_ENCRYPTEDPW | CI_VERBOTEN))) {
 		if (debug)
-		    log("debug: %s: encrypting password for %s on load",
+		    log("debug: %s: password encriptada para %s on load",
 				s_ChanServ, ci->name);
 		if (encrypt_in_place(ci->founderpass, PASSMAX) < 0)
-		    fatal("%s: load database: Can't encrypt %s password!",
+		    fatal("%s: load database: No está encriptada la password de %s!",
 				s_ChanServ, ci->name);
 		ci->flags |= CI_ENCRYPTEDPW;
 	    }
@@ -511,8 +511,8 @@ static void load_old_cs_dbase(dbFILE *f, int ver)
 	    if (ci->flags & CI_ENCRYPTEDPW) {
 		/* Bail: it makes no sense to continue with encrypted
 		 * passwords, since we won't be able to verify them */
-		fatal("%s: load database: password for %s encrypted "
-		          "but encryption disabled, aborting",
+		fatal("%s: load database: password para %s encriptada "
+		          "pero la encriptacion está desactivada, abortando",
 		          s_ChanServ, ci->name);
 	    }
 #endif
@@ -679,7 +679,7 @@ void load_cs_dbase(void)
 	    prev = NULL;
 	    while ((c = getc_db(f)) != 0) {
 		if (c != 1)
-		    fatal("Invalid format in %s", ChanDBName);
+		    fatal("Formato inválido en %s", ChanDBName);
 		ci = smalloc(sizeof(ChannelInfo));
 		*last = ci;
 		last = &ci->next;
@@ -837,7 +837,7 @@ void load_cs_dbase(void)
 	break;
 
       default:
-	fatal("Unsupported version number (%d) on %s", ver, ChanDBName);
+	fatal("Version no soportada (%d) en %s", ver, ChanDBName);
 
     } /* switch (version) */
 
@@ -849,7 +849,7 @@ void load_cs_dbase(void)
 	for (ci = chanlists[i]; ci; ci = next) {
 	    next = ci->next;
 	    if (!(ci->flags & CI_VERBOTEN) && !ci->founder) {
-		log("%s: database load: Deleting founderless channel %s",
+		log("%s: Carga DB: Borrando canal %s por no tener founder",
 			s_ChanServ, ci->name);
 		delchan(ci);
 	    }
@@ -865,9 +865,9 @@ void load_cs_dbase(void)
 #define SAFE(x) do {						\
     if ((x) < 0) {						\
 	restore_db(f);						\
-	log_perror("Write error on %s", ChanDBName);		\
+	log_perror("Error de escritura en %s", ChanDBName);		\
 	if (time(NULL) - lastwarn > WarningTimeout) {		\
-	    wallops(NULL, "Write error on %s: %s", ChanDBName,	\
+	    wallops(NULL, "Error de escritura en %s: %s", ChanDBName,	\
 			strerror(errno));			\
 	    lastwarn = time(NULL);				\
 	}							\
@@ -992,8 +992,8 @@ void check_modes(const char *chan)
 
     /* Check for mode bouncing */
     if (c->server_modecount >= 3 && c->chanserv_modecount >= 3) {
-	wallops(NULL, "Warning: unable to set modes on channel %s.  "
-		"Are your servers' U:lines configured correctly?", chan);
+	wallops(NULL, "ATENCION: No se ha podido cambiar modos en el canal %s.  "
+		"Los U-Lines de los servidores están configuradas correctamente?", chan);
 	log("%s: Bouncy modes on channel %s", s_ChanServ, c->name);
 	c->bouncy_modes = 1;
 	return;
@@ -1414,7 +1414,7 @@ void expire_chans()
 	    next = ci->next;
 	    if (now - ci->last_used >= CSExpire
 			&& !(ci->flags & (CI_VERBOTEN | CI_NO_EXPIRE))) {
-		log("Expiring channel %s", ci->name);
+		log("Expirando canal %s", ci->name);
 		delchan(ci);
 	    }
 	}
@@ -1439,13 +1439,13 @@ void cs_remove_nick(const NickInfo *ni)
 		if (ci->successor) {
 		    NickInfo *ni2 = ci->successor;
 		    if (ni2->channelcount >= ni2->channelmax) {
-			log("%s: Successor (%s) of %s owns too many channels, "
-			    "deleting channel",
+			log("%s: El sucesor (%s) de %s tiene demasiados canales, "
+			    "borrando canal...",
 			    s_ChanServ, ni2->nick, ci->name);
 			delchan(ci);
 		    } else {
-			log("%s: Transferring foundership of %s from deleted "
-			    "nick %s to successor %s",
+			log("%s: Transferiendo founder de %s desde el nick borrado "
+			    "%s al sucesor %s",
 			    s_ChanServ, ci->name, ni->nick, ni2->nick);
 			ci->founder = ni2;
 			ci->successor = NULL;
@@ -1453,7 +1453,7 @@ void cs_remove_nick(const NickInfo *ni)
 			    ni2->channelcount++;
 		    }
 		} else {
-		    log("%s: Deleting channel %s owned by deleted nick %s",
+		    log("%s: Borrando canal %s propiedad del nick borrado %s",
 				s_ChanServ, ci->name, ni->nick);
 		    delchan(ci);
 		}
@@ -1489,9 +1489,20 @@ ChannelInfo *cs_findchan(const char *chan)
     ChannelInfo *ci;
 
     for (ci = chanlists[tolower(chan[1])]; ci; ci = ci->next) {
-	if (stricmp(ci->name, chan) == 0)
+         if (stricmp(ci->name, chan) == 0)
+             return ci;
+    }
+/*
+    for (ci = chanlists[tolower(chan[1])]; ci; ci = ci->next) {
+	if (strCasecmp(ci->name, chan) == 0)
 	    return ci;
     }
+    
+    for (ci = chanlists[chan[1]]; ci; ci = ci->next) {
+         if (strCasecmp(ci->name, chan) == 0)
+             return ci;
+    }         
+*/
     return NULL;
 }
 
@@ -1820,7 +1831,7 @@ static void do_register(User *u)
 		ni->channelcount++;
 	    ni = ni->link;
 	}
-	log("%s: Channel %s registered by %s!%s@%s", s_ChanServ, chan,
+	log("%s: Canal %s registrado por %s!%s@%s", s_ChanServ, chan,
 		u->nick, u->username, u->host);
 	notice_lang(s_ChanServ, u, CHAN_REGISTERED, chan, u->nick);
 #ifndef USE_ENCRYPTION
@@ -1870,7 +1881,7 @@ static void do_identify(User *u)
 		    u->founder_chans->prev = uc;
 		u->founder_chans = uc;
 		uc->chan = ci;
-		log("%s: %s!%s@%s identified for %s", s_ChanServ,
+		log("%s: %s!%s@%s identifica para canal %s", s_ChanServ,
 			u->nick, u->username, u->host, ci->name);
 	    }
 	    notice_lang(s_ChanServ, u, CHAN_IDENTIFY_SUCCEEDED, chan);
@@ -1878,7 +1889,7 @@ static void do_identify(User *u)
 	    log("%s: check_password failed for %s", s_ChanServ, ci->name);
 	    notice_lang(s_ChanServ, u, CHAN_IDENTIFY_FAILED);
 	} else {
-	    log("%s: Failed IDENTIFY for %s by %s!%s@%s",
+	    log("%s: IDENTIFY fallado para canal %s por %s!%s@%s",
 			s_ChanServ, ci->name, u->nick, u->username, u->host);
 	    notice_lang(s_ChanServ, u, PASSWORD_INCORRECT);
 	    bad_password(u);

@@ -454,11 +454,13 @@ struct channel_ {
 
 // # define MODE_SENDER(service) ServerName
 
-/* P10 */
+/* Soporte P10 */
 
 #define NUMNICKBASE 64
 #define NUMNICKMAXCHAR 'z'
 
+#define toLower(c)      (NTL_tolower_tab[(c)-CHAR_MIN])
+#define toUpper(c)	(NTL_toupper_tab[(c)-CHAR_MIN])
 
 /*************************************************************************/
 

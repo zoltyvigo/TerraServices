@@ -75,17 +75,17 @@ void sighandler(int signum)
 	if (signum == SIGHUP) {  /* SIGHUP = save databases and restart */
 	    save_data = -2;
 	    signal(SIGHUP, SIG_IGN);
-	    log("Received SIGHUP, restarting.");
+	    log("Recibido SIGHUP, reiniciando.");
 	    if (!quitmsg)
-		quitmsg = "Restarting on SIGHUP";
+		quitmsg = "Reiniciando por señal SIGHUP";
 	    longjmp(panic_jmp, 1);
 	} else if (signum == SIGTERM) {
 	    save_data = 1;
 	    delayed_quit = 1;
 	    signal(SIGTERM, SIG_IGN);
 	    signal(SIGHUP, SIG_IGN);
-	    log("Received SIGTERM, exiting.");
-	    quitmsg = "Shutting down on SIGTERM";
+	    log("Recibido SIGTERM, saliendo.");
+	    quitmsg = "Cierre conexion por señal SIGTERM";
 	    longjmp(panic_jmp, 1);
 	} else if (signum == SIGINT || signum == SIGQUIT) {
 	    /* nothing -- terminate below */
@@ -131,9 +131,9 @@ void sighandler(int signum)
 	quitting = 1;
     } else {
 #if HAVE_STRSIGNAL
-	snprintf(quitmsg, BUFSIZE, "Services terminating: %s", strsignal(signum));
+	snprintf(quitmsg, BUFSIZE, "TerraServices ha terminado: %s", strsignal(signum));
 #else
-	snprintf(quitmsg, BUFSIZE, "Services terminating on signal %d", signum);
+	snprintf(quitmsg, BUFSIZE, "TerraServices ha terminado por señal %d", signum);
 #endif
 	quitting = 1;
     }
@@ -275,9 +275,9 @@ int main(int ac, char **av, char **envp)
     /* Check for restart instead of exit */
     if (save_data == -2) {
 #ifdef SERVICES_BIN
-	log("Restarting");
+	log("Reiniciando");
 	if (!quitmsg)
-	    quitmsg = "Restarting";
+	    quitmsg = "Reiniciando";
 	send_cmd(ServerName, "SQ %s 0 :%s", ServerName, quitmsg);
 	disconn(servsock);
 	close_log();
@@ -295,7 +295,7 @@ int main(int ac, char **av, char **envp)
 
     /* Disconnect and exit */
     if (!quitmsg)
-	quitmsg = "Terminating, reason unknown";
+	quitmsg = "TerraServices ha terminado, razón desconocida";
     log("%s", quitmsg);
     if (started) { 
 	send_cmd(ServerName, "SQ %s 0 :%s", ServerName, quitmsg);

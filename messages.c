@@ -47,7 +47,7 @@ static void m_away(char *source, int ac, char **av)
 static void m_burst(char *source, int ac, char **av)
 {
 
-//     do_burst(source, ac, av);
+     do_burst(source, ac, av);
      
 }
 
@@ -151,23 +151,20 @@ static void m_motd(char *source, int ac, char **av)
 {
     FILE *f;
     char buf[BUFSIZE];
-    User *u = finduser(source);
     
-    if (!u) 
-        return;
 
     f = fopen(MOTDFilename, "r");
-    send_cmd(ServerName, "375 %s :- %s Message of the Day",
-		u->numeric, ServerName);
+    send_cmd(ServerName, "375 %s :- %s Mensaje del día",
+		source, ServerName);
    if (f) {
 	while (fgets(buf, sizeof(buf), f)) {
 	    buf[strlen(buf)-1] = 0;
-	    send_cmd(ServerName, "372 %s :- %s", u->numeric, buf);
+	    send_cmd(ServerName, "372 %s :- %s", source, buf);
 	}
 	fclose(f);
     } else {
-	send_cmd(ServerName, "372 %s :- MOTD file not found!  Please "
-			"contact your IRC administrator.", u->numeric);
+	send_cmd(ServerName, "372 %s :- Archivo MOTD no ha sido encontrado!  Por favor "
+			"contacta con el Administrador del IRC.", source);
     }
 
     /* Look, people.  I'm not asking for payment, praise, or anything like
@@ -176,10 +173,12 @@ static void m_motd(char *source, int ac, char **av)
      * message below.
      */
 
-    send_cmd(ServerName, "372 %s :-", u->numeric);
-    send_cmd(ServerName, "372 %s :- Services is copyright (c) "
-		"1996-1999 Andy Church.", u->numeric);
-    send_cmd(ServerName, "376 %s :End of /MOTD command.", u->numeric);
+    send_cmd(ServerName, "372 %s :-", source);
+    send_cmd(ServerName, "372 %s :- TerraServices está en P10, desarrollado "
+                "por Toni García <zolty@terra.es> 2000-2001", source);
+    send_cmd(ServerName, "372 %s :- TerraServices está basado en los Services (c) "
+		"1996-1999 Andy Church.", source);
+    send_cmd(ServerName, "376 %s :End of /MOTD command.", source);
 }
 
 /*************************************************************************/
@@ -250,10 +249,13 @@ static void m_privmsg(char *source, int ac, char **av)
 	    User *u = finduser(source);
 	    if (u)
 		notice_lang(s_OperServ, u, ACCESS_DENIED);
+/* No necesario en undernet P10, no sabemos el trio */
+/*
 	    else
 		privmsg(s_OperServ, source, "Acceso denegado.");
+		*/
 	    if (WallBadOS)
-		wallops(s_OperServ, "Denied access to %s from %s (non-oper)",
+		wallops(s_OperServ, "Denegando el acceso a %s desde %s (no es ircop)",
 			s_OperServ, source);
 	}
     } else if (stricmp(av[0], s_NickServP10) == 0) {
@@ -310,36 +312,36 @@ static void m_squit(char *source, int ac, char **av)
 
 static void m_stats(char *source, int ac, char **av)
 {
-    User *u = finduser(source);
     if (ac < 1)
-	return;
-    	
-    if (!u)
-        return;
-        	
+	return;    	
+      	
     switch (*av[0]) {
       case 'u': {
 	int uptime = time(NULL) - start_time;
 	send_cmd(NULL, "242 %s :Services up %d day%s, %02d:%02d:%02d",
-		u->numeric, uptime/86400, (uptime/86400 == 1) ? "" : "s",
+		source, uptime/86400, (uptime/86400 == 1) ? "" : "s",
 		(uptime/3600) % 24, (uptime/60) % 60, uptime % 60);
 	send_cmd(NULL, "250 %s :Current users: %d (%d ops); maximum %d",
-		u->numeric, usercnt, opcnt, maxusercnt);
-	send_cmd(NULL, "219 %s u :End of /STATS report.", u->numeric);
+		source, usercnt, opcnt, maxusercnt);
+	send_cmd(NULL, "219 %s u :End of /STATS report.", source);
 	break;
       } /* case 'u' */
 
       case 'l':
 	send_cmd(NULL, "211 %s Server SendBuf SentBytes SentMsgs RecvBuf "
-		"RecvBytes RecvMsgs ConnTime", u->numeric);
-	send_cmd(NULL, "211 %s %s %d %d %d %d %d %d %ld", u->numeric, RemoteServer,
+		"RecvBytes RecvMsgs ConnTime", source);
+	send_cmd(NULL, "211 %s %s %d %d %d %d %d %d %ld", source, RemoteServer,
 		read_buffer_len(), total_read, -1,
 		write_buffer_len(), total_written, -1,
 		start_time);
-	send_cmd(NULL, "219 %s l :End of /STATS report.", u->numeric);
+	send_cmd(NULL, "219 %s l :End of /STATS report.", source);
 	break;
 
       case 'c':
+      case 'n':
+        send_cmd(NULL, "213 %s C %s * %s %d 0", source, RemoteServer , ServerHUB, RemotePort);
+        send_cmd(NULL, "214 %s N %s * %s 0 0", source, RemoteServer , ServerHUB); 
+        break;
       case 'h':
       case 'i':
       case 'k':
@@ -347,7 +349,7 @@ static void m_stats(char *source, int ac, char **av)
       case 'o':
       case 'y':
 	send_cmd(NULL, "219 %s %c :/STATS %c not applicable or not supported.",
-		u->numeric, *av[0], *av[0]);
+		source, *av[0], *av[0]);
 	break;
     }
 }
@@ -443,7 +445,7 @@ Message messages[] = {
     { "A",         m_away },    
     { "BURST",     m_burst },
     { "B",         m_burst },
-    { "CLOSE",      NULL },
+    { "CLOSE",     NULL },
     /* CLOSE no tiene token */        
     { "CNOTICE",   NULL },
     { "CN",        NULL },        
@@ -457,7 +459,7 @@ Message messages[] = {
     { "DE",        NULL },        
     { "DESYNCH",   NULL },
     { "DS",        NULL },
-    { "DIE",      NULL },
+    { "DIE",       NULL },
     /* DIE no tiene token */        
     { "DNS",       NULL },
     /* DNS no tiene token */                        
@@ -517,7 +519,7 @@ Message messages[] = {
     { "Q",         m_quit },    
     { "REHASH",    NULL },
     /* REHASH no tiene token */
-    { "RESTART",      NULL },
+    { "RESTART",   NULL },
     /* RESTART no tiene token */                
     { "RPING",     NULL },
     { "RI",        NULL },

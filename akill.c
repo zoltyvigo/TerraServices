@@ -54,7 +54,7 @@ int num_akills(void)
 #define SAFE(x) do {					\
     if ((x) < 0) {					\
 	if (!forceload)					\
-	    fatal("Read error on %s", AutokillDBName);	\
+	    fatal("Error de lectura en %s", AutokillDBName);	\
 	nakill = i;					\
 	break;						\
     }							\
@@ -163,7 +163,7 @@ void load_akill(void)
       } /* case 1 */
 
       default:
-	fatal("Unsupported version (%d) on %s", ver, AutokillDBName);
+	fatal("Version no soportada (%d) en %s", ver, AutokillDBName);
     } /* switch (version) */
 
     close_db(f);
@@ -176,9 +176,9 @@ void load_akill(void)
 #define SAFE(x) do {							\
     if ((x) < 0) {							\
 	restore_db(f);							\
-	log_perror("Write error on %s", AutokillDBName);		\
+	log_perror("Error de escritura en %s", AutokillDBName);		\
 	if (time(NULL) - lastwarn > WarningTimeout) {			\
-	    wallops(NULL, "Write error on %s: %s", AutokillDBName,	\
+	    wallops(NULL, "Error de escritura en %s: %s", AutokillDBName,	\
 			strerror(errno));				\
 	    lastwarn = time(NULL);					\
 	}								\
@@ -214,7 +214,9 @@ void save_akill(void)
 
 int check_akill(const char *nick, const char *username, const char *host)
 {
-/* He cambiado antes en do_umode, en vez de pillar nicks, pilla trios :) */
+/* He cambiado antes en do_umode,
+ * en vez de pillar nicks, pilla trios :) 
+ */
     char buf[512];
     int i;
     char *host2, *username2;
@@ -240,8 +242,8 @@ int check_akill(const char *nick, const char *username, const char *host)
 		/* Glurp... this oughtn't happen, but if it does, let's not
 		 * play with null pointers.  Yell and bail out.
 		 */
-		wallops(NULL, "Missing @ in AKILL: %s", akills[i].mask);
-		log("Missing @ in AKILL: %s", akills[i].mask);
+		wallops(NULL, "Encontrado @ en el AKILL: %s", akills[i].mask);
+		log("AKILL: Encontrado @ en el AKILL: %s", akills[i].mask);
 		continue;
 	    }
 	    *host2++ = 0;
@@ -273,7 +275,7 @@ void expire_akills(void)
 	if (akills[i].expires == 0 || akills[i].expires > now)
 	    continue;
 	if (WallAkillExpire)
-	    wallops(s_OperServ, "AKILL on %s has expired", akills[i].mask);
+	    wallops(s_OperServ, "AKILL en %s ha expirado", akills[i].mask);
 
         send_cmd(NULL,"%c GL * -%s", convert2y[ServerNumeric], akills[i].mask);                                                  
                                                                                                                
@@ -302,7 +304,7 @@ void add_akill(const char *mask, const char *reason, const char *who,
 		      const time_t expiry)
 {
     if (nakill >= 32767) {
-	log("%s: Attempt to add AKILL to full list!", s_OperServ);
+	log("%s: Intento de añadir AKILL a la lista llena!", s_OperServ);
 	return;
     }
     if (nakill >= akill_size) {
@@ -422,19 +424,19 @@ void do_akill(User *u)
 		    amount = strtol(expiry, (char **)&expiry, 10);
 		    if (amount) {
 			switch (*expiry) {
-			    case 'd': s = "day";    break;
-			    case 'h': s = "hour";   break;
-			    case 'm': s = "minute"; break;
+			    case 'd': s = "dias";    break;
+			    case 'h': s = "horas";   break;
+			    case 'm': s = "minutos"; break;
 			    default : amount = 0;
 			}
 		    }
 		}
 		if (!amount)
-		    strcpy(buf, "does not expire");
-		else
-		    snprintf(buf, sizeof(buf), "expires in %d %s%s",
+		    strcpy(buf, "no expirará");
+  		else
+		    snprintf(buf, sizeof(buf), "expirará en %d %s%s",
 					amount, s, amount==1 ? "" : "s");
-		wallops(s_OperServ, "%s added an AKILL for %s (%s)",
+		wallops(s_OperServ, "%s ha añadido un AKILL para %s (%s)",
 			u->nick, mask, buf);
 	    }
 	    if (readonly)
@@ -543,7 +545,7 @@ void do_akill(User *u)
 		}
 		notice_lang(s_OperServ, u, OPER_AKILL_VIEW_FORMAT,
 				akills[i].mask,
-				*akills[i].who ? akills[i].who : "<unknown>",
+				*akills[i].who ? akills[i].who : "<desconocido>",
 				timebuf, expirebuf, akills[i].reason);
 	    }
 	}

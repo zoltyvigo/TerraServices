@@ -22,6 +22,7 @@ int langlist[NUM_LANGS];
 
 /* Order in which languages should be displayed: (alphabetical) */
 static int langorder[NUM_LANGS] = {
+    LANG_ES,            /* Spanish */
     LANG_EN_US,		/* English (US) */
     LANG_FR,		/* French */
     LANG_IT,		/* Italian */
@@ -29,7 +30,6 @@ static int langorder[NUM_LANGS] = {
     LANG_JA_EUC,	/* Japanese (EUC encoding) */
     LANG_JA_SJIS,	/* Japanese (SJIS encoding) */
     LANG_PT,		/* Portugese */
-    LANG_ES,		/* Spanish */
     LANG_TR,		/* Turkish */
 };
 

@@ -197,7 +197,8 @@ void process()
 	    m->func(source, ac, av);
     } else {
 	log("unknown message from server (%s)", inbuf);
-	send_cmd(ServerName, "P #devels :DEBUG: %s", inbuf);
+     /* Debug de Mensajes desconocidos en el canal #devels */
+//	send_cmd(ServerName, "P #devels :DEBUG: %s", inbuf);
     }
 
     /* Free argument list we created */

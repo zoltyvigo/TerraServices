@@ -6,9 +6,9 @@
  * details.
  */
 
-#define BUILD	"117"
+#define BUILD	"156"
 
-const char version_number[] = "4.3.2";
+const char version_number[] = "0.0-Beta2";
 const char version_build[] =
 	"build #" BUILD ", compiled " __DATE__ " " __TIME__;
 const char version_protocol[] =

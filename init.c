@@ -378,12 +378,12 @@ int init(int ac, char **av)
 
     /* Announce ourselves to the logfile. */
     if (debug || readonly || skeleton) {
-	log("Services %s (compiled for %s) starting up (options:%s%s%s)",
+	log("TerraServices %s (compilados para %s) iniciados (opciones:%s%s%s)",
 		version_number, version_protocol,
 		debug ? " debug" : "", readonly ? " readonly" : "",
 		skeleton ? " skeleton" : "");
     } else {
-	log("Services %s (compiled for %s) starting up",
+	log("TerraServices %s (compilados para %s) iniciados",
 		version_number, version_protocol);
     }
     start_time = time(NULL);
@@ -433,29 +433,29 @@ int init(int ac, char **av)
     if (!skeleton) {
 	load_ns_dbase();
 	if (debug)
-	    log("debug: Loaded %s database (1/6)", s_NickServ);
+	    log("debug: Cargando la DB de %s (1/6)", s_NickServ);
 	load_cs_dbase();
 	if (debug)
-	    log("debug: Loaded %s database (2/6)", s_ChanServ);
+	    log("debug: Cargando la DB de %s (2/6)", s_ChanServ);
     }
     load_os_dbase();
     if (debug)
-	log("debug: Loaded %s database (3/6)", s_OperServ);
+	log("debug: Cargando la DB de %s (3/6)", s_OperServ);
     load_akill();
     if (debug)
-	log("debug: Loaded AKILL database (4/6)");
+	log("debug: Cargando la DB de AKILLs (4/6)");
     load_news();
     if (debug)
-	log("debug: Loaded news database (5/6)");
+	log("debug: Cargando la DB de News (5/6)");
     load_exceptions();
     if (debug)
-        log("debug: Loaded exception database (6/6)");
-    log("Databases loaded");
+        log("debug: Cargando la DB de Ilines (6/6)");
+    log("Cargadas las DB");
 
     /* Connect to the remote server */
     servsock = conn(RemoteServer, RemotePort, LocalHost, LocalPort);
     if (servsock < 0)
-	fatal_perror("Can't connect to server");
+	fatal_perror("No puedo conectar al servidor");
     send_cmd(NULL, "PASS :%s", RemotePassword);    
 //    send_cmd(NULL, "PA :%s", RemotePassword);
     send_cmd(NULL, "SERVER %s %d 0 %ld J10 %cD] :%s",  
@@ -479,7 +479,7 @@ int init(int ac, char **av)
     /* Bring in our pseudo-clients */
     introduce_user(NULL);
     /* Sincroniza la red al tiempo real */
-    send_cmd(NULL, "%c SE :%ld", convert2y[ServerNumeric], time(NULL));
+    send_cmd(NULL, "%c SE :%lu", convert2y[ServerNumeric], time(NULL));
     /* Manda global */
 //    send_cmd(s_OperServ, "O $*.%s :Restablecidos los servicios de la red", NETWORK_DOMAIN);
     send_cmd(s_OperServ, "O $*.org :Restablecidos los servicios de la red");

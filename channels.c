@@ -94,7 +94,7 @@ void send_channel_list(User *user)
 		}
 	    }
 	    end += snprintf(end, sizeof(buf)-(end-buf),
-					" %s%s%s", isvoice ? "+" : "",
+					" Modos en %s Ops:%s Voices:%s", isvoice ? "+" : "",
 					isop ? "@" : "", u->user->nick);
 	}
 	privmsg(s_OperServ, source, buf);
@@ -112,17 +112,17 @@ void send_channel_users(User *user)
     const char *source = user->numeric;
 
     if (!c) {
-	privmsg(s_OperServ, source, "Channel %s not found!",
+	privmsg(s_OperServ, source, "Canal %s no encontrado!",
 		chan ? chan : "(null)");
 	return;
     }
-    privmsg(s_OperServ, source, "Channel %s users:", chan);
+    privmsg(s_OperServ, source, "Canal %s usuarios:", chan);
     for (u = c->users; u; u = u->next)
 	privmsg(s_OperServ, source, "%s", u->user->nick);
-    privmsg(s_OperServ, source, "Channel %s chanops:", chan);
+    privmsg(s_OperServ, source, "Canal %s operadores:", chan);
     for (u = c->chanops; u; u = u->next)
 	privmsg(s_OperServ, source, "%s", u->user->nick);
-    privmsg(s_OperServ, source, "Channel %s voices:", chan);
+    privmsg(s_OperServ, source, "Canal %s moderadores:", chan);
     for (u = c->voices; u; u = u->next)
 	privmsg(s_OperServ, source, "%s", u->user->nick);
 }
@@ -168,7 +168,7 @@ Channel *firstchan(void)
 	current = chanlist[next_index++];
     if (debug >= 3)
 	log("debug: firstchan() returning %s",
-			current ? current->name : "NULL (end of list)");
+			current ? current->name : "NULL (fin de la lista)");
     return current;
 }
 
@@ -182,7 +182,7 @@ Channel *nextchan(void)
     }
     if (debug >= 3)
 	log("debug: nextchan() returning %s",
-			current ? current->name : "NULL (end of list)");
+			current ? current->name : "NULL (fin de la lista)");
     return current;
 }
 
@@ -202,7 +202,7 @@ void chan_adduser(User *user, const char *chan)
 
     if (newchan) {
 	if (debug)
-	    log("debug: Creating channel %s", chan);
+	    log("debug: Creando canal %s", chan);
 	/* Allocate pre-cleared memory */
 	c = scalloc(sizeof(Channel), 1);
 	strscpy(c->name, chan, sizeof(c->name));
@@ -299,7 +299,7 @@ void chan_deluser(User *user, Channel *c)
     /* Chan saliendo del canal */
 //        send_cmd(s_ChanServ, "PART %s", c->name);
 	if (debug)
-	    log("debug: Deleting channel %s", c->name);
+	    log("debug: Borrando canal %s", c->name);
 	if (c->ci)
 	    c->ci->c = NULL;
 	if (c->topic)
@@ -310,17 +310,17 @@ void chan_deluser(User *user, Channel *c)
 	    if (c->bans[i])
 		free(c->bans[i]);
 	    else
-		log("channel: BUG freeing %s: bans[%d] is NULL!", c->name, i);
+		log("Canales: BUG freeing %s: bans[%d] es NULL!", c->name, i);
 	}
 	if (c->bansize)
 	    free(c->bans);
 	if (c->chanops || c->voices)
-	    log("channel: Memory leak freeing %s: %s%s%s %s non-NULL!",
+	    log("Canales: Memory leak freeing %s: %s%s%s %s no es NULL!",
 			c->name,
 			c->chanops ? "c->chanops" : "",
-			c->chanops && c->voices ? " and " : "",
+			c->chanops && c->voices ? " y " : "",
 			c->voices ? "c->voices" : "",
-			c->chanops && c->voices ? "are" : "is");
+			c->chanops && c->voices ? "son" : "es");
 	if (c->next)
 	    c->next->prev = c->prev;
 	if (c->prev)
@@ -339,6 +339,9 @@ void do_create(const char *source, int ac, char **av)
    User *u;
    
    u = finduser(source);
+/* Esto sería lo correcto pero peta :/
+   u = finduserP10(source); 
+*/   
    do_join(source, ac, av);
    av[0] = sstrdup(av[0]);
    av[1] = sstrdup("+o");
@@ -360,13 +363,13 @@ void do_create(const char *source, int ac, char **av)
  *      source = Numerico del servidor
  *      av[0]  = Canal
  *      av[1]  = Hora de creacion canal
- *      av[2]  = Modos canal
+ *      av[2]  = Modos canal (si no tiene, solo saldrá + )
  *
  *  Si tiene modo +k y +l
  *      av[3]  = Key
  *      av[4]  = Limite usuarios
  *      av[5]  = usuarios y los modos
- *      av[6..]  = bans....
+ *      av[6...]  = bans....
  *
  *  Si solo tiene modo +k o +l
  *      av[3]  = key o limite
@@ -381,11 +384,11 @@ void do_create(const char *source, int ac, char **av)
  *   "E BURST #zoltan 93422742 +ntkli lere 12 EMS,TEJ:o,FWE:ov,JET:v,EJS,JRT :%*!*@jet.es *!*@*.lnst.es" 
  */
 void do_burst(const char *source, int ac, char **av)
-{     
+{        
     char **modes = NULL;
+    char *ax[3];    
     int n = 0, first = 1, mod_num = 0;
-    User *u;    
-    
+    User *u = NULL;        
     
     /* Run over all remaining parameters */    
     for (n = 2; n < ac; n++) {
@@ -408,19 +411,18 @@ void do_burst(const char *source, int ac, char **av)
 
             case '%':        /* bans */
             {
-                char *pv = NULL, *p = NULL, *ban = NULL;
+                char *pv, *p = NULL, *ban;
                 /* Run over all bans */
                 for (pv = av[n] +1; (ban = strtoken(&p, pv, " ")); pv = NULL)
-                {                 
-                    char *aban[3];                   
-                    aban[0] = sstrdup(av[0]);                    
-                    aban[1] = sstrdup("+b");
-                    aban[2] = sstrdup(ban);                    
+                {                                   
+                    ax[0] = sstrdup(av[0]);                    
+                    ax[1] = sstrdup("+b");
+                    ax[2] = sstrdup(ban);                    
                     /* Como no sabemos quien ha baneado, ponemos que
                      * ha sido ChanServ :)
                      */
-                    do_cmode(s_ChanServ, 3, aban);
-                    free(aban);
+                    do_cmode(s_ChanServ, 3, ax);
+//                    free(ax);
                 }
                 break;                /* Done bans part */
             }     
@@ -435,13 +437,12 @@ void do_burst(const char *source, int ac, char **av)
                 {          
                     if ((ptr = strchr(nick, ':')))        /* New default mode ? */
                     {
+                        default_mode = NULL;
                         *ptr = '\0';        /* Fix 'nick' */
                         u = finduserP10(nick);                                                                           
                              
-                        /*Calculate new mode change: */
-                        default_mode = NULL;                        
+                        /*Calculate new mode change: */                      
                         while (*(++ptr)) {
-#ifdef ESTO_PETA
                             if (*ptr == 'o')
                             {
                                 if (default_mode) 
@@ -457,40 +458,45 @@ void do_burst(const char *source, int ac, char **av)
                                     default_mode = sstrdup("v");
                             }
                             else
-                              break;                                                                                                                                                                                                    
-#endif                              
-                        }                               
+                              break;                                                                                                                                                                                                                                  
+                        }
                     }
-                    else {
+                    else
                         u = finduserP10(nick);
                         
-                        if (u) {
-                            if (debug)
-                                log("channel: Usuario %s entra al canal %s", u->nick, av[0]);
-                            do_join(u->nick, 1, av);
-                            if (first && mod_num) {
-                                do_cmode(source, mod_num, modes);
-                                free(modes);
-                            }
-                            if (first)
-                                first = 0;
+                    if (u) {
+                        if (debug)
+                            log("Canales: Usuario %s entra al canal %s", u->nick, av[0]);
+                        do_join(u->nick, 1, av);
+                        if (first && mod_num) {
+                            do_cmode(source, mod_num, modes);
+//                            free(modes);
+                        }
+                        if (first)
+                            first = 0;
                                 
-                            if (default_mode) {
-                                char *amodes[3];
-                                amodes[0] = sstrdup(av[0]);
-                                amodes[1] = sstrdup(default_mode);
-                                amodes[2] = sstrdup(u->numeric);
-                              /* Como no sabemos quien ha dado los modos,
-                               * ponemos que ha sido ChanServ :)
-                               */                                                                                              
-                                do_cmode(s_ChanServ, 3, amodes);
-                                free(amodes);
-                                default_mode = NULL;                              
-                            }                           
-                       } else
-                            log("channel: No se encuentra user %s en canal %s", nick, av[0]);
-                    } 
-//                break;                /* Dome nicks part */
+                        if (default_mode) {
+                            if (stricmp(default_mode, "ov") == 0) {
+                                ax[0] = sstrdup(av[0]);
+                                ax[1] = sstrdup("o");
+                                ax[2] = sstrdup(u->numeric);
+                                do_cmode(s_ChanServ, 3, ax);
+                                ax[1] = sstrdup("v");
+                                do_cmode(s_ChanServ, 3, ax);
+                                free(ax);                                
+                            } else {
+                                ax[0] = sstrdup(av[0]);
+                                ax[1] = sstrdup(default_mode);
+                                ax[2] = sstrdup(u->numeric);
+                                /* Como no sabemos quien ha dado los modos,
+                                 * ponemos que ha sido ChanServ :)
+                                 */                                                                                              
+                                do_cmode(s_ChanServ, 3, ax);
+                                free(ax);
+                            }                              
+                        }                           
+                    } else
+                        log("channel: No se encuentra user %s en canal %s", nick, av[0]);
                 }
             }                         /* <-- Next parameter if any */    
         }    /* Swith de la linea de burst */
@@ -513,7 +519,7 @@ void do_cmode(const char *source, int ac, char **av)
 
     chan = findchan(av[0]);
     if (!chan) {
-	log("channel: MODE %s for nonexistent channel %s",
+	log("Canales: MODE %s para canal %s no existente",
 					merge_args(ac-1, av+1), av[0]);
 	return;
     }
@@ -586,7 +592,7 @@ void do_cmode(const char *source, int ac, char **av)
 
 	case 'k':
 	    if (--ac < 0) {
-		log("channel: MODE %s %s: missing parameter for %ck",
+		log("Canales: MODE %s %s: falta parametro para %ck",
 					chan->name, modestr, add ? '+' : '-');
 		break;
 	    }
@@ -601,7 +607,7 @@ void do_cmode(const char *source, int ac, char **av)
 	case 'l':
 	    if (add) {
 		if (--ac < 0) {
-		    log("channel: MODE %s %s: missing parameter for +l",
+		    log("Canales: MODE %s %s: falta parametro para +l",
 							chan->name, modestr);
 		    break;
 		}
@@ -613,7 +619,7 @@ void do_cmode(const char *source, int ac, char **av)
 
 	case 'b':
 	    if (--ac < 0) {
-		log("channel: MODE %s %s: missing parameter for %cb",
+		log("Canales: MODE %s %s: falta parametro para %cb",
 					chan->name, modestr, add ? '+' : '-');
 		break;
 	    }
@@ -642,7 +648,7 @@ void do_cmode(const char *source, int ac, char **av)
 
 	case 'o':
 	    if (--ac < 0) {
-		log("channel: MODE %s %s: missing parameter for %co",
+		log("Canales: MODE %s %s: falta parametro para %co",
 					chan->name, modestr, add ? '+' : '-');
 		break;
 	    }
@@ -655,8 +661,8 @@ void do_cmode(const char *source, int ac, char **av)
 		    break;
 		user = finduserP10(nick);
 		if (!user) {
-		    log("channel: MODE %s +o for nonexistent user %s",
-							chan->name, user->nick);
+		    log("Canales: MODE %s +o para usuario %s inexistente",
+							chan->name, nick);
 		    break;
 		}
 		if (debug)
@@ -688,7 +694,7 @@ void do_cmode(const char *source, int ac, char **av)
 
 	case 'v':
 	    if (--ac < 0) {
-		log("channel: MODE %s %s: missing parameter for %cv",
+		log("Canales: MODE %s %s: falta parametro para %cv",
 					chan->name, modestr, add ? '+' : '-');
 		break;
 	    }
@@ -701,7 +707,7 @@ void do_cmode(const char *source, int ac, char **av)
 		    break;
 		user = finduserP10(nick);
 		if (!user) {
-		    log("channe: MODE %s +v for nonexistent user %s",
+		    log("Canales: MODE %s +v para usuario %s inexistente",
 							chan->name, user->nick);
 		    break;
 		}
@@ -747,7 +753,7 @@ void do_topic(const char *source, int ac, char **av)
     Channel *c = findchan(av[0]);
 
     if (!c) {
-	log("channel: TOPIC %s for nonexistent channel %s",
+	log("Canales: TOPIC %s para canal %s inexistente",
 						merge_args(ac-1, av+1), av[0]);
 	return;
     }

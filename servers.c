@@ -12,6 +12,7 @@
 #include "pseudo.h"
 
 int nodos;
+int usuarios;
 static Server *serverlist; 
 static Server *lastserver = NULL;
 
@@ -29,6 +30,8 @@ void del_server(Server *server)
         lastserver = NULL;
 
     servercnt--;
+    nodos++;
+    usuarios = usuarios + server->users;
     
     del_users_server(server);
     
@@ -123,6 +126,27 @@ Server *find_servernumeric(const char *numeric)
 }
 
 /*************************************************************************/
+/*************************************************************************/
+
+/* Return statistics.  Pointers are assumed to be valid. */
+void get_server_stats(long *nrec, long *memuse)
+{
+    long count = 0, mem = 0;
+    Server *server;
+
+    for (server = serverlist; server; server = server->next) {
+        count++;         
+        mem += sizeof(*server);       
+        if (server->name)
+            mem += strlen(server->name)+1;
+        if (server->numeric)
+            mem += strlen(server->numeric)+1;                                                                                          
+    }
+    *nrec = count;
+    *memuse = mem;
+}                                 
+
+/*************************************************************************/
 
  /* Salir mensaje en el Canal de Control los servers ke van entrando
   * Zoltan Julio 2000
@@ -202,12 +226,11 @@ void do_squit(const char *source, int ac, char **av)
 
     Server *server, *tmpserver;
     
-//    server = find_servername(av[0]);
-    int usuarios = usercnt;
-    int nnodos = servercnt;
-    
     server = find_servername(av[0]);
-        
+
+    usuarios = 0;
+    nodos = 0;
+           
     if (server) {
         recursive_squit(server, av[1]);
         if (server->hub) {
@@ -221,30 +244,16 @@ void do_squit(const char *source, int ac, char **av)
                          break;
                      }
                 }
-            }    
-//            nnodos = nnodos - servercnt;
-//            usuarios = usuarios - usercnt;
-            if (nodos < 1)
-                wallops(s_OperServ, "SQUIT de 12%s, llevandose %d usuarios", server->name, server->users);
-            else {
-                wallops(s_OperServ, "SQUIT de 12%s, llevandose %d nodos y %d usuarios", server->name, nodos, server->users);    
-                wallops(s_OperServ, "SQUIT de 12%s por C12%sC Motivo: %s", av[0], source, av[2]);
-            }
+            }              
             log("Eliminando servidor %s", server->name);
             del_server(server);            
-//            nnodos = nnodos - servercnt;
-//            usuarios = usuarios - usercnt;
-              usuarios-=usercnt;
-              nnodos-=servercnt;
                                     
-//            if (nnodos < 1)
-//                wallops(s_OperServ, "SQUIT de C12%sC, llevandose %d usuarios", av[0], usuarios);
-//            else 
-                wallops(s_OperServ, "SQUIT de C12%sC, llevandose %d nodos y %d usuarios", av[0], nnodos, usuarios);
+            if (nodos < 2)
+                wallops(s_OperServ, "SQUIT de 12%s, llevandose %d usuarios", av[0], usuarios);
+            else 
+                wallops(s_OperServ, "SQUIT de 12%s, llevandose %d nodos y %d usuarios", av[0], nodos, usuarios);
                                                                     
-//            log("Eliminando servidor %s", server->name);
-//            del_server(server);
-            }                                            
+        }                                            
     } else {        
         log("Server: Tratando de eliminar el servidor inexsistente: %s", av[0]);
         return;

@@ -47,6 +47,7 @@ E void chan_adduser(User *user, const char *chan);
 E void chan_deluser(User *user, Channel *c);
 
 E void do_burst(const char *source, int ac, char **av);
+E void do_create(const char *source, int ac, char **av);
 E void do_cmode(const char *source, int ac, char **av);
 E void do_topic(const char *source, int ac, char **av);
 
@@ -324,7 +325,12 @@ E char *stristr(char *s1, char *s2);
 E char *strupper(char *s);
 E char *strlower(char *s);
 E char *strnrepl(char *s, int32 size, const char *old, const char *new);
+/* Compatiblidad P10 */
 E char *strtoken(char **save, char *str, char *fs);
+E int strCasecmp(const char *a, const char *b);
+E const char NTL_tolower_tab[];
+E const char NTL_toupper_tab[];
+
 
 E char *merge_args(int argc, char **argv);
 
@@ -413,6 +419,7 @@ E void privmsg(const char *source, const char *dest, const char *fmt, ...)
 
 /**** servers.c ****/
 
+E void get_server_stats(long *nrec, long *memuse);
 E void do_server(const char *source, int ac, char **av);
 E void do_squit(const char *source, int ac, char **av);
 E Server *find_servername(const char *servername);
@@ -477,7 +484,6 @@ E User *firstuser(void);
 E User *nextuser(void);
 
 E void do_nick(const char *source, int ac, char **av);
-E void do_create(const char *source, int ac, char **av);
 E void do_join(const char *source, int ac, char **av);
 E void do_part(const char *source, int ac, char **av);
 E void do_kick(const char *source, int ac, char **av);

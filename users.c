@@ -44,7 +44,7 @@ static User *new_user(const char *nick)
 	maxusercnt = usercnt;
 	maxusertime = time(NULL);
 	if (LogMaxUsers)
-	    log("user: New maximum user count: %d", maxusercnt);
+	    log("Usuarios: Nuevo record de usuarios: %d", maxusercnt);
     }
     return user;
 }
@@ -205,6 +205,8 @@ void get_user_stats(long *nusers, long *memuse)
 	for (user = userlist[i]; user; user = user->next) {
 	    count++;
 	    mem += sizeof(*user);
+            if (user->numeric)
+                mem += strlen(user->numeric)+1;
 	    if (user->username)
 		mem += strlen(user->username)+1;
 	    if (user->host)
@@ -270,7 +272,7 @@ void send_user_info(User *user)
     struct u_chaninfolist *ci;
 
     if (!u) {
-	notice(s_OperServ, user->numeric, "User %s not found!",
+	notice(s_OperServ, user->numeric, "Usuario %s no encontrado!",
 		nick ? nick : "(null)");
 	return;
     }
@@ -477,7 +479,9 @@ void do_nick(const char *source, int ac, char **av)
     } else {
 	/* An old user changing nicks. */
 
+/* Con el finduserP10 no pilla nada */
 	user = finduser(source);
+//        user = finduserP10(source);
 	if (!user) {
 	    log("user: NICK from nonexistent nick %s: %s", source,
 							merge_args(ac, av));
@@ -637,7 +641,7 @@ void do_kick(const char *source, int ac, char **av)
 	    *t++ = 0;
 	user = finduserP10(s);
 	if (!user) {
-	    log("user: KICK for nonexistent user %s on %s: %s", user->nick, av[0],
+	    log("user: KICK for nonexistent user %s on %s: %s", s, av[0],
 						merge_args(ac-2, av+2));
 	    continue;
 	}
@@ -680,7 +684,7 @@ void do_umode(const char *source, int ac, char **av)
     }
     user = finduser(source);
     if (!user) {
-	log("user: MODE %s for nonexistent nick %s: %s", av[1], user->nick,
+	log("user: MODE %s for nonexistent nick %s: %s", av[1], source,
 							merge_args(ac, av));
 	return;
     }
@@ -733,7 +737,7 @@ void do_quit(const char *source, int ac, char **av)
 	/* Reportedly Undernet IRC servers will sometimes send duplicate
 	 * QUIT messages for quitting users, so suppress the log warning. */
 #ifndef IRC_UNDERNET
-	log("user: QUIT from nonexistent user %s: %s", user->nick,
+	log("user: QUIT from nonexistent user %s: %s", source,
 							merge_args(ac, av));
 #endif
 	return;

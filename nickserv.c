@@ -685,6 +685,7 @@ int validate_user(User *u)
     }
 
 #ifdef OBSOLETO
+/* Con el control de servers, esto no sirve de nada :P */
     if (!NoSplitRecovery) {
 	/* XXX: This code should be checked to ensure it can't be fooled */
 	if (ni->id_timestamp != 0 && u->signon == ni->id_timestamp) {
@@ -827,10 +828,41 @@ NickInfo *findnick(const char *nick)
 {
     NickInfo *ni;
 
+/* Añadido soporte toLower, toUpper y strCasecmp para evitar conflictos
+ * con nicks, debido a la arquitectura de undernet, que considera
+ * como equivalentes los nicks [zoltan] y {zoltan} entre otros signos
+ * Así los Services, lo considerará como el mismo nick, impidiendo que 
+ * se pueda registrar {zoltan} existiendo [zoltan]
+ *
+ * Signos equivalentes
+ * Minúsculas == Mayúsculas (esto ya estaba antes con tolower)
+ * [ == {
+ * ] == }
+ * ^ == ~
+ * \ == |
+ *
+ * Copiado codigo common.c y common.h del ircu de Undernet
+ * 
+ * zoltan 1/11/2000
+ */
+ /* Codigo Antiguo */
+ /*
     for (ni = nicklists[tolower(*nick)]; ni; ni = ni->next) {
-	if (stricmp(ni->nick, nick) == 0)
+         if (stricmp(ni->nick, nick) == 0)
+             return ni;
+    }
+*/ 
+ /* Codigo Nuevo */
+    for (ni = nicklists[toLower(*nick)]; ni; ni = ni->next) {
+        if (strCasecmp(ni->nick, nick) == 0)
+            return ni;
+    }
+    
+    for (ni = nicklists[toUpper(*nick)]; ni; ni = ni->next) {
+	if (strCasecmp(ni->nick, nick) == 0)
 	    return ni;
     }
+    
     return NULL;
 }
 
@@ -1082,7 +1114,12 @@ static void collide(NickInfo *ni, int from_timeout)
 	send_cmd(NULL, "SVSNICK %s %s :%ld", ni->nick, guestnick, time(NULL));
 	ni->status |= NS_GUESTED;
     } else {
-#endif
+    
+    /* COMANDO RENAME de iRC-Hispano */
+    if (NSForceNickChange) {
+        send_cmd(ServerName, "RENAME %s", ni->nick);
+    } else {    
+#endif /* No_PONER */
 	notice_lang(s_NickServ, u, DISCONNECT_NOW);
     	kill_user(s_NickServ, u->numeric, "Protección de Nick Registrado");
     	send_cmd(NULL, "%c N %s %lu %s %s AAAAAA %c%c%c :Protegiendo a %s",
@@ -2371,13 +2408,15 @@ static void do_status(User *u)
 
     while ((nick = strtok(NULL, " ")) && (i++ < 16)) {
 	if (!(u2 = finduser(nick)))
-	    privmsg(s_NickServ, u->numeric, "STATUS %s 0", nick);
+	    privmsg(s_NickServ, u->numeric, "STATUS %s 0 (No conectado)", nick);
+        else if (!(findnick(nick)))
+            privmsg(s_NickServ, u->numeric, "STATUS %s 0 (No registrado)", nick);                   
 	else if (nick_identified(u2))
-	    privmsg(s_NickServ, u->numeric, "STATUS %s 3", nick);
+	    privmsg(s_NickServ, u->numeric, "STATUS %s 3 (Identificado)", nick);
 	else if (nick_recognized(u2))
-	    privmsg(s_NickServ, u->numeric, "STATUS %s 2", nick);
+	    privmsg(s_NickServ, u->numeric, "STATUS %s 2 (Reconocido por la máscara)", nick);
 	else
-	    privmsg(s_NickServ, u->numeric, "STATUS %s 1", nick);
+	    privmsg(s_NickServ, u->numeric, "STATUS %s 1 (No reconocido, ni identificado)", nick);
     }
 }
 

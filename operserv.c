@@ -194,7 +194,7 @@ void operserv(const char *source, char *buf)
 #define SAFE(x) do {					\
     if ((x) < 0) {					\
 	if (!forceload)					\
-	    fatal("Read error on %s", OperDBName);	\
+	    fatal("Error de lectura en %s", OperDBName);	\
 	failed = 1;					\
 	break;						\
     }							\
@@ -251,7 +251,7 @@ void load_os_dbase(void)
 	break;
 
       default:
-	fatal("Unsupported version (%d) on %s", ver, OperDBName);
+	fatal("Version no soportada (%d) en %s", ver, OperDBName);
     } /* switch (version) */
     close_db(f);
 }
@@ -265,9 +265,9 @@ void load_os_dbase(void)
 #define SAFE(x) do {						\
     if ((x) < 0) {						\
 	restore_db(f);						\
-	log_perror("Write error on %s", OperDBName);		\
+	log_perror("Error de escritura en %s", OperDBName);		\
 	if (time(NULL) - lastwarn > WarningTimeout) {		\
-	    wallops(NULL, "Write error on %s: %s", OperDBName,	\
+	    wallops(NULL, "Error de escritura en %s: %s", OperDBName,	\
 			strerror(errno));			\
 	    lastwarn = time(NULL);				\
 	}							\
@@ -487,7 +487,7 @@ static void send_clone_lists(User *u)
 	return;
     }
 
-    notice(s_OperServ, u->nick, "clonelist[]");
+    privmsg(s_OperServ, u->numeric, "clonelist[]");
     for (i = 0; i < CLONE_DETECT_SIZE; i++) {
 	if (clonelist[i].host)
 	    privmsg(s_OperServ, u->numeric, "    %10ld  %s", clonelist[i].time, clonelist[i].host ? clonelist[i].host : "(null)");
@@ -664,6 +664,9 @@ static void do_stats(User *u)
 	notice_lang(s_OperServ, u, OPER_STATS_BYTES_WRITTEN, 
 			total_written / 1024);
 
+        get_server_stats(&count, &mem);
+        privmsg(s_OperServ, u->numeric, "Server  : %6d registros, %5d kB",
+                        count, (mem+512) / 1024);
 	get_user_stats(&count, &mem);
 	notice_lang(s_OperServ, u, OPER_STATS_USER_MEM,
 			count, (mem+512) / 1024);
@@ -793,7 +796,7 @@ static void do_clearmodes(User *u)
 	    }
 	}
 	if (WallOSClearmodes)
-	    wallops(s_OperServ, "%s used CLEARMODES%s on %s",
+	    wallops(s_OperServ, "%s ha usado CLEARMODES%s en %s",
 			u->nick, all ? " ALL" : "", chan);
 	if (all) {
 	    /* Clear mode +o */
@@ -884,7 +887,7 @@ static void do_os_kick(User *u)
         if (u2) {
             send_cmd(s_ChanServ, "K %s %s :%s (%s)", chan, u2->numeric, u->nick, s);
             if (WallOSKick)
-	        wallops(s_OperServ, "%s used KICK on %s/%s", u->nick, nick, chan);
+	        wallops(s_OperServ, "%s ha usado KICK en %s/%s", u->nick, nick, chan);
             argv[0] = sstrdup(chan);
             argv[1] = sstrdup(u2->numeric);
             argv[2] = sstrdup(s);
@@ -1144,10 +1147,8 @@ static void do_jupe(User *u)
     if (!jserver) {
 	syntax_error(s_OperServ, u, "JUPE", OPER_JUPE_SYNTAX);
     } else {
-	wallops(s_OperServ, "\2Juping\2 %s by request of \2%s\2.",
-		jserver, u->nick);
 	if (!reason) {
-	    snprintf(buf, sizeof(buf), "Jupitered by %s", u->nick);
+	    snprintf(buf, sizeof(buf), "JUPEado por %s", u->nick);
 	    reason = buf;
 	}
         server = find_servername(jserver);
@@ -1156,6 +1157,8 @@ static void do_jupe(User *u)
             privmsg(s_OperServ, u->numeric, "No encuentro a %s para JUPE", jserver);
             return;
         } else {
+            wallops(s_OperServ, "\2JUPE\2 a %s por peticion de \2%s\2.",
+                        jserver, u->nick);        
             send_cmd(NULL, "%c SQ %s 0 :%s", convert2y[ServerNumeric], jserver, reason);
             argv[0] = sstrdup(server->name);
             argv[1] = sstrdup("0");
@@ -1197,9 +1200,10 @@ static void do_os_quit(User *u)
 {
     quitmsg = malloc(28 + strlen(u->nick));
     if (!quitmsg)
-	quitmsg = "QUIT command received, but out of memory!";
+	quitmsg = "Aieee! QUITing Services...";
     else
-	sprintf(quitmsg, "QUIT command received from %s", u->nick);
+	sprintf(quitmsg, "Aieee! %s, %s y %s han recibido una orden de QUIT de %s",
+	          s_NickServ, s_ChanServ, s_MemoServ, u->nick);
     quitting = 1;
 }
 
@@ -1209,9 +1213,10 @@ static void do_shutdown(User *u)
 {
     quitmsg = malloc(32 + strlen(u->nick));
     if (!quitmsg)
-	quitmsg = "SHUTDOWN command received, but out of memory!";
+	quitmsg = "Aieee! SHUTDOWNing Services...";
     else
-	sprintf(quitmsg, "SHUTDOWN command received from %s", u->nick);
+	sprintf(quitmsg, "Aieee! %s, %s y %s han recibido una orden de SHUTDOWN de %s",
+                   s_NickServ, s_ChanServ, s_MemoServ, u->nick);
     save_data = 1;
     delayed_quit = 1;
 }
@@ -1223,9 +1228,10 @@ static void do_restart(User *u)
 #ifdef SERVICES_BIN
     quitmsg = malloc(31 + strlen(u->nick));
     if (!quitmsg)
-	quitmsg = "RESTART command received, but out of memory!";
+	quitmsg = "Aieee! RESTARTing Services...";
     else
-	sprintf(quitmsg, "RESTART command received from %s", u->nick);
+	sprintf(quitmsg, "Aieee! %s, %s y %s han recibido una orden de RESTART de %s",
+	           s_NickServ, s_ChanServ, s_MemoServ, u->nick);
     raise(SIGHUP);
 #else
     notice_lang(s_OperServ, u, OPER_CANNOT_RESTART);
@@ -1242,7 +1248,7 @@ static void do_listignore(User *u)
     IgnoreData *id;
     int i;
 
-    notice(s_OperServ, u->nick, "Command disabled - it's broken.");
+    privmsg(s_OperServ, u->numeric, "Command disabled - it's broken.");
     return;
     
     for (i = 0; i < 256; i++) {
@@ -1251,7 +1257,7 @@ static void do_listignore(User *u)
 		notice_lang(s_OperServ, u, OPER_IGNORE_LIST);
 		sent_header = 1;
 	    }
-	    notice(s_OperServ, u->nick, "%ld %s", id->time, id->who);
+	    privmsg(s_OperServ, u->numeric, "%ld %s", id->time, id->who);
 	}
     }
     if (!sent_header)
@@ -1267,9 +1273,9 @@ static void do_matchwild(User *u)
     char *pat = strtok(NULL, " ");
     char *str = strtok(NULL, " ");
     if (pat && str)
-	notice(s_OperServ, u->nick, "%d", match_wild(pat, str));
+	privmsg(s_OperServ, u->numeric, "%d", match_wild(pat, str));
     else
-	notice(s_OperServ, u->nick, "Syntax error.");
+	privmsg(s_OperServ, u->numeric, "Syntax error.");
 }
 
 #endif	/* DEBUG_COMMANDS */
@@ -1315,7 +1321,7 @@ static void do_killclones(User *u)
 		tempuser = nextuser();
 		count++;
 		snprintf(killreason, sizeof(killreason), 
-					"Cloning [%d]", count);
+					"KILL de Clones [%d]", count);
 		kill_user(NULL, user->numeric, killreason);
 		user = tempuser;
 	    } else {
@@ -1326,9 +1332,9 @@ static void do_killclones(User *u)
 	add_akill(akillmask, akillreason, u->nick, 
 			time(NULL) + KillClonesAkillExpire);
 
-	wallops(s_OperServ, "\2%s\2 used KILLCLONES for \2%s\2 killing "
-			"\2%d\2 clones. A temporary AKILL has been added "
-			"for \2%s\2.", u->nick, clonemask, count, akillmask);
+	wallops(s_OperServ, "\2%s\2 ha usado KILLCLONES para \2%s\2 killeando "
+			"\2%d\2 clones. Un GLINE temporal ha sido añadido "
+			"para \2%s\2.", u->nick, clonemask, count, akillmask);
 
 	log("%s: KILLCLONES: %d clone(s) matching %s killed.",
 			s_OperServ, count, clonemask);
