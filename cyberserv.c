@@ -1360,7 +1360,7 @@ static void do_iline(User *u)
         }
                                 
         
-        limit = (limite && isdigit(*limite)) ? atoi(limite) : -1;
+        limit = (limite && isdigit((int)*limite)) ? atoi(limite) : -1;
         if (limit < 0 || limit > MaximoClones) {
             notice_lang(s_CyberServ, u, CYBER_ILINE_INVALID_LIMIT,
                                 MaximoClones);

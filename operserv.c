@@ -1475,7 +1475,7 @@ static void do_set(User *u)
 	    log("Debug mode deactivated");
 	    debug = 0;
 	    notice_lang(s_OperServ, u, OPER_SET_DEBUG_OFF);
-	} else if (isdigit(*setting) && atoi(setting) > 0) {
+	} else if (isdigit((int)*setting) && atoi(setting) > 0) {
 	    debug = atoi(setting);
 	    log("Debug mode activated (level %d)", debug);
 	    notice_lang(s_OperServ, u, OPER_SET_DEBUG_LEVEL, debug);

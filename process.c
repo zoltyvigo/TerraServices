@@ -111,7 +111,7 @@ int split_buf(char *buf, char ***argv, int colon_special)
 	    s = strpbrk(buf, " ");
 	    if (s) {
 		*s++ = 0;
-		while (isspace(*s))
+		while (isspace((int)*s))
 		    s++;
 	    } else {
 		s = buf + strlen(buf);
@@ -153,7 +153,7 @@ void process()
 	if (!s)
 	    return;
 	*s = 0;
-	while (isspace(*++s))
+	while (isspace((int)*++s))
 	    ;
 	strscpy(source, buf+1, sizeof(source));
 	memmove(buf, s, strlen(s)+1);
@@ -165,7 +165,7 @@ void process()
     s = strpbrk(buf, " ");
     if (s) {
 	*s = 0;
-	while (isspace(*++s))
+	while (isspace((int)*++s))
 	    ;
     } else
 	s = buf + strlen(buf);

@@ -3708,7 +3708,7 @@ NickInfo *ni = findnick(mask);
 	    notice_lang(s_ChanServ, u, CHAN_AKICK_LIST_EMPTY, chan);
 	    return;
 	}
-	if (mask && isdigit(*mask) &&
+	if (mask && isdigit((int)*mask) &&
 			strspn(mask, "1234567890,-") == strlen(mask)) {
 	    process_numlist(mask, NULL, akick_list_callback, u, ci,
                            &sent_header, is_view);

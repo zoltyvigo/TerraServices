@@ -1053,8 +1053,11 @@ NickInfo *findnick(const char *nick)
 	if (stricmp(ni->nick, nick) == 0)
 	    return ni;
     }
-  
  */
+
+    if(!nick)
+        return NULL;
+
  /* Codigo Nuevo */
     for (ni = nicklists[toLower(*nick)]; ni; ni = ni->next) {
         if (strCasecmp(ni->nick, nick) == 0)
