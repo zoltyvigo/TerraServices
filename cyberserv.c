@@ -660,7 +660,7 @@ int is_cyber_admin(User *u)
             if (stricmp(il->admin->nick, u->nick) == 0)               
                 if (nick_identified(u))            
                     return 1;
-             
+                return 0;
         }
     }    
     

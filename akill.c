@@ -393,7 +393,7 @@ void do_akill(User *u)
 	}
 
 	if (mask && (reason = strtok(NULL, ""))) {
-            char buf[128];
+            char buf[256];
             if (strchr(mask, '!')) {
                 notice_lang(s_OperServ, u, OPER_AKILL_NO_NICK);
                 notice_lang(s_OperServ, u, BAD_USERHOST_MASK);
@@ -420,7 +420,7 @@ void do_akill(User *u)
 
             if (expires == 0)
                 snprintf(buf, sizeof(buf),
-                         getstring(u->nick, OPER_AKILL_NO_EXPIRE));
+                         getstring(u->ni, OPER_AKILL_NO_EXPIRE));
             else
                 expires_in_lang(buf, sizeof(buf), u, expires - t + 59);
             canalopers(s_OperServ, "%s ha añadido un GLINE para %s (%s)",

@@ -1095,9 +1095,10 @@ NickInfo *getlink(NickInfo *ni)
 {
     NickInfo *orig = ni;
     int i = 0;
-
-    while (ni->link && ++i < 512)
-	ni = ni->link;
+    
+    if(ni) 
+        while (ni->link && ++i < 512)
+	    ni = ni->link;
     if (i >= 512) {
 	log("%s: Infinite loop(?) found at nick %s for nick %s, cutting link",
 		s_NickServ, ni->nick, orig->nick);
@@ -1633,7 +1634,8 @@ static void do_register(User *u)
 	return;
     }
 
-
+/* SOLO IRCOPS REGISTO DE NICK */
+/*
     if (!is_oper(u->nick)) {
         privmsg(s_NickServ, u->nick, "El servicio de Registro de Nicks "
          "está en fase de pruebas.");
@@ -1641,6 +1643,7 @@ static void do_register(User *u)
          "ya se avisará de ello.");
         return;
     }
+*/
 
     /* Previene que los nicks "ircXXXXXX" que genera el ircu
      * no puedan ser registrados
@@ -3450,9 +3453,6 @@ static void do_reguser(User *u)
 
     if (!pass || !email || (stricmp(pass, nick) == 0 && strtok(NULL, " "))) {
 	syntax_error(s_NickServ, u, "REGUSER", NICK_REGUSER_SYNTAX);
-    } else if ((time(NULL) < u->lastnickreg + NSRegDelay) && !is_oper(nick)) {
-	notice_lang(s_NickServ, u, NICK_REG_PLEASE_WAIT, NSRegDelay);
-
     } else if ((ni = findnick(nick))) {	/* i.e. there's already such a nick regged */
 	if (ni->status & NS_VERBOTEN) {
 	    log("%s: %s@%s tried to register FORBIDden nick %s", s_NickServ,

@@ -138,7 +138,7 @@ static Command cmds[] = {
     { "?",        do_help,     NULL,  -1,                       -1,-1,-1,-1 },
     { "CREDITS",  do_credits,  NULL,  SERVICES_CREDITS_TERRA,   -1,-1,-1,-1 },
     { "CREDITOS", do_credits,  NULL,  SERVICES_CREDITS_TERRA,   -1,-1,-1,-1 },
-    { "REGISTER", do_register, is_services_admin,
+    { "REGISTER", do_register, is_services_oper,
                 CHAN_HELP_REGISTER,       -1,-1,-1,-1 },
     { "IDENTIFY", do_identify, NULL,  CHAN_HELP_IDENTIFY,       -1,-1,-1,-1 },
     { "DROP",     do_drop,     NULL,  -1,

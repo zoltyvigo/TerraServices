@@ -28,9 +28,10 @@ void *smalloc(long size)
 	log("smalloc: Illegal attempt to allocate 0 bytes");
 	size = 1;
     }
-    buf = malloc(size);
-    if (!buf)
+    if(!(buf=(void *)malloc(size))) {
+	log("smalloc: FATAL: IMPOSIBLE OBTENER %ld BYTES!!", size);
 	raise(SIGUSR1);
+    }
     return buf;
 }
 
@@ -42,9 +43,10 @@ void *scalloc(long elsize, long els)
 	log("scalloc: Illegal attempt to allocate 0 bytes");
 	elsize = els = 1;
     }
-    buf = calloc(elsize, els);
-    if (!buf)
+    if(!(buf=(void *)calloc(elsize, els))) {
+	log("scalloc: FATAL: IMPOSIBLE OBTENER %ld ESTRUCTURAS DE TAMAÑO %ld!!", elsize, els);
 	raise(SIGUSR1);
+    }
     return buf;
 }
 
@@ -56,9 +58,11 @@ void *srealloc(void *oldptr, long newsize)
 	log("srealloc: Illegal attempt to allocate 0 bytes");
 	newsize = 1;
     }
-    buf = realloc(oldptr, newsize);
-    if (!buf)
+    if(!(buf=(void *)realloc(oldptr, newsize))) {
+	log("realloc: FATAL: IMPOSIBLE REAJUSTAR EL TAMAÑO DEL PUNTERO %p A %ld BYTES!!",
+            oldptr, newsize);
 	raise(SIGUSR1);
+    }
     return buf;
 }
 
