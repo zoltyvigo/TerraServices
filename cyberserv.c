@@ -319,7 +319,7 @@ void cyberserv(const char *source, char *buf)
             s = "\1";
         notice(s_CyberServ, u->nick, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION\1") == 0) {
-        notice(s_CyberServ, u->nick, "\1VERSION irc-services-%s+Terra-1.0 %s :-- %s",
+        notice(s_CyberServ, u->nick, "\1VERSION irc-services-%s+Terra-1.0 %s -- %s",
                        version_number, s_CyberServ, version_build);    
     } else if (skeleton) {
         notice_lang(s_CyberServ, u, SERVICE_OFFLINE, s_CyberServ);
@@ -373,7 +373,7 @@ void load_cyber_dbase(void)
                 prev = il;
                 
                 SAFE(read_string(&il->host, f));
-                SAFE(read_string(&il->host2, f));                
+                SAFE(read_string(&il->host2, f));                            
                 SAFE(read_string(&s, f));
                 if (s)
                     il->admin = findnick(s);
@@ -387,7 +387,7 @@ void load_cyber_dbase(void)
                 SAFE(read_string(&il->comentario, f));
                 SAFE(read_string(&il->vhost, f));                                
                 SAFE(read_buffer(il->operwho, f));                
-                SAFE(read_int16(&il->limite, f));                                
+                SAFE(read_int16(&il->limite, f));                                              
                 SAFE(read_int32(&tmp32, f));
                 il->time_concesion = tmp32;
                 SAFE(read_int32(&tmp32, f));
@@ -396,7 +396,6 @@ void load_cyber_dbase(void)
                 SAFE(read_int32(&tmp32, f));
                 il->time_record = tmp32;                                                                                               
                 SAFE(read_int16(&il->estado, f));
-  
             }  /* while (getc_db(f) != 0) */
             *last = NULL;
                         
@@ -453,6 +452,7 @@ void save_cyber_dbase(void)
             SAFE(write_string(il->comentario, f));
             SAFE(write_string(il->vhost, f));
             SAFE(write_buffer(il->operwho, f));
+            SAFE(write_int16(il->limite, f));            
             SAFE(write_int32(il->time_concesion, f));
             SAFE(write_int32(il->time_expiracion, f));
             SAFE(write_int16(il->record_clones, f));
@@ -491,20 +491,13 @@ IlineInfo *find_iline_host(const char *host)
      for (il = ilinelists[tolower(*host)]; il; il = il->next) {
          if (stricmp(il->host, host) == 0)
              return il;
-     }     
-     return NULL;
-}
-
-
-IlineInfo *find_iline_host2(const char *host)
-{
-
-     IlineInfo *il;
-     
-     for (il = ilinelists[tolower(*host)]; il; il = il->next) {
-         if (stricmp(il->host2, host) == 0)
-             return il;
-     }
+/* Para ver la IP num y inversa */
+/*             
+         if (il->host2)
+             if (stricmp(il->host2, host) == 0)
+                 return il;    
+*/                 
+     }          
      return NULL;
 }
 
@@ -513,28 +506,16 @@ IlineInfo *find_iline_admin(const char *nick)
 {
 
      IlineInfo *il;
+     int i;
      
-/* Codigo Antiguo */
 
-     for (il = ilinelists[tolower(*nick)]; il; il = il->next) {
-         if (stricmp(il->admin->nick, nick) == 0)
-             return il;
-     }
-                            
-
-/* Codigo Nuevo */
-/*
-     for (il = ilinelists[toLower(*nick)]; il; il = il->next) {
-         if (strCasecmp(il->admin->nick, nick) == 0)
-             return il;
-     }
-
-     for (il = nicklists[toUpper(*nick)]; il; il = il->next) {
-         if (strCasecmp(il->admin->nick, nick) == 0)
-            return il;
-     }                              
-
-*/     
+     for (i = 0; i < 256; i++) {
+         for (il = ilinelists[i]; il; il = il->next) {
+             if (stricmp(il->admin->nick, nick) == 0)
+                 return il;
+         }         
+     }    
+             
      return NULL;
 }
 
@@ -547,13 +528,12 @@ int is_cyber_admin(User *u)
     if (is_services_admin(u))
         return 1;
         
-    if (skeleton)
-        return 1;
     
     for (i = 0; i < 256; i++) {
         for (il = ilinelists[i]; il; il = il->next) {
-            if (stricmp(il->admin->nick, u->nick) == 0)
-                return 1;
+            if (stricmp(il->admin->nick, u->nick) == 0)               
+                if (nick_identified(u))            
+                    return 1;
              
         }
     }    
@@ -569,24 +549,38 @@ void check_ip_iline(User *u)
 {
     NickInfo *ni = findnick(u->nick);
     IlineInfo *il;
-    privmsg(s_CyberServ, u->nick, "Comprobando...");
+
     if (!ni)
         return;
     
-    if (!(il = find_iline_admin(u->nick))) {
-     privmsg(s_CyberServ, u->nick, "no eres admin");
+    if (!(il = find_iline_admin(u->nick))) 
         return;
-    }    
-    privmsg(s_CyberServ, u->nick, "Eres Admin de Iline");    
-    if (stricmp(il->host, u->host) == 0) {
-    privmsg(s_CyberServ, u->nick, "tu ip actual concide con el host");
+      
+    if (stricmp(il->host, u->host) == 0) 
         return;
-    }    
-//    if (il->estado & IL_IPNOFIJA)
+   
+    if (!(il->estado & IL_IPNOFIJA))
+        return;
+        
     notice_lang(s_CyberServ, u, CYBER_ACTUALIZA_CHECK, s_CyberServ);
     
 }
 
+/*************************************************************************/
+
+void check_cyber_ilines(User *u, NickInfo *ni)
+{
+    IlineInfo *il;
+    
+    il = find_iline_admin(ni->nick);
+    
+    if (!il)
+        return;
+        
+    privmsg(s_NickServ, u->nick, "Iline a ip 12%s, limite clones: 12%d",
+                                   il->host, il->limite);                                      
+
+}
 /*************************************************************************/
 
 static IlineInfo *makeiline(const char *host)
@@ -694,12 +688,12 @@ static void do_actualiza(User *u)
     
     IlineInfo *iline;
 
-/*
+
     if (!is_cyber_admin(u)) {
         notice_lang(s_CyberServ, u, CYBER_NO_ADMIN_CYBER);
         return;
     }
-  */
+
     if (!(iline = find_iline_admin(u->nick))) {
         notice_lang(s_CyberServ, u, CYBER_NO_ADMIN_CYBER);
     } else if (stricmp(iline->host, u->host) == 0) {
@@ -708,6 +702,7 @@ static void do_actualiza(User *u)
         notice_lang(s_CyberServ, u, CYBER_ACTUALIZA_IPFIJA, iline->host);
     } else {    
         iline->host = sstrdup(u->host);
+        alpha_insert_iline(iline);        
         notice_lang(s_CyberServ, u, CYBER_ACTUALIZA_SUCCEEDED, 
                                           iline->host, iline->limite);
     }
@@ -721,12 +716,13 @@ static void do_info(User *u)
     char *host = strtok(NULL, " ");
     Clones *clones;
     IlineInfo *il;
+    struct tm *tm;
     
     int is_servadmin = is_services_admin(u);
     
-    if (is_services_oper && host) {
+    if (is_services_oper(u) && host)  {
         clones = findclones(host);    
-        il = find_iline_host(host);       
+        il = find_iline_host(host);
         if (il) {
             notice_lang(s_CyberServ, u, CYBER_INFO_HEADER, il->comentario);          
             if (il->estado & IL_IPNOFIJA) {
@@ -734,31 +730,72 @@ static void do_info(User *u)
                 notice_lang(s_CyberServ, u, CYBER_INFO_IPFIJA_HOST, il->host);                
             } else {
                 notice_lang(s_CyberServ, u, CYBER_INFO_IPFIJA_OFF);            
-                if (il->host2) 
-                    notice_lang(s_CyberServ, u, CYBER_INFO_HOST2, il->host2);
-                notice_lang(s_CyberServ, u, CYBER_INFO_HOST, il->host);                
+                if (il->host2) {
+                    notice_lang(s_CyberServ, u, CYBER_INFO_HOST2, il->host);
+                    notice_lang(s_CyberServ, u, CYBER_INFO_HOST, il->host2);                
+                } else
+                    notice_lang(s_CyberServ, u, CYBER_INFO_HOST, il->host);
             } 
             notice_lang(s_CyberServ, u, CYBER_INFO_LIMITE, il->limite);
             if (is_servadmin) {
-                notice_lang(s_CyberServ, u, CYBER_INFO_NICKADMIN, il->admin);
-                notice_lang(s_CyberServ, u, CYBER_INFO_NAMEADMIN, il->nombreadmin);
-                notice_lang(s_CyberServ, u, CYBER_INFO_DNI, il->dniadmin);
-                notice_lang(s_CyberServ, u, CYBER_INFO_EMAIL, il->email);
-                notice_lang(s_CyberServ, u, CYBER_INFO_TELEFONO, il->telefono);
+                notice_lang(s_CyberServ, u, CYBER_INFO_NICKADMIN, il->admin->nick);
+                notice_lang(s_CyberServ, u, CYBER_INFO_NAMEADMIN, 
+                            il->nombreadmin ? il->nombreadmin : "");
+                notice_lang(s_CyberServ, u, CYBER_INFO_DNI, 
+                            il->dniadmin ? il->dniadmin : "");
+                notice_lang(s_CyberServ, u, CYBER_INFO_EMAIL,
+                            il->email ? il->email : "");
+                notice_lang(s_CyberServ, u, CYBER_INFO_TELEFONO, 
+                            il->telefono ? il->telefono : "");
             }    
             if (il->vhost)
                 notice_lang(s_CyberServ, u, CYBER_INFO_VHOST, il->vhost);
             if (is_servadmin) {    
-/* Poner aqui cosas con time */
-
+                char timebuf[32], expirebuf[256];
+                time_t now = time(NULL);
+                tm = localtime(&il->time_concesion);
+                strftime_lang(timebuf, sizeof(timebuf), u, STRFTIME_DATE_TIME_FORMAT, tm);
+                if (il->time_expiracion == 0) {
+                    snprintf(expirebuf, sizeof(expirebuf),
+                             getstring(u->ni, OPER_AKILL_NO_EXPIRE));
+                } else if (il->time_expiracion <= now) {
+                    snprintf(expirebuf, sizeof(expirebuf),
+                             getstring(u->ni, OPER_AKILL_EXPIRES_SOON));
+                } else {
+                     expires_in_lang(expirebuf, sizeof(expirebuf), u,
+                                      il->time_expiracion - now + 59);
+                }
+                notice_lang(s_CyberServ, u, CYBER_INFO_TIME, timebuf, expirebuf);     
                 notice_lang(s_CyberServ, u, CYBER_INFO_OPER, il->operwho);
+                if (il->record_clones) {
+                    tm = localtime(&il->time_record);
+                    strftime_lang(timebuf, sizeof(timebuf), u,
+                                         STRFTIME_DATE_TIME_FORMAT, tm);                    
+                    notice_lang(s_CyberServ, u, CYBER_INFO_RECORD,
+                              il->record_clones, timebuf);
+                }
             }       
         } else {
             notice_lang(s_CyberServ, u, CYBER_ILINE_NOT_CONCEDED, host);
         }    
     } else {    
         clones = findclones(u->host);
-        il = find_iline_host(u->host);        
+        il = find_iline_admin(u->nick);        
+        if (il) {
+            notice_lang(s_CyberServ, u, CYBER_INFO_HEADER, il->comentario);
+            if (il->estado & IL_IPNOFIJA) {
+                notice_lang(s_CyberServ, u, CYBER_INFO_IPFIJA_ON);
+                notice_lang(s_CyberServ, u, CYBER_INFO_IPFIJA_HOST, il->host);
+            } else {
+                notice_lang(s_CyberServ, u, CYBER_INFO_IPFIJA_OFF);
+                if (il->host2) {
+                    notice_lang(s_CyberServ, u, CYBER_INFO_HOST2, il->host);
+                    notice_lang(s_CyberServ, u, CYBER_INFO_HOST, il->host2);
+                } else
+                    notice_lang(s_CyberServ, u, CYBER_INFO_HOST, il->host);
+            }
+                                                                                                                                                                                                    
+        }
         
     }    
     if (clones) {
@@ -766,10 +803,7 @@ static void do_info(User *u)
                                    il ? il->limite : LimiteClones);   
     } else        
         notice_lang(s_CyberServ, u, CYBER_INFO_NO_CLONES, host ? host : u->host);
-        
-       
-                            
-                            
+                                                                       
 }
 
 /*************************************************************************/
@@ -870,9 +904,9 @@ static void do_cyberunban(User *u)
 {
 
    char *chan = strtok(NULL, " ");
-//   Channel *c;
-//   int i;
-//   char *av[3];
+   Channel *c;
+   int i;
+   char *av[3];
    
    if (!is_cyber_admin(u)) {
        notice_lang(s_CyberServ, u, CYBER_NO_ADMIN_CYBER);
@@ -886,7 +920,7 @@ static void do_cyberunban(User *u)
    
    privmsg(s_CyberServ, u->nick, "Comando no disponible aun");
    return;
-/**   
+   
    if (!(c = findchan(chan))) {
        notice_lang(s_CyberServ, u, CHAN_X_NOT_IN_USE, chan);
    } else {
@@ -915,7 +949,7 @@ static void do_cyberunban(User *u)
            notice_lang(s_CyberServ, u, CYBER_UNBAN_FAILED, chan);
        free(bans);
    }       
-**/
+
 }                                                                                                    
  
 /*************************************************************************/
@@ -990,11 +1024,7 @@ static void do_clones(User *u)
                 notice_lang(s_CyberServ, u, CYBER_CLONES_NOT_FOUND, param);
             } else {
                 iline = find_iline_host(param);
-
-           /* If limit == 0, then there is no limit - reply must include
-            * this information. e.g. "... with no limit.".
-            */
-                                   
+                                  
                 notice_lang(s_CyberServ, u, CYBER_CLONES_VIEW_FORMAT,
                                         param, clones->numeroclones,
                                    iline ? iline->limite : LimiteClones);
@@ -1055,7 +1085,10 @@ static void do_list(User *u)
                         if (il->estado & IL_IPNOFIJA) {
                             snprintf(buf, sizeof(buf), "%-20s, [IP NO Fija] %s",
                                         il->host, il->comentario);
-                        }                 
+                        }   
+                        privmsg(s_CyberServ, u->nick, "  %c%s",
+                                               noexpire_char, buf);
+                                                                                                              
                     }      
                 }
             }
@@ -1156,7 +1189,7 @@ static void do_iline(User *u)
         il = makeiline(host);
         if (il) {                  
             il->admin = ni;
-            il->comentario = motivo;          
+            il->comentario = sstrdup(motivo);          
             strscpy(il->operwho, u->nick, NICKMAX);                        
             il->limite = limit;              
             il->time_concesion = time(NULL);
@@ -1265,6 +1298,7 @@ static void do_set_host(User *u, IlineInfo *il, char *param)
         antiguo = sstrdup(param);
     }    
     il->host = sstrdup(param);
+    alpha_insert_iline(il);    
     notice_lang(s_CyberServ, u, CYBER_SET_HOST_CHANGED, antiguo, param);
                 
 }

@@ -699,7 +699,7 @@ void do_umode(const char *source, int ac, char **av)
                             notice_lang(s_NickServ, user, NICK_IDENTIFY_X_MODE_R, user->nick);
                             if (!(new_ni->status & NS_RECOGNIZED))
                                 check_memos(user);
-                            check_ip_iline(user);    
+//                            check_ip_iline(user);    
                             strcpy(new_ni->nick, user->nick);                                
                         }
                     } else {
@@ -949,7 +949,7 @@ int match_virtualmask(const char *mask, User *user)
     strlower(host);
 /* Aqui calcular la ip virtual */  
     host2 = make_virtualhost(user->host);
-    
+    privmsg(s_ChanServ, user->nick, "IP CIFRADA CALCULADA: %s", host2);    
     if (nick) {
         nick2 = strlower(sstrdup(user->nick));
         result = match_wild(nick, nick2) &&

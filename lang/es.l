@@ -1447,7 +1447,7 @@ CYBER_INFO_HOST
 CYBER_INFO_HOST2
 	IP Inversa: 12%s
 CYBER_INFO_LIMITE
-	Numero de clones: 12d
+	Numero de clones: 12%d
 CYBER_INFO_NICKADMIN
 	Nick del admin: 12%s
 CYBER_INFO_NAMEADMIN
@@ -1463,7 +1463,7 @@ CYBER_INFO_VHOST
 CYBER_INFO_TIME
 	Dado de alta: 12%s, expira en 12%s
 CYBER_INFO_RECORD
-	Numero más alto: 12%s clones, alcanzado el 12%s
+	Numero más alto: 12%d clones, alcanzado el 12%s
 CYBER_INFO_OPER
 	Iline añadido por 12%s
 CYBER_INFO_CLONES

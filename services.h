@@ -206,7 +206,7 @@ struct nickinfo_ {
     char *last_quit;
     time_t time_registered;
     time_t last_seen;
-    time_t last_used_reg;      /* Ultimo REGISTRA/APOYO en Reg */
+//    time_t last_used_reg;      /* Ultimo REGISTRA/APOYO en Reg */
     int16 status;	/* See NS_* below */
     
     char *suspendby;           /* Quien lo suspendio */

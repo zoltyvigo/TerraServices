@@ -270,6 +270,7 @@ E int is_cyber_admin(User *u);
 E int nick_is_cyber_admin(NickInfo *ni);
 E void cyber_remove_nick(const NickInfo *ni);
 E void check_ip_iline(User *u);
+E void check_cyber_iline(User *u, NickInfo *ni);
 #endif
 
 /**** helpserv.c ****/

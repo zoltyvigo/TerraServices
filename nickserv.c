@@ -2563,6 +2563,7 @@ static void do_info(User *u)
 //        if (param && (stricmp(param, "ALL") == 0) && ((is_services_oper(u) || (ni == u->ni)
 //                    || (ni == u->real_ni))) {
         if (show_hidden) {
+//            check_cyber_iline(u, ni);
             check_cs_access(u, ni);
 /* Ya no hay links */
 /*
