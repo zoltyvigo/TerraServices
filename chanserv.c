@@ -138,8 +138,7 @@ static Command cmds[] = {
     { "?",        do_help,     NULL,  -1,                       -1,-1,-1,-1 },
     { "CREDITS",  do_credits,  NULL,  SERVICES_CREDITS_TERRA,   -1,-1,-1,-1 },
     { "CREDITOS", do_credits,  NULL,  SERVICES_CREDITS_TERRA,   -1,-1,-1,-1 },
-    { "REGISTER", do_register, is_services_oper,
-                CHAN_HELP_REGISTER,       -1,-1,-1,-1 },
+    { "REGISTER", do_register, NULL,  CHAN_HELP_REGISTER,       -1,-1,-1,-1 },
     { "IDENTIFY", do_identify, NULL,  CHAN_HELP_IDENTIFY,       -1,-1,-1,-1 },
     { "DROP",     do_drop,     NULL,  -1,
 		CHAN_HELP_DROP, CHAN_SERVADMIN_HELP_DROP,
@@ -484,7 +483,7 @@ void chanserv(const char *source, char *buf)
 	    s = "\1";
 	notice(s_ChanServ, source, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION\1") == 0) {
-        notice(s_ChanServ, source, "\1VERSION ircservices-%s+Terra-%s %s -- %s\1",
+        notice(s_ChanServ, source, "\1VERSION ircservices-%s+Tierrared-%s %s -- %s\1",
                   version_number, version_terra, s_ChanServ, version_build);
     } else if (skeleton) {
 	notice_lang(s_ChanServ, u, SERVICE_OFFLINE, s_ChanServ);
@@ -2234,12 +2233,12 @@ static void do_register(User *u)
     }
 
 /* Solo vía Reg */
-/*
-    if (!((stricmp(u->nick, "Reg") == 0) || is_services_admin(u))) {
+
+    if (!((stricmp(u->nick, "Reg") == 0) || is_services_oper(u))) {
         notice_lang(s_ChanServ, u, ACCESS_DENIED);
         return;
     }    
-*/
+
     if (!desc) {
 	syntax_error(s_ChanServ, u, "REGISTER", CHAN_REGISTER_SYNTAX);
     } else if (*chan == '&') {
@@ -2314,7 +2313,7 @@ static void do_register(User *u)
 	ci->desc = sstrdup(desc);
 	if (c->topic) {
 	    ci->last_topic = sstrdup(c->topic);
-	    strscpy(ci->last_topic_setter, c->topic_setter, NICKMAX);
+    strscpy(ci->last_topic_setter, c->topic_setter, NICKMAX);
 	    ci->last_topic_time = c->topic_time;
 	}
 	ni = ci->founder;
@@ -3709,7 +3708,7 @@ NickInfo *ni = findnick(mask);
 	    notice_lang(s_ChanServ, u, CHAN_AKICK_LIST_EMPTY, chan);
 	    return;
 	}
-	if (mask && isdigit((int)*mask) &&
+	if (mask && isdigit(*mask) &&
 			strspn(mask, "1234567890,-") == strlen(mask)) {
 	    process_numlist(mask, NULL, akick_list_callback, u, ci,
                            &sent_header, is_view);
@@ -3940,11 +3939,11 @@ static void do_info(User *u)
             notice_lang(s_ChanServ, u, CHAN_INFO_NO_FOUNDER, ni->nick);
         }
 
-/*      if (show_all && (ni = ci->successor)) {
-	La mask, solo accesible a opers
+        if (show_all && (ni = ci->successor)) {
+/*	La mask, solo accesible a opers
             if (ni->last_usermask && (is_servoper ||
 				!(ni->flags & NI_HIDE_MASK))) {
-
+*/
             if (ni->last_usermask && is_servoper) {				
 	        notice_lang(s_ChanServ, u, CHAN_INFO_SUCCESSOR, ni->nick, 
 				ni->last_usermask);
@@ -3953,7 +3952,7 @@ static void do_info(User *u)
 				ni->nick);
 	    }
 	}
-*/
+
 	notice_lang(s_ChanServ, u, CHAN_INFO_DESCRIPTION, ci->desc);
 	tm = localtime(&ci->time_registered);
 	strftime_lang(buf, sizeof(buf), u, STRFTIME_DATE_TIME_FORMAT, tm);
@@ -3965,6 +3964,11 @@ static void do_info(User *u)
         /* En un canal con modo +s o +p, solo se ve el topic SI estas
          * dentro del canal o eres un oper de los servicios */
 
+	if (ci->last_topic) {
+	    notice_lang(s_ChanServ, u, CHAN_INFO_LAST_TOPIC, ci->last_topic);
+	    notice_lang(s_ChanServ, u, CHAN_INFO_TOPIC_SET_BY,
+			ci->last_topic_setter);
+	}
         if (ci->last_topic) {
             if (ci->c) { /* Canal existente */
                 if (!(ci->c->mode & CMODE_S || ci->c->mode & CMODE_P)) {

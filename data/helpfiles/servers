@@ -1,10 +1,8 @@
-La red Terra Networks esta formada por los siguientes servidores:
+La red Tierrared.com esta formada por los siguientes servidores:
 
-    12tpir.anillo.adm   Terra Networks S.A HUB (irc.terra.es)
-    12tpi1.anillo.adm   Servidor IRC Clientes 1 (213.4.91.12)
-    12tpi2.anillo.adm   Servidor IRC Clientes 2 (213.4.91.13)
-    12tpi3.anillo.adm   Servidor IRC Clientes 3 (213.4.91.14)
-    12tpi4.anillo.adm   Servidor IRC Clientes 4 (213.4.91.20)
-    12tpi5.anillo.adm   Servidor IRC Clientes 5 (213.4.91.30)
+    12trueno.tierrared.com 		La Tierra Comunicacion S.L. HUB   (irc.tierrared.com)
+    12stardust.tierrared.com 	Tierra Networks S.L.U. Es-gay.com (es-gay.com)
+    12deep.space			Nodo P9 de Servicios de Red (deep.space)
+    12soyuz.tierrared.com		Nodo de Servicios Extra P10 (soyuz.tierrared.com)
 
-Para conectar a un servidor de Terra Networks, escribe 12/server irc.terra.es
+Para conectar a un servidor de Tierrared.com, escribe 12/server irc.tierrared.com o bien /server ^_es-gay.com^_

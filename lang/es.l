@@ -1,4 +1,4 @@
-# Archivo de idioma Español.
+#Archivo de idioma Español.
 #
 # Services esta protegido por derechos de autor (c) 1996-1999 Andrew Church.
 #     E-mail: <achurch@dragonfire.net>
@@ -191,11 +191,11 @@ CHAN_X_FORBIDDEN_OPER
 
 NICK_IDENTIFY_REQUIRED
 	Se requiere identificar con la contraseña para este comando.
-	Vuelve a intentar después de escribir 12/IDENTIFY <contraseña>.
+	Vuelve a intentar después de escribir 12/msg NiCK IDENTIFY <contraseña>.
 
 CHAN_IDENTIFY_REQUIRED
 	Se requiere identificar con la contraseña para este comando.
-	Vuelve a intentar después de escribir 12/IDENTIFY %s contraseña.
+	Vuelve a intentar después de escribir 12/msg NiCK IDENTIFY %s contraseña.
 
 SERV_X_NOT_FOUND
 	El servidor ^C12%s^C no ha sido encontrado.
@@ -208,9 +208,9 @@ SERV_X_NOT_FOUND
 
 # Automatic messages
 NICK_IS_REGISTERED
-	4Este nick pertenece a otra persona. Escoge otro nick. (Si es el tuyo, escribe 12/IDENTIFY contraseña.)
+	4Este nick pertenece a otra persona. Escoge otro nick. (Si es el tuyo, escribe 12/msg NiCK IDENTIFY contraseña.)
 NICK_IS_SECURE
-	Este nick esta registrado y protegido. Si es tu nick, escribe 12/IDENTIFY contraseña. Si no lo es, escoge un nick diferente.
+	Este nick esta registrado y protegido. Si es tu nick, escribe 12/msg NiCK IDENTIFY contraseña. Si no lo es, escoge un nick diferente.
 NICK_IS_SUSPENDED
 	Este nick ha sido suspendido temporalmente.
 	Motivo: 12%s
@@ -250,12 +250,9 @@ NICK_MAIL_ANONYMOUS
 	Dominio de correo inaceptable.
 	No utilice servicios anonimos.
 NICK_MAIL_TELELINE
-	Dirección E-mail inválida, Sólo se permiten cuentas de Terra.
-	Si tu mail es de 12teleline.es, cambia por 12terra.es, es decir
-	si el mail es 12ejemplo@teleline.es, usa 12ejemplo@terra.es para
-	registrar el nick.
+	Dirección E-mail inválida, Sólo se permiten cuentas de Proveedores oficiales.
 NICK_MAIL_TERRA
-	Dirección E-mail inválida, Sólo se permiten cuentas de Terra.
+	Dirección E-mail inválida, Sólo se permiten cuentas de ISP Oficiales.
 	Escribe 12/msg %s MAIL para más información.
 NICK_MAIL_ABUSE
 	No puedes registrar más de 12%d nicks por email.	
@@ -268,17 +265,13 @@ NICK_PASSWORD_IS
 NICK_IN_MAIL
 	Revisa tu correo (12%s) en unos minutos, te llegará una password.
 
-# REGUSER responses
-NICK_REGUSER_SYNTAX
-	12REGUSER <nick> <password> <email>
-
 # IDENTIFY responses
 NICK_IDENTIFY_SYNTAX
 	12IDENTIFY <password>
 NICK_IDENTIFY_FAILED
 	4Contraseña incorrecta.
 NICK_IDENTIFY_SUCCEEDED
-	3Contraseña aceptada. Bienvenid@ a Terra Networks ;)
+	3Contraseña aceptada. Bienvenid@ a Tierrared.com ;)
 NICK_IDENTIFY_X_MODE_R
 	12%s, has sido AUTOidentificado por tu modo 12+r.
 NICK_IS_IDENTIFIED
@@ -621,12 +614,9 @@ NICK_LISTEMAILS_INVALID
 NICK_LISTEMAILS_ANONYMOUS
 	Dominio de correo de servicios anonimos.
 NICK_LISTEMAILS_TELELINE
-	Dirección E-mail inválida, Sólo cuentas de Terra.
-	Si el mail es de 12teleline.es, cambia por 12terra.es, es decir
-	si el mail es 12ejemplo@teleline.es, usa 12ejemplo@terra.es para
-	la consulta.
+	Dirección E-mail inválida, Sólo cuentas de ISP Oficiales.
 NICK_LISTEMAILS_TERRA
-	Dirección E-mail inválida, Sólo cuentas de Terra para la consulta.
+	Dirección E-mail inválida, Sólo cuentas de ISP Oficiales.
 NICK_LISTEMAILS_HEADER
 	Lista de nicks registrados con el email 12%s:
 NICK_LISTEMAILS_RESULTS
@@ -773,7 +763,7 @@ CHAN_MUST_REGISTER_NICK
 	Usted debe de registrar primero su nick. Escriba 12/msg %s HELP para obtener más información de como registrar nicks.
 CHAN_MUST_IDENTIFY_NICK
 	Por favor identifiquese primero con 12%s, utilizando el comando:
-	12/IDENTIFY contraseña
+	12/msg NiCK IDENTIFY contraseña
 CHAN_MAY_NOT_BE_REGISTERED
 	Canal 12%s no puede ser registrado.
 CHAN_ALREADY_REGISTERED
@@ -1125,7 +1115,7 @@ CHAN_INFO_SYNTAX
 CHAN_INFO_HEADER
 	Información de canal 12%s:
 CHAN_INFO_OFICIAL
-	Es un Canal Oficial de Terra
+	Es un Canal Oficial de Tierrared
 CHAN_INFO_ACTIVED
 	Estado: 12ACTIVO
 CHAN_INFO_SUSPENDED
@@ -1856,7 +1846,7 @@ CYBER_UNSUSPEND_SUCCEEDED
 ###########################################################################
 
 CREG_NICK_IDENTIFY_REQUIRED
-	No estás identificado, identifícate con 12/IDENTIFY contraseña.
+	No estás identificado, identifícate con 12/msg NiCK IDENTIFY contraseña.
 CREG_NOT_REGISTRED
 	El canal 12%s no ha sido encontrado.
 CREG_NOT_PROCESO_REG
@@ -2586,29 +2576,9 @@ NICK_HELP_REGISTER
 
 NICK_HELP_MAIL
 	Para registrar el nick, el mail tiene que ser de una cuenta
-	de Terra, si no, no podrás registrar el nick.
-	Consigue GRATIS una cuenta de correo de Terra en la web de tu
-	pais.
-	
-	Dominio Correo      Pais     Pagina web para dar de alta una cuenta
-
-	12@terra.es           España      12http://www.terra.es
-	12@terra.com.ar       Argentina   12http://www.terra.com.ar
-	12@terra.com.br       Brasil      12http://www.terra.com.br
-	12@terra.co.cr        Costa Rica  12http://www.terra.co.cr
-	12@terra.com.co       Colombia    12http://www.terra.com.co
-	12@terra.cl           Chile       12http://www.terra.cl
-	12@terra.com          EE.UU.      12http://www.terra.com
-	12@terra.com.sv       El Salvador 12http://www.terra.com.sv
-	12@terra.com.gt       Guatemala   12http://www.terra.com.gt
-	12@terra.com.hn       Honduras    12http://www.terra.com.hn
-	12@terra.com.mx       México      12http://www.terra.com.mx
-	12@terra.com.ni       Nicaragua   12http://www.terra.com.ni
-	12@terra.com.pa       Panamá      12http://www.terra.com.pa
-	12@terra.com.pe       Perú        12http://www.terra.com.pe
-	12@terra.com.uy       Uruguay     12http://www.terra.com.uy
-	12@terra.com.ve       Venezuela   12http://www.terra.com.ve
-
+	de un ISP Oficial, si no, no podrás registrar el nick.
+	Consigue GRATIS una cuenta de correo de ISP's Oficiales y
+	registra tu nick. Gracias.
 
 NICK_HELP_IDENTIFY
 	Sintaxis: 12IDENTIFY <contraseña>
@@ -2643,11 +2613,11 @@ NICK_HELP_ACCESS
 	
 	Ejemplos:
 	
-	    12ACCESS ADD freemind@*.terra.es
-	        Permite el acceso al usuario 12freemind de cualquier
-	        ordenador en el dominio 12terra.es.
+	    12ACCESS ADD neo@*.tierrared.com
+	        Permite el acceso al usuario 12neo de cualquier
+	        ordenador en el dominio 12tierrared.com.
 	
-	    12ACCESS DEL freemind@*.terra.es
+	    12ACCESS DEL neo@*.tierrared.com
 	        Hace lo contrario de el comando anterior.
 	
 	    12ACCESS LIST
@@ -2879,15 +2849,15 @@ NICK_HELP_LIST
 	
 	Ejemplos:
 	
-	    12LIST *!zolty@terra.es
-	         Lista los nicks registrados por zolty@terra.es.
+	    12LIST *!neo@tierrared.com
+	         Lista los nicks registrados por neo@tierrared.com.
 	
 	    12LIST *Bot*!*@*
 	        Lista todos los nicks registrados que contenga 12Bot
 	        en su nombre (no importa mayúsculas).
 		
-	    12LIST *!*@*.terra.es
-	        Lista todos los nicks registrados por usuarios del dominio 12terra.es.
+	    12LIST *!*@*.tierrared.com
+	        Lista todos los nicks registrados por usuarios del dominio 12tierrared.com.
 
 NICK_HELP_STATUS
 	Sintaxis: 12STATUS <nick1> <nick2>...
@@ -3003,8 +2973,8 @@ NICK_SERVADMIN_HELP_LIST
 	
 	Ejemplos:
 	
-	    12LIST *!freemind@terra.es
-	        Lista todos los nicks registrados por joeuser@foo.com.
+	    12LIST *!neo@tierrared.com
+	        Lista todos los nicks registrados por neo@tierrared.com.
 
 	    12LIST *Bot*!*@*
 	        Lista todos los nicks registrados que contenga 12Bot
@@ -3060,14 +3030,6 @@ NICK_SERVADMIN_HELP_UNFORBID
 	
 	Levanta la prohibicion de uso de un nick para que se pueda
 	usar y registrar el nick.
-	
-	Limitado a 4Administradores de la RED.
-
-NICK_SERVADMIN_HELP_REGUSER
-	Sintaxis: 12REGUSER <nick> <password> <email>
-	
-	Permite a un administrador registrar un nick en concreto
-	sin tenerse q cambiar de nick.
 	
 	Limitado a 4Administradores de la RED.
 
@@ -3706,7 +3668,7 @@ CHAN_SERVADMIN_HELP_SET
 CHAN_SERVADMIN_HELP_SET_OFICIAL
 	Sintaxis: 12SET <canal> OFICIAL {ON | OFF}
 	
-	Define si el canal dado es un Canal Oficial de Terra.
+	Define si el canal dado es un Canal Oficial de Tierrared o Tierrared.com.
 	
 	Limitado a 4Administradores de la RED.
 
@@ -4004,7 +3966,7 @@ CYBER_HELP_CONTRATA
 	etc.. tienen derecho a tener un número de clones (un clon es
 	una conexion a la red). No se necesita IP fija para los clones.
 	Para solicitarlos, tienes que acudir a la siguiente dirección:
-	12http://www.terra.es/personal4/clones.irc/
+	12http://www.tierrared.com/clones/
 	Y cubrir el formulario para la solicitud de clones y en menos
 	de 24 horas tendrás los clones concedidos.
 
@@ -4982,9 +4944,9 @@ SERVICES_CREDITS_TERRA
 	Services es copyright (c) 1996-2000 de Andy Church <achurch@achurch.org>
 	y de Andrew Keempe <theshadow@shadowfire.org>.
 
-	TerraServices es copyright (c) 2000-2001 de Terra Networks S.A.
+	TerraServices es copyright (c) 2000-2001 de sus desarrolladores.
 	Estos bots han sido reprogramados por el comite técnico de developers
-	de Terra Networks S.A. usando la base de los ircservices-4.3.3 original.
+	usando la base de los ircservices-4.3.3 original.
 
 	Miembros del Comite tecnico de developers:
 	   Marcos Rey          TeX         <tex@terra.es>

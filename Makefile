@@ -66,9 +66,6 @@ spotless: myclean
 	(cd lang ; $(MAKE) spotless)
 	rm -f config.cache configure.log sysconf.h Makefile.inc language.h
 
-distclean: spotless
-
-
 install: $(PROGRAM) languages
 	$(INSTALL) services $(BINDEST)/services
 	rm -f $(BINDEST)/listnicks $(BINDEST)/listchans

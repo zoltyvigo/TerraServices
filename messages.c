@@ -448,7 +448,6 @@ Message messages[] = {
     { "LUSERS",    NULL },
     { "MAP",       NULL },    
     { "MODE",      m_mode },
-    { "SAMODE",    m_mode },
     { "MOTD",      m_motd },
     { "NAMES",     NULL },
     { "NICK",      m_nick },

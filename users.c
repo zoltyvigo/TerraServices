@@ -672,7 +672,7 @@ void do_umode(const char *source, int ac, char **av)
             case 'X': add ? (user->mode |= UMODE_X) : (user->mode &= ~UMODE_X);
                       break;
             case 'k': add ? (user->mode |= UMODE_K) : (user->mode &= ~UMODE_K);
-                      break;	              
+//                      break;	              
 //            case 'd': add ? (user->mode |= UMODE_D) : (user->mode &= ~UMODE_D);
 //                      break;                      
             case 'r':
@@ -835,8 +835,8 @@ void do_kill(const char *source, int ac, char **av)
 int is_oper(const char *nick)
 {
     User *user = finduser(nick);
-    return user && (user->mode & UMODE_O);
-/*    return user && ((user->mode & UMODE_O) || (user->mode & UMODE_H)); */
+//    return user && (user->mode & UMODE_O);
+    return user && ((user->mode & UMODE_O) || (user->mode & UMODE_H));
 }
 
 /*************************************************************************/

@@ -101,7 +101,7 @@ void memoserv(const char *source, char *buf)
 	    s = "\1";
 	notice(s_MemoServ, source, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION\1") == 0) {
-        notice(s_MemoServ, source, "\1VERSION ircservices-%s+Terra-%s %s -- %s\1",
+        notice(s_MemoServ, source, "\1VERSION ircservices-%s+Tierrared-%s %s -- %s\1",
                   version_number, version_terra, s_MemoServ, version_build);
     } else if (skeleton) {
 	notice_lang(s_MemoServ, u, SERVICE_OFFLINE, s_MemoServ);
@@ -303,14 +303,12 @@ static MemoInfo *getmemoinfo(const char *name, int *ischan, int *isverboten)
 	    *ischan = 1;
 	ci = cs_findchan(name);
 	if (ci)
-        {
             if (ci->flags & CI_VERBOTEN) {
                 *isverboten = 1;
                 return NULL;
             } else {
                 return &ci->memos;
             }
-	}
 	else
 	    return NULL;
     } else {
@@ -319,14 +317,12 @@ static MemoInfo *getmemoinfo(const char *name, int *ischan, int *isverboten)
 	    *ischan = 0;
 	ni = findnick(name);
 	if (ni)
-        {
             if (ni->status & NS_VERBOTEN) {
                 *isverboten = 1;
                 return NULL;
             } else {
                return &getlink(ni)->memos;
             }
-	}
 	else
 	    return NULL;
     }
@@ -608,7 +604,7 @@ static void do_list(User *u)
 	}
 	mi = &u->ni->memos;
     }
-    if (param && !isdigit((int)*param) && stricmp(param, "NEW") != 0) {
+    if (param && !isdigit(*param) && stricmp(param, "NEW") != 0) {
 	syntax_error(s_MemoServ, u, "LIST", MEMO_LIST_SYNTAX);
     } else if (mi->memocount == 0) {
 	if (chan)
@@ -617,7 +613,7 @@ static void do_list(User *u)
 	    notice_lang(s_MemoServ, u, MEMO_HAVE_NO_MEMOS);
     } else {
 	int sent_header = 0;
-	if (param && isdigit((int)*param)) {
+	if (param && isdigit(*param)) {
 	    process_numlist(param, NULL, list_memo_callback, u,
 					mi, &sent_header, chan);
 	} else {
@@ -833,7 +829,7 @@ static void do_del(User *u)
 	}
 	mi = &u->ni->memos;
     }
-    if (!numstr || (!isdigit((int)*numstr) && stricmp(numstr, "ALL") != 0)) {
+    if (!numstr || (!isdigit(*numstr) && stricmp(numstr, "ALL") != 0)) {
 	syntax_error(s_MemoServ, u, "DEL", MEMO_DEL_SYNTAX);
     } else if (mi->memocount == 0) {
 	if (chan)
@@ -841,7 +837,7 @@ static void do_del(User *u)
 	else
 	    notice_lang(s_MemoServ, u, MEMO_HAVE_NO_MEMOS);
     } else {
-	if (isdigit((int)*numstr)) {
+	if (isdigit(*numstr)) {
 	    /* Delete a specific memo or memos. */
 	    last = -1;   /* Last memo deleted */
 	    last0 = -1;  /* Beginning of range of last memos deleted */
@@ -984,7 +980,7 @@ static void do_set_limit(User *u, MemoInfo *mi, char *param)
 					MEMO_SET_LIMIT_SERVADMIN_SYNTAX);
 	    return;
 	}
-	if ((!isdigit((int)*p1) && stricmp(p1, "NONE") != 0) ||
+	if ((!isdigit(*p1) && stricmp(p1, "NONE") != 0) ||
 			(p2 && stricmp(p2, "HARD") != 0)) {
 	    syntax_error(s_MemoServ, u, "SET LIMIT",
 					MEMO_SET_LIMIT_SERVADMIN_SYNTAX);
@@ -1009,7 +1005,7 @@ static void do_set_limit(User *u, MemoInfo *mi, char *param)
 	if (stricmp(p1, "NONE") == 0)
 	    limit = -1;
     } else {
-	if (!p1 || p2 || !isdigit((int)*p1)) {
+	if (!p1 || p2 || !isdigit(*p1)) {
 	    syntax_error(s_MemoServ, u, "SET LIMIT", MEMO_SET_LIMIT_SYNTAX);
 	    return;
 	}

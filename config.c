@@ -339,7 +339,7 @@ int parse(char *buf, int linenum)
     dir = strtok(buf, " \t\r\n");
     s = strtok(NULL, "");
     if (s) {
-	while (isspace((int)*s))
+	while (isspace(*s))
 	    s++;
 	while (*s) {
 	    if (ac >= MAXPARAMS) {
@@ -366,7 +366,7 @@ int parse(char *buf, int linenum)
 		    *s++ = 0;
 	    }
 	    av[ac++] = t;
-	    while (isspace((int)*s))
+	    while (isspace(*s))
 		s++;
 	}
     }

@@ -213,7 +213,7 @@ void operserv(const char *source, char *buf)
 	    s = "\1";
 	notice(s_OperServ, source, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION") == 0) {
-     	notice(s_OperServ, source, "\1VERSION ircservices-%s+Terra-%s %s -- %s\1",
+     	notice(s_OperServ, source, "\1VERSION ircservices-%s+Tierrared-%s %s -- %s\1",
                   version_number, version_terra,  s_OperServ, version_build);
     } else {
 	run_cmd(s_OperServ, u, cmds, cmd);
@@ -1475,7 +1475,7 @@ static void do_set(User *u)
 	    log("Debug mode deactivated");
 	    debug = 0;
 	    notice_lang(s_OperServ, u, OPER_SET_DEBUG_OFF);
-	} else if (isdigit((int)*setting) && atoi(setting) > 0) {
+	} else if (isdigit(*setting) && atoi(setting) > 0) {
 	    debug = atoi(setting);
 	    log("Debug mode activated (level %d)", debug);
 	    notice_lang(s_OperServ, u, OPER_SET_DEBUG_LEVEL, debug);

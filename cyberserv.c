@@ -270,16 +270,14 @@ int add_clones(const char *nick, const char *host)
             } else {
 /* MIGRACION */
 /* Si Tiene 3 o 4 o 5 clones MOSTRAR MENSAJE DE AVISO */
-                if ((clones->numeroclones >= 3) && (clones->numeroclones <= 5)) 
-                {
-                    privmsg(s_CyberServ, nick, "4ATENCION!!!, MIGRACION DEL LIMITE DE CLONES");
-                    privmsg(s_CyberServ, nick, "Tu actual limite de 5 clones sera reducido proximamente a 2 clones"
-                            " no obstante, puedes contratar gratuitamente más clones, escribe"
-                            " 12/msg Cyber CONTRATA  para más informacion.");
-                }
-/* Fin migracion */
-                return 1;
+            if ((clones->numeroclones >= 3) && (clones->numeroclones <= 5))
+   privmsg(s_CyberServ, nick, "4ATENCION!!!, MIGRACION DEL LIMITE DE CLONES");
+   privmsg(s_CyberServ, nick, "Tu actual limite de 5 clones sera reducido proximamente a 2 clones"
+   " no obstante, puedes contratar gratuitamente más clones, escribe"
+   " 12/msg Cyber CONTRATA  para más informacion.");
             }
+/* Fin migracion */
+            return 1;
         }
     }
     nclones++;
@@ -369,7 +367,7 @@ void cyberserv(const char *source, char *buf)
             s = "\1";
         notice(s_CyberServ, u->nick, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION\1") == 0) {
-        notice(s_CyberServ, u->nick, "\1VERSION irc-services-%s+Terra-%s %s -- %s",
+        notice(s_CyberServ, u->nick, "\1VERSION irc-services-%s+Tierrared-%s %s -- %s",
                   version_number, version_terra, s_CyberServ, version_build);    
     } else if (skeleton) {
         notice_lang(s_CyberServ, u, SERVICE_OFFLINE, s_CyberServ);
@@ -555,11 +553,11 @@ void cyber_remove_nick(const NickInfo *ni)
         for (il = ilinelists[i]; il; il = next) { 
             next = il->next;                                                    
             if (il->admin == ni) {
-                il->admin = findnick("Terra");
+                il->admin = findnick("Tierrared");
                 
                 
                 canalopers(s_CyberServ, "Cambiando admin iline %s [%s] propiedad del"
-                         "  nick borrado %s a Terra", il->host, il->comentario, ni->nick);
+                         "  nick borrado %s a Tierrared", il->host, il->comentario, ni->nick);
 /*                
                 canalopers(s_CyberServ, "Borrando iline %s [%s] propiedad del nick"
                                    " borrado %s", il->host, il->comentario, ni->nick);
@@ -660,7 +658,7 @@ int is_cyber_admin(User *u)
             if (stricmp(il->admin->nick, u->nick) == 0)               
                 if (nick_identified(u))            
                     return 1;
-                return 0;
+             
         }
     }    
     
@@ -1362,7 +1360,7 @@ static void do_iline(User *u)
         }
                                 
         
-        limit = (limite && isdigit((int)*limite)) ? atoi(limite) : -1;
+        limit = (limite && isdigit(*limite)) ? atoi(limite) : -1;
         if (limit < 0 || limit > MaximoClones) {
             notice_lang(s_CyberServ, u, CYBER_ILINE_INVALID_LIMIT,
                                 MaximoClones);

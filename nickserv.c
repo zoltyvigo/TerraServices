@@ -82,15 +82,12 @@ static void do_ghost(User *u);
 static void do_status(User *u);
 static void do_opers(User *u);
 static void do_listemails(User *u);
-#ifdef REG_NICK_MAIL
 static void do_sendpass(User *u);
-#endif
 static void do_getpass(User *u);
 static void do_suspend(User *u);
 static void do_unsuspend(User *u);
 static void do_forbid(User *u);
 static void do_unforbid(User *u);
-static void do_reguser(User *u);
 
 /*************************************************************************/
 
@@ -165,11 +162,9 @@ static Command cmds[] = {
     { "LISTLINKS",do_listlinks,is_services_oper, -1,
 		-1, NICK_SERVADMIN_HELP_LISTLINKS,
 		NICK_SERVADMIN_HELP_LISTLINKS, NICK_SERVADMIN_HELP_LISTLINKS },
-#ifdef REG_NICK_MAIL
     { "SENDPASS", do_sendpass,  is_services_oper,  -1,
                 -1, NICK_SERVADMIN_HELP_SENDPASS,
                 NICK_SERVADMIN_HELP_SENDPASS, NICK_SERVADMIN_HELP_SENDPASS },
-#endif
     { "GETPASS",  do_getpass,  is_services_admin,  -1,
 		-1, NICK_SERVADMIN_HELP_GETPASS,
 		NICK_SERVADMIN_HELP_GETPASS, NICK_SERVADMIN_HELP_GETPASS },
@@ -185,9 +180,6 @@ static Command cmds[] = {
     { "UNFORBID", do_unforbid, is_services_admin,  -1,
                 -1, NICK_SERVADMIN_HELP_UNFORBID,
                 NICK_SERVADMIN_HELP_UNFORBID, NICK_SERVADMIN_HELP_UNFORBID },		
-    { "REGUSER", do_reguser, is_services_admin,  -1,
-                -1, NICK_SERVADMIN_HELP_REGUSER,
-                NICK_SERVADMIN_HELP_REGUSER, NICK_SERVADMIN_HELP_REGUSER },		
     { NULL }
 };
 
@@ -378,7 +370,7 @@ void nickserv(const char *source, char *buf)
 	    s = "\1";
 	notice(s_NickServ, source, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION\1") == 0) {
-        notice(s_NickServ, source, "\1VERSION ircservices-%s+Terra-%s %s -- %s\1",
+        notice(s_NickServ, source, "\1VERSION ircservices-%s+Tierrared-%s %s -- %s\1",
                    version_number, version_terra, s_NickServ, version_build);
     } else if (skeleton) {
 	notice_lang(s_NickServ, u, SERVICE_OFFLINE, s_NickServ);
@@ -1061,11 +1053,8 @@ NickInfo *findnick(const char *nick)
 	if (stricmp(ni->nick, nick) == 0)
 	    return ni;
     }
+  
  */
-
-    if(!nick)
-        return NULL;
-
  /* Codigo Nuevo */
     for (ni = nicklists[toLower(*nick)]; ni; ni = ni->next) {
         if (strCasecmp(ni->nick, nick) == 0)
@@ -1095,10 +1084,9 @@ NickInfo *getlink(NickInfo *ni)
 {
     NickInfo *orig = ni;
     int i = 0;
-    
-    if(ni) 
-        while (ni->link && ++i < 512)
-	    ni = ni->link;
+
+    while (ni->link && ++i < 512)
+	ni = ni->link;
     if (i >= 512) {
 	log("%s: Infinite loop(?) found at nick %s for nick %s, cutting link",
 		s_NickServ, ni->nick, orig->nick);
@@ -1634,7 +1622,6 @@ static void do_register(User *u)
 	return;
     }
 
-/* SOLO IRCOPS REGISTO DE NICK */
 /*
     if (!is_oper(u->nick)) {
         privmsg(s_NickServ, u->nick, "El servicio de Registro de Nicks "
@@ -1644,7 +1631,6 @@ static void do_register(User *u)
         return;
     }
 */
-
     /* Previene que los nicks "ircXXXXXX" que genera el ircu
      * no puedan ser registrados
      */
@@ -1691,9 +1677,6 @@ static void do_register(User *u)
         notice_lang(s_NickServ, u, NICK_MAIL_INVALID);
         syntax_error(s_NickServ, u, "REGISTER", NICK_REGISTER_MAIL_SYNTAX);
 
-    } else if (is_domain_teleline(email)) { 
-        notice_lang(s_NickServ, u, NICK_MAIL_TELELINE);
-
     } else if (!is_domain_allowed(email)) {
         notice_lang(s_NickServ, u, NICK_MAIL_TERRA, s_NickServ);
 
@@ -1714,7 +1697,7 @@ static void do_register(User *u)
  * - zoltan
  */
         srand(time(NULL));
-        sprintf(pass,"Terra%04u",1+(int)(rand()%9999));
+        sprintf(pass,"pw%04u",1+(int)(rand()%9999));
 #else
     } else if (stricmp(u->nick, pass) == 0
 		|| (StrictPasswords && strlen(pass) < 5)) {
@@ -1803,12 +1786,12 @@ static void do_register(User *u)
                buf = smalloc(sizeof(char *) * 1024);
                sprintf(buf,"\n  Nick registrado: %s\n"
                            "Password del nick: %s\n\n"
-                           "Para identificarte   -> /IDENTIFY %s\n"
+                           "Para identificarte   -> /msg NiCK IDENTIFY %s\n"
                            "Para cambio de clave -> /msg %s SET PASSWORD nueva_contraseña\n\n"
                            "Página de Información %s\n",
                   ni->nick, ni->pass, ni->pass, s_NickServ, WebNetwork);
 
-               snprintf(subject, sizeof(subject), "Registro del Nick '%s' en Terra", ni->nick);
+               snprintf(subject, sizeof(subject), "Registro del Nick '%s' en Tierrared", ni->nick);
                
                send_mail(ni->emailreg, subject, buf);
                exit(0);
@@ -1819,7 +1802,7 @@ static void do_register(User *u)
 #else            
 	    log("%s: `%s' registered by %s@%s", s_NickServ,
 			u->nick, u->username, u->host);
-	    notice_lang(s_NickServ, u, NICK_REGISTERED, u->nick, "<no definida>");
+	    notice_lang(s_NickServ, u, NICK_REGISTERED, u->nick, ni->access[0]);
 #endif  /* REG_NICK_MAIL */
 	    
 #if defined (USE_ENCRYPTION) && !defined (REG_NICK_MAIL)
@@ -1860,7 +1843,7 @@ static void do_identify(User *u)
 		s_NickServ, u->nick, u->username, u->host);
 	notice_lang(s_NickServ, u, PASSWORD_INCORRECT);
 	bad_password(u);
-	/* SVSNICK Terra */
+	/* SVSNICK Tierrared */
 //	send_cmd(NULL, "SVSNICK %s", u->nick);
 
     } else if (res == -1) {
@@ -2013,7 +1996,7 @@ static void do_drop(User *u)
 	    u->ni = u->real_ni = NULL;
         {
            /* envio de mails */
-#ifdef REG_NICK_MAIL
+
         char *buf;
         char subject[BUFSIZE];
         if (fork()==0) {
@@ -2022,13 +2005,12 @@ static void do_drop(User *u)
                         "Operador:  %s\n\n"
                         "Motivo  :  %s\n",
                         nick ? nick : u->nick, u->nick, reason);
-            snprintf(subject, sizeof(subject), "Drop del Nick '%s' en Terra",
+            snprintf(subject, sizeof(subject), "Drop del Nick '%s' en Tierrared",
                                  nick);
             send_mail(SendFrom, subject, buf);
             exit(0);
 
-        }
-#endif
+       }
        }
     }
 }
@@ -2283,7 +2265,7 @@ static void do_set_hide(User *u, NickInfo *ni, char *param)
 	flag = NI_HIDE_EMAIL;
 	onmsg = NICK_SET_HIDE_EMAIL_ON;
 	offmsg = NICK_SET_HIDE_EMAIL_OFF;
-/* Desactivado en Terra */
+/* Desactivado en Tierrared */
 /* 	
     } else if (stricmp(param, "USERMASK") == 0) {
 	flag = NI_HIDE_MASK;
@@ -2756,8 +2738,8 @@ static void do_info(User *u)
             strftime_lang(buf, sizeof(buf), u, STRFTIME_DATE_TIME_FORMAT, tm);
             notice_lang(s_NickServ, u, NICK_INFO_LAST_PASS_CHANGED, buf);
         }
-/*	if (is_services_oper(u))
-	    notice_lang(s_NickServ, u, NICK_INFO_EMAIL_REGISTER, ni->emailreg);*/
+	if (is_services_oper(u))
+	    notice_lang(s_NickServ, u, NICK_INFO_EMAIL_REGISTER, ni->emailreg);
 	if (ni->last_quit && (show_all || !(real->flags & NI_HIDE_QUIT)))
 	    notice_lang(s_NickServ, u, NICK_INFO_LAST_QUIT, ni->last_quit);
 	if (ni->url)
@@ -3135,11 +3117,11 @@ static void do_listemails(User *u)
         }
         notice_lang(s_NickServ, u, NICK_LISTEMAILS_RESULTS, nicksmail, total);
     }
+
 }
 
 /*************************************************************************/
 
-#ifdef REG_NICK_MAIL
 static void do_sendpass(User *u)
 {
     char *nick = strtok(NULL, " ");
@@ -3155,8 +3137,6 @@ static void do_sendpass(User *u)
         notice_lang(s_NickServ, u, NICK_SENDPASS_MAIL, nick, ni->emailreg);
         {        
         /* Funcion envio de mails */                                                                                         
-#endif
-#ifdef REG_NICK_MAIL
          char *buf;
          char subject[BUFSIZE];
                  
@@ -3170,19 +3150,16 @@ static void do_sendpass(User *u)
                          "Página de Información %s\n",
                                ni->nick, ni->pass, ni->pass, s_NickServ, WebNetwork);
                                                                         
-             snprintf(subject, sizeof(subject), "Contraseña solicitada del Nick '%s' en Terra", ni->nick);
+             snprintf(subject, sizeof(subject), "Contraseña solicitada del Nick '%s' en Tierrared", ni->nick);
 
              send_mail(ni->emailreg, subject, buf);
              exit(0);
          }                                                                                                                                                                      
-#endif
-#ifdef REG_NICK_MAIL
          notice_lang(s_NickServ, u, NICK_SENDPASS_SUCCEEDED, nick, ni->emailreg);                                                
         }            
         canalopers(s_NickServ, "%s ha usado SENDPASS sobre %s", u->nick, nick);        
     }
 }            
-#endif
 
 /*************************************************************************/
 static void do_getpass(User *u)
@@ -3403,149 +3380,3 @@ static void do_unforbid(User *u)
 }                                            
         
 /*************************************************************************/
-
-/* Register a nick. */
-
-static void do_reguser(User *u)
-{
-    char *nick = strtok(NULL, " ");
-    char *pass = strtok(NULL, " ");
-    char *email = strtok(NULL, " ");
-    NickInfo *ni;
-
-    if (readonly) {
-	notice_lang(s_NickServ, u, NICK_REGISTRATION_DISABLED);
-	return;
-    }
-
-   if (!pass || !email || !nick) {
-        syntax_error(s_NickServ, u, "REGUSER", NICK_REGUSER_SYNTAX);
-	return;
-   }
-   if (!is_oper(u->nick)) {
-       privmsg(s_NickServ, u->nick, "El servicio de Registro de Nicks "
-        "está en fase de pruebas.");
-       privmsg(s_NickServ, u->nick, "Proximamente estará disponible, "
-        "ya se avisará de ello.");
-       return;
-   }
-
-    /* Previene que los nicks "ircXXXXXX" que genera el ircu
-     * no puedan ser registrados
-     */
-    if (NSForceNickChange) {
-	int prefixlen = strlen(NSGuestNickPrefix);
-	int nicklen = strlen(nick);
-
-	/* A guest nick is defined as a nick...
-	 * 	- starting with NSGuestNickPrefix
-	 * 	- with a series of between, and including, 2 and 7 digits
-	 * -TheShadow
-	 */
-	if (nicklen <= prefixlen+7 && nicklen >= prefixlen+2 &&
-			stristr(nick, NSGuestNickPrefix) == nick &&
-			strspn(nick+prefixlen, "1234567890") ==
-							nicklen-prefixlen) {
-	    notice_lang(s_NickServ, u, NICK_CANNOT_BE_REGISTERED, nick);
-	    return;
-	}
-    }
-
-    if (!pass || !email || (stricmp(pass, nick) == 0 && strtok(NULL, " "))) {
-	syntax_error(s_NickServ, u, "REGUSER", NICK_REGUSER_SYNTAX);
-    } else if ((ni = findnick(nick))) {	/* i.e. there's already such a nick regged */
-	if (ni->status & NS_VERBOTEN) {
-	    log("%s: %s@%s tried to register FORBIDden nick %s", s_NickServ,
-			u->username, u->host, nick);
-	    notice_lang(s_NickServ, u, NICK_CANNOT_BE_REGISTERED, nick);
-	} else {
-	    notice_lang(s_NickServ, u, NICK_ALREADY_REGISTERED, nick);
-	}
-    } else if (stricmp(nick, pass) == 0
-		|| (StrictPasswords && strlen(pass) < 5)) {
-	notice_lang(s_NickServ, u, MORE_OBSCURE_PASSWORD);
-    } else {
-	ni = makenick(nick);
-	if (ni) {
-#ifdef USE_ENCRYPTION
-	    int len = strlen(pass);
-	    if (len > PASSMAX) {
-		len = PASSMAX;
-		pass[len] = 0;
-		notice_lang(s_NickServ, u, PASSWORD_TRUNCATED, PASSMAX);
-	    }
-	    if (encrypt(pass, len, ni->pass, PASSMAX) < 0) {
-		memset(pass, 0, strlen(pass));
-		log("%s: Failed to encrypt password for %s (register)",
-			s_NickServ, nick);
-		notice_lang(s_NickServ, u, NICK_REGISTRATION_FAILED);
-		return;
-	    }
-	    memset(pass, 0, strlen(pass));
-	    ni->status = NS_ENCRYPTEDPW | NS_IDENTIFIED | NS_RECOGNIZED;
-#else	    
-	    if (strlen(pass) > PASSMAX-1) /* -1 for null byte */
-		notice_lang(s_NickServ, u, PASSWORD_TRUNCATED, PASSMAX-1);
-	    strscpy(ni->pass, pass, PASSMAX);
-#endif
-	    ni->status = NS_IDENTIFIED | NS_RECOGNIZED;
-	    ni->flags = 0;
-	    if (NSDefKill)
-		ni->flags |= NI_KILLPROTECT;
-	    if (NSDefKillQuick)
-		ni->flags |= NI_KILL_QUICK;
-	    if (NSDefSecure)
-		ni->flags |= NI_SECURE;
-	    if (NSDefPrivate)
-		ni->flags |= NI_PRIVATE;
-	    if (NSDefHideEmail)
-		ni->flags |= NI_HIDE_EMAIL;
-	    if (NSDefHideUsermask)
-		ni->flags |= NI_HIDE_MASK;
-	    if (NSDefHideQuit)
-		ni->flags |= NI_HIDE_QUIT;
-	    if (NSDefMemoSignon)
-		ni->flags |= NI_MEMO_SIGNON;
-	    if (NSDefMemoReceive)
-		ni->flags |= NI_MEMO_RECEIVE;
-	    ni->memos.memomax = MSMaxMemos;
-            ni->msg_fullmemo = NULL;
-	    ni->channelcount = 0;
-	    ni->channelmax = CSMaxReg;
-	    ni->last_usermask = smalloc(strlen(u->username)+strlen(u->host)+2);
-	    sprintf(ni->last_usermask, "%s@%s", u->username, u->host);
-	    ni->last_realname = sstrdup(u->realname);
-	    ni->time_registered = ni->last_seen = time(NULL);
-/* A peticion de GSi, que se registraba con masks muy genericas
- * de tipo Ircap6.999@*.uc.nombres.ttd.es
- * Se borra del codigo
- *	    ni->accesscount = 1;
- *	    ni->access = smalloc(sizeof(char *));
- *	    ni->access[0] = create_mask(u);
- */
-            ni->accesscount = 0;
-            ni->access = NULL;
-            ni->last_changed_pass = 0;
-	    ni->language = DEF_LANGUAGE;
-	    ni->link = NULL;
-            ni->email = email;
-	    u->ni = u->real_ni = ni;
-	    log("%s: `%s' registered by %s!%s@%s", s_NickServ,
-			nick, u->nick, u->username, u->host);
-	    notice_lang(s_NickServ, u, NICK_REGISTERED, nick, "<no definida>");
-	    
-#if defined (USE_ENCRYPTION) && !defined (REG_NICK_MAIL)
-	    notice_lang(s_NickServ, u, NICK_PASSWORD_IS, ni->pass);
-#endif
-	    u->lastnickreg = time(NULL);
-
-	} else {
-	    log("%s: makenick(%s) failed", s_NickServ, u->nick);
-	    notice_lang(s_NickServ, u, NICK_REGISTRATION_FAILED);
-	}
-
-    }
-
-}
-
-/**************************************************************/

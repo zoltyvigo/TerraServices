@@ -15,9 +15,20 @@ all: $(LANGOBJS)
 
 install: all
 	mkdir -p $(DATDEST)/languages
+ifdef RUNGROUP
+	chgrp $(RUNGROUP) $(DATDEST)/languages
+	chmod 770 $(DATDEST)/languages
+else
 	chmod 700 $(DATDEST)/languages
+endif
 	cp $(LANGOBJS) $(DATDEST)/languages
+ifdef RUNGROUP
+	chgrp $(RUNGROUP) $(DATDEST)/languages/*
+	chmod 660 $(DATDEST)/languages/*
+else
 	chmod 600 $(DATDEST)/languages/*
+endif
+
 
 clean:
 	rm -f *~ $(LANGOBJS) langcomp
