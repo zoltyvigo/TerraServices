@@ -369,8 +369,8 @@ E char *strlower(char *s);
 E char *strLower(char *s);
 E char *strnrepl(char *s, int32 size, const char *old, const char *new);
 E int strCasecmp(const char *a, const char *b);
-E const char NTL_tolower_tab[];
-E const char NTL_toupper_tab[];
+E const int NTL_tolower_tab[];
+E const int NTL_toupper_tab[];
 
 E char *merge_args(int argc, char **argv);
 
@@ -382,6 +382,10 @@ E int process_numlist(const char *numstr, int *count_ret,
 		range_callback_t callback, User *u, ...);
 E int dotime(const char *s);
 
+E char *strToken(char **save, char *str, char *fs);
+E char *strTok(char *str, char *fs);
+#define strtok strTok
+#define strtoken strToken
 
 /**** news.c ****/
 

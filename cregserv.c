@@ -612,4 +612,5 @@ static void do_info(User *u)
     struct tm *tm;
     int i;    
 
-#endif            
+#endif
+            

@@ -26,7 +26,7 @@ int toupper(char c)
  * zoltan  1/11/2000
  */
  
-const char NTL_toupper_tab[] = {
+const int NTL_toupper_tab[] = {
 #if (CHAR_MIN<0)
 /* x80-x87 */ '\x80', '\x81', '\x82', '\x83', '\x84', '\x85', '\x86', '\x87',
 /* x88-x8f */ '\x88', '\x89', '\x8a', '\x8b', '\x8c', '\x8d', '\x8e', '\x8f',
@@ -95,7 +95,7 @@ int tolower(char c)
  * zoltan  1/11/2000
  */
  
-const char NTL_tolower_tab[] = {
+const int NTL_tolower_tab[] = {
 #if (CHAR_MIN<0)
 /* x80-x87 */ '\x80', '\x81', '\x82', '\x83', '\x84', '\x85', '\x86', '\x87',
 /* x88-x8f */ '\x88', '\x89', '\x8a', '\x8b', '\x8c', '\x8d', '\x8e', '\x8f',
@@ -440,3 +440,64 @@ int dotime(const char *s)
 }
 
 /*************************************************************************/
+
+char       *
+strToken(save, str, fs)
+     char      **save;
+     char       *str, *fs;
+{
+char       *pos = *save;        /*
+
+                                 * keep last position across calls
+                                 */
+char   *tmp;
+
+   if (str)
+      pos = str;                /*
+                                 * new string scan
+                                 */
+
+   while (pos && *pos && strchr(fs, *pos) != NULL)
+      pos++;                    /*
+                                 * skip leading separators
+                                 */
+
+   if (!pos || !*pos)
+      return (pos = *save = NULL);      /*
+                                         * string contains only sep's
+                                         */
+
+   tmp = pos;                   /*
+                                 * now, keep position of the token
+                                 */
+
+   while (*pos && strchr(fs, *pos) == NULL)
+      pos++;                    /*
+                                 * skip content of the token
+                                 */
+
+   if (*pos)
+      *pos++ = '\0';            /*
+                                 * remove first sep after the token
+                                 */
+   else
+      pos = NULL;               /*
+                                 * end of string
+                                 */
+
+   *save = pos;
+   return (tmp);
+}
+
+/*
+ * * NOT encouraged to use!
+ */
+
+char       *
+strTok(str, fs)
+     char       *str, *fs;
+{
+static char *pos;
+
+   return strtoken(&pos, str, fs);
+}
