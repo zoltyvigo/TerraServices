@@ -68,6 +68,7 @@ void canalopers(const char *source, const char *fmt, ...)
     vsend_cmd(source ? source : ServerName, buf, args);
 }
 
+
 /*************************************************************************/
 
 /* Envia mensaje al canal de los admins. */
@@ -76,12 +77,12 @@ void canaladmins(const char *source, const char *fmt, ...)
 {
     va_list args;
     char buf[BUFSIZE];
-
-
+    
+    
     va_start(args, fmt);
     snprintf(buf, sizeof(buf), "PRIVMSG #%s :%s", CanalAdmins, fmt);
     vsend_cmd(source ? source : ServerName, buf, args);
-}
+}    
 
 /*************************************************************************/
 
@@ -191,9 +192,15 @@ void privmsg(const char *source, const char *dest, const char *fmt, ...)
 /*************************************************************************/
 
 void send_nick(const char *nick, const char *user, const char *host,
-               const char *server, const char *name)
+		const char *server, const char *name)
 {
 
+#ifdef IRC_UNDERNET
     send_cmd(ServerName, "NICK %s 1 %ld %s %s %s :%s", nick, time(NULL),
-           user, host, server, name);
+	    user, host, server, name);
+#else
+    // NICK <nick> <hops> <TS> <umode> <user> <host> <server> <svsid> :<ircname>
+    send_cmd(NULL, "NICK %s 1 %ld + %s %s %s 0 :%s", nick, time(NULL),
+	    user, host, server, name);
+#endif
 }

@@ -92,6 +92,7 @@ extern int toupper(char), tolower(char);
 #define strtok strTok
 #define strtoken strToken
 
+
 /* We also have our own encrypt(). */
 #define encrypt encrypt_
 
@@ -144,9 +145,6 @@ extern int toupper(char), tolower(char);
 #ifdef CYBER
 #define ILINE_VERSION   1
 #endif
-#ifdef CREG
-#define CREG_VERSION    1
-#endif
 
 /*************************************************************************/
 /* Estructura de los servidores */
@@ -161,7 +159,9 @@ struct server_ {
     char *name;
     time_t ts_join;
     int  users;
+#ifdef IRC_UNDERNET
     char *numeric;
+#endif
 };
 
 
@@ -218,7 +218,7 @@ struct nickinfo_ {
     time_t time_registered;
     time_t last_seen;
     time_t last_changed_pass;  /* Hora del ultimo cambio de Password */
-    int16 status;	/* See NS_* below */
+    int16 status;	       /* See NS_* below */
     
     char *suspendby;           /* Quien lo suspendio */
     char *suspendreason;       /* Motivo de la suspension */
@@ -432,7 +432,7 @@ struct chaninfo_ {
 /* Canal Oficial de Terra Networks */
 #define CI_OFICIAL_CHAN	0x00020000
 /* Levels, no permitir deop, devoice, kick a usuarios con nivel = o superior */
-#define CI_LEVELS       0x00040000
+#define CI_LEVELS	0x00040000
 
 /* Indices for cmd_access[]: */
 #define CA_INVITE	0
@@ -468,17 +468,20 @@ struct user_ {
     char nick[NICKMAX];
     NickInfo *ni;			/* Effective NickInfo (not a link) */
     NickInfo *real_ni;			/* Real NickInfo (ni.nick==user.nick) */
-    Server *server;                     /* Server user is on */
+    Server *server;			/* Server user is on */
     char *username;
     char *host;				/* User's hostname */
     char *realname;
 
-    time_t timestamp;                   /* TS3 - time of signon/last nick change
-                                         * TS8 - time of signon */
-    time_t signon;                      /* Timestamp sent with nick when it was
-                                         * introduced to us. Never changes! */
-    time_t my_signon;                   /* When did _we_ see the user with
-                                         * their current nickname? */
+    time_t timestamp;			/* TS3 - time of signon/last nick change
+    				 	 * TS8 - time of signon */
+    time_t signon;			/* Timestamp sent with nick when it was
+    					 * introduced to us. Never changes! */
+    time_t my_signon;			/* When did _we_ see the user with
+    					 * their current nickname? */
+#ifdef IRC_BAHAMUT
+    uint32 servicestamp;		/* Our UNIQUE id for the user. */
+#endif
     int32 mode;				/* See below */
     struct u_chanlist {
 	struct u_chanlist *next, *prev;
@@ -511,7 +514,7 @@ struct user_ {
 
 struct channel_ {
     Channel *next, *prev;
-    char name[CHANMAX + 1];
+    char name[CHANMAX];
     ChannelInfo *ci;			/* Corresponding ChannelInfo */
     time_t creation_time;		/* When channel was created */
 
@@ -548,6 +551,9 @@ struct channel_ {
 #define CMODE_L 0x00000080
 #define CMODE_R 0x00000100		/* Only identified users can join */
 #define CMODE_r 0x00000200		/* Set for all registered channels */
+/* IRC_BAHAMUT servers only */
+#define CMODE_C 0x00000400		/* No mIRC/ANSI colours in channel
+*/
 
 
 /*************************************************************************/
@@ -578,8 +584,9 @@ struct ilineinfo_ {
     char *comentario;           /* Comentario */
     char *vhost;                /* Virtual host del ciber */
     char operwho[NICKMAX];      /* Admin que puso la iline */
-    char *suspendby;            /* Quien lo suspendio */
-    char *suspendreason;        /* Motivo de la suspension */         
+
+    char *suspendby;                    /* Quien lo suspendio */
+    char *suspendreason;                /* Motivo de la suspension */         
     
     int16 limite;               /* Limite Iline */
     time_t time_concesion;
@@ -590,7 +597,6 @@ struct ilineinfo_ {
 };
 #endif
 /*************************************************************************/
-
 
 /* Who sends channel MODE (and KICK) commands? */
 /* Obsoleto */

@@ -268,10 +268,6 @@ NICK_PASSWORD_IS
 NICK_IN_MAIL
 	Revisa tu correo (12%s) en unos minutos, te llegará una password.
 
-# REGUSER responses
-NICK_REGUSER_SYNTAX
-	12REGUSER <nick> <password> <email>
-
 # IDENTIFY responses
 NICK_IDENTIFY_SYNTAX
 	12IDENTIFY <password>
@@ -300,7 +296,7 @@ NICK_IDENTIFY_FIRST
 NICK_IDENTIFY_PASSWORD_NO_CHANGED
 	Para tu mayor seguridad, se recomienda que cambies la contraseña
 	cada cierto tiempo. Este mensaje se mostrará cuando lleves mas de 
-	12%d dias sin cambiar la contraseña, como recordatorio para que
+	%d dias sin cambiar la contraseña, como recordatorio para que
 	cambies la contraseña con frecuencia.
 
 
@@ -580,7 +576,7 @@ NICK_RECOVERED
 	Escribe 12/msg %s RELEASE %s para recuperarlo antes de un minuto.
 NICK_REVOVERED_CHANGE
 	Usuario utilizando tu nick ha sido cambiado el nick.
-	Escribe 12/msg %s RELEASE %s para recuperarlo antes de un minuto.
+	Escribe /msg %s RELEASE %s para recuperarlo antes de un minuto.
 
 
 # RELEASE responses
@@ -615,22 +611,22 @@ NICK_STATUS_SUSPENDED
 
 # LISTEMAILS responses
 NICK_LISTEMAILS_SYNTAX
-	12LISTEMAILS <correo@electronico.es>
+	LISTEMAILS <correo@electronico.es>
 NICK_LISTEMAILS_INVALID
 	Dirección Email invalida.
 NICK_LISTEMAILS_ANONYMOUS
 	Dominio de correo de servicios anonimos.
 NICK_LISTEMAILS_TELELINE
 	Dirección E-mail inválida, Sólo cuentas de Terra.
-	Si el mail es de 12teleline.es, cambia por 12terra.es, es decir
-	si el mail es 12ejemplo@teleline.es, usa 12ejemplo@terra.es para
+	Si el mail es de teleline.es, cambia por terra.es, es decir
+	si el mail es ejemplo@teleline.es, usa ejemplo@terra.es para
 	la consulta.
 NICK_LISTEMAILS_TERRA
 	Dirección E-mail inválida, Sólo cuentas de Terra para la consulta.
 NICK_LISTEMAILS_HEADER
-	Lista de nicks registrados con el email 12%s:
+	Lista de nicks registrados con el email %s:
 NICK_LISTEMAILS_RESULTS
-	Fin de lista - 12%d/12%d entradas mostradas.
+	Fin de lista - %d/%d entradas mostradas.
 
 
 # SENDPASS responses
@@ -661,7 +657,7 @@ NICK_SUSPEND_SUSPENDED
 NICK_SUSPEND_SUCCEEDED
 	El nick 12%s ha sido 12SUSPENDido!.
 NICK_SUSPEND_ALREADY_SUSPENDED
-	El nick 12%s ya estaba suspendido.
+	El nick ^C12%s^C ya estaba suspendido.
 NICK_SUSPENDED
 	El nick 12%s ha sido suspendido temporalmente.
 	Causa de suspensión: 12%s.
@@ -672,7 +668,7 @@ NICK_UNSUSPEND_SYNTAX
 NICK_SUSPEND_NOT_SUSPEND
 	El nick 12%s no está suspendido.
 NICK_UNSUSPEND_SUSPEND_ADMIN
-	No puedes reactivar el nick 12%s, esta suspendido por un admin.
+	No puedes reactivar el nick %s, esta suspendido por un admin.
 NICK_UNSUSPEND_SUCCEEDED
 	El nick 12%s ha sido reactivado.
 NICK_REACTIVED
@@ -979,15 +975,15 @@ CHAN_SET_UNBANCYBER_ON
 CHAN_SET_UNBANCYBER_OFF
 	Opción Unban por 4%s12 desactivada.
 CHAN_SET_UNBANCYBER_FAILED
-	No puedes configurar el 12UNBANCYBER en un canal oficial.
+	No puedes configurar el UNBANCYBER en un canal oficial.
 
 # SET LEVELS responses
 CHAN_SET_LEVELS_SYNTAX
-	12SET <canal> LEVELS {ON | OFF}
+	SET <canal> LEVELS {ON | OFF}
 CHAN_SET_LEVELS_ON
-	Opción Levels 12activada.
+	Opción Levels activada.
 CHAN_SET_LEVELS_OFF
-	Opción Levels 12desactivada.
+	Opción Levels desactivada.
 
 # SET STAY responses
 CHAN_SET_STAY_SYNTAX
@@ -1090,7 +1086,7 @@ CHAN_AKICK_LIST_HEADER
 CHAN_AKICK_LIST_FORMAT
 	  %3d %s%s
 CHAN_AKICK_VIEW_FORMAT
-	  %3d %s (por 12%s, el 12%s)
+	  %3d %s (por %s, el %s)
 	    %s
 CHAN_AKICK_ENFORCE_DONE
 	12AKICK ENFORCE para 12%s completado; 12%d usuarios son afectados.
@@ -1187,7 +1183,7 @@ CHAN_INFO_OPT_MEMOALERT
 CHAN_INFO_OPT_UNBANCYBER
 	12Unban de Cyber
 CHAN_INFO_OPT_LEVELS
-	12Levels
+	Levels
 CHAN_INFO_OPT_NONE
 	12Ninguna
 CHAN_INFO_MODE_LOCK
@@ -1199,7 +1195,7 @@ CHAN_INFO_NO_EXPIRE
 CHAN_LIST_SYNTAX
 	12LIST <patron>
 CHAN_LIST_SERVADMIN_SYNTAX
-	12LIST <patron> [FORBID] [NOEXPIRE] [SUSPENDED]
+	^C12LIST <patron>^C [FORBID] [NOEXPIRE] [SUSPENDED]
 CHAN_LIST_HEADER
 	Lista de entradas que satisfacen 12%s:
 CHAN_LIST_FORMAT
@@ -1219,34 +1215,34 @@ CHAN_IS_ADMIN_SERVICE
 CHAN_IS_OPER_SERVICE
 	No puedes hacer 12%s a un Operador de la red.
 CHAN_IS_LEVELS
-	No puedes hacer 12%s a un usuario con igual o mayor level que el tuyo.
+	No puedes hacer %s a un usuario con igual o mayor level que el tuyo.
 CHAN_NICK_IN_CHAN
-	El nick 12%s ya está en el canal 12%s.
+	El nick %s ya está en el canal %s.
 CHAN_NICK_NOT_IN_CHAN
-	El nick 12%s no está en el canal 12%s.
+	El nick %s no está en el canal %s.
 
 CHAN_OP_SYNTAX
 	12OP <canal> <nick>
 CHAN_OP_ALREADY_OP
-	El nick 12%s ya esta opeado en el canal 12%s.
+	El nick %s ya esta opeado en el canal %s.
 
 # DEOP responses
 CHAN_DEOP_SYNTAX
 	12DEOP <canal> <nick>
 CHAN_DEOP_ALREADY_DEOP
-	El nick 12%s no está opeado en el canal 12%s.
+	El nick %s no está opeado en el canal %s.
 
 # VOICE responses
 CHAN_VOICE_SYNTAX
 	12VOICE <canal> <nick>
 CHAN_VOICE_ALREADY_VOICE
-	El nick 12%s ya esta voiceado en el canal 12%s.
+	El nick %s ya esta voiceado en el canal %s.
 
 # DEVOICE responses
 CHAN_DEVOICE_SYNTAX
 	12DEVOICE <canal> <nick>
 CHAN_DEVOICE_ALREADY_DEVOICE
-	El nick 12%s no está voiceado en el canal 12%s.
+	El nick %s no está voiceado en el canal %s.
 
 # KICK responses
 CHAN_KICK_SYNTAX
@@ -1260,10 +1256,9 @@ CHAN_KICK_SYNTAX
 CHAN_UNBAN_SYNTAX
 	12UNBAN <canal>
 CHAN_UNBAN_NOT_FOUND
-	La lista de bans del canal 12%s está vacia.
+	La lista de bans del canal %s está vacia.
 CHAN_UNBAN_FAILED
-#	No habia bans en el canal 12%s que te afecten.
-	No se ha podido desbanearte de 12%s.
+	No habia bans en el canal 12%s que te afecten.
 CHAN_UNBANNED
 	Has sido desbaneado de 12%s.
 
@@ -1287,15 +1282,15 @@ CHAN_CLEARED_TOPIC
 CHAN_GETKEY_SYNTAX
 	GETKEY <canal>
 CHAN_GETKEY_NOT_FOUND
-	No hay key (no está en modo +k) en el canal 12%s.
+	No hay key (no está en modo +k) en el canal %s.
 CHAN_GETKEY_FOUND
-	La key del canal 12%s es %s12 .
+	La key del canal %s es %s.
 
 # RESET responses
 CHAN_RESET_SYNTAX
 	12RESET <canal>
 CHAN_RESET_SUCCEEDED
-	Ha sido reseteado el canal 12%s.
+	Ha sido reseteado el canal %s.
 
 
 # GETPASS responses
@@ -1323,7 +1318,7 @@ CHAN_UNSUSPEND_SYNTAX
 CHAN_SUSPEND_NOT_SUSPEND
 	El canal 12%s no está suspendido.
 CHAN_UNSUSPEND_SUSPEND_ADMIN
-	No puedes reactivar el canal 12%s, esta suspendido por un admin.
+	No puedes reactivar el canal %s, esta suspendido por un admin.
 CHAN_UNSUSPEND_SUCCEEDED
 	El canal 12%s ha sido reactivado.
 
@@ -1398,7 +1393,7 @@ MEMO_X_GETS_NO_MEMOS
 MEMO_X_HAS_TOO_MANY_MEMOS
 	12%s tiene demasiados mensajes y no puede recibir más.
 MEMO_X_FULLMEMO
-	Mensaje FULLMEMO: 12%s
+	Mensaje FULLMEMO: %s
 MEMO_SENT
 	Mensaje enviado a 12%s.
 
@@ -1504,7 +1499,7 @@ MEMO_UNSET_LIMIT
 MEMO_SET_FULLMEMO_SYNTAX
 	SET FULLMEMO [mensaje]
 MEMO_SET_FULLMEMO_CHANGED
-	Mensaje de Memos llenos ajustado a 12%s.
+	Mensaje de Memos llenos ajustado a %s.
 MEMO_SET_FULLMEMO_UNSET
 	Mensaje de Memos llenos deshabilitado.
 
@@ -1514,7 +1509,7 @@ MEMO_INFO_SYNTAX
 MEMO_INFO_SERVADMIN_SYNTAX
 	12INFO [nick | canal]
 MEMO_INFO_HEAD
-	Información de 4%s sobre 12%s:
+	Información de %s sobre %s:
 MEMO_INFO_NO_MEMOS
 	No tienes mensajes.
 MEMO_INFO_MEMO
@@ -1568,9 +1563,9 @@ MEMO_INFO_X_HARD_LIMIT
 MEMO_INFO_X_NO_LIMIT
 	12%s no tiene limite de mensajes.
 MEMO_INFO_NOT_MSG_FULLMEMO
-	Mensaje de Memo lleno: 12No tiene.
+	Mensaje de Memo lleno: No tiene.
 MEMO_INFO_MSG_FULLMEMO
-	Mensaje de Memo lleno: 12%s.
+	Mensaje de Memo lleno: %s.
 MEMO_INFO_X_NOTIFY_OFF
 	%s is not notified of new memos.
 MEMO_INFO_X_NOTIFY_ON
@@ -1582,13 +1577,13 @@ MEMO_INFO_X_NOTIFY_SIGNON
 MEMO_INFO_NOTIFY
 	Notificacion de memos: %s.
 MEMO_INFO_NOTIFY_ON
-	12Siempre (ON)
+	Siempre (ON)
 MEMO_INFO_NOTIFY_LOGON
-	12Al conectar y away off (LOGON)
+	Al conectar y away off (LOGON)
 MEMO_INFO_NOTIFY_NEW
-	12Solo al recibir (NEW)
+	Solo al recibir (NEW)
 MEMO_INFO_NOTIFY_OFF
-	12Nunca (OFF)
+	Nunca (OFF)
 
 ###########################################################################
 #
@@ -1611,11 +1606,11 @@ CYBER_ILINE_ALREADY_PRESENT
 CYBER_ILINE_IS_SUSPENDED
 	No puedes usar los comandos de Cyber, la iline a tu cyber está suspendida temporalmente.
 CYBER_ILINE_SUSPENDED
-	La iline a tu host 12%s ha sido suspendida temporalmente.
-	Motivo: 12%s.
+	La iline a tu host %s ha sido suspendida temporalmente.
+	Motivo: %s.
 CYBER_ILINE_EXPIRE
-	La iline a tu host 12%s expirará el dia 12%s (12%s).
-	Consulta 12/msg %s CONTRATA para más informacion sobre la renovacion de la iline.
+	La iline a tu host %s expirará el dia %s (%s).
+	Consulta /msg %s ACTUALIZA para m s informacion sobre la renovacion de la iline.
 
 # ACTUALIZA responses
 CYBER_ACTUALIZA_CHECK
@@ -1630,7 +1625,7 @@ CYBER_ACTUALIZA_IPFIJA
 CYBER_ACTUALIZA_SUCCEEDED
 	Actualizada la iline, ahora el host 12%s tiene concedidas 12%d clones.
 CYBER_ACTUALIZA_SUCCEEDED_ILIMITED
-	Actualizada la iline, ahora el host 12%s tiene concedidas clones ilimitados.
+	Actualizada la iline, ahora el host %s tiene concedidas clones ilimitados.
 # INFO responses
 CYBER_INFO_HEADER
 	Información sobre el Cyber: 12%s
@@ -1647,7 +1642,7 @@ CYBER_INFO_HOST2
 CYBER_INFO_LIMITE
 	Numero de clones: 12%d
 CYBER_INFO_LIMITE_ILIMITED
-	Numero de clones: 12Ilimitados
+	Numero de clones: Ilimitados
 CYBER_INFO_NICKADMIN
 	Nick del admin: 12%s
 CYBER_INFO_NAMEADMIN
@@ -1661,20 +1656,20 @@ CYBER_INFO_TELEFONO
 CYBER_INFO_VHOST
 	Vhost del ciber: 12%s
 CYBER_INFO_TIME
-	Dado de alta: 12%s, 12%s
+	Dado de alta: 12%s, expira en 12%s
 CYBER_INFO_RECORD
 	Numero más alto: 12%d clones, alcanzado el 12%s
 CYBER_INFO_OPER
 	Iline añadido por 12%s
 CYBER_INFO_SUSPENDED
-	Iline suspendida por 12%s
+	Iline suspendido por %s
 CYBER_INFO_SUSPENDED_DETAILS
-	Motivo: %s
+	Motivo:
 CYBER_INFO_CLONES
 	El host 12%s tiene actualmente 12%d clones.
 	El limite es de 12%d clones.
 CYBER_INFO_CLONES_ILIMITED
-	El host 12%s tiene actualmente 12%d clones.
+	El host %s tiene actualmente %d clones.
 	Tiene clones ilimitados.
 CYBER_INFO_NO_CLONES
 	El host 12%s no tiene actualmente ningún clon.
@@ -1695,7 +1690,7 @@ CYBER_GLINE_SUCCEEDED
 CYBER_UNBAN_SYNTAX
 	12UNBAN <canal>
 CYBER_UNBAN_NOT_UNBAN
-	No puedes desbanear en 12%s, no está activado el 12UNBANCYBER.
+	No puedes desbanear en %s, no está activado el UNBANCYBER.
 CYBER_UNBAN_FAILED
 	No hay ban en 12%s que afecte a tu cyber.
 CYBER_UNBAN_SUCCEEDED
@@ -1759,19 +1754,19 @@ CYBER_ILINE_SYNTAX_DEL
 CYBER_ILINE_INVALID_HOSTMASK
 	Mascara invalido, las mask no puede contener nick ni user.
 CYBER_ILINE_INVALID_LIMIT
-	Limite invalido, solo puedes entre12 0 (Ilimitados) a 12%d.
+	Limite invalido, solo puedes entre 0 (Ilimitados) a %d.
 CYBER_ILINE_ADD_FAILED
 	Ha fallado al añadir iline.
 CYBER_ILINE_ADD_SUCCEEDED
 	Añadida Iline para 12%s, 12%d clones.
 CYBER_ILINE_DEL_SUCCEEDED
-	Iline de 12%s borrado de la lista de ilines.
+	12Iline de %s borrado de la lista de ilines.
 
 # SET Responses
 CYBER_SET_SYNTAX
 	12SET <host> <opción> <parametros>
 CYBER_SET_UNKNOWN_OPTION
-	Opcion 4SET %s desconocida.
+	Opcion SET %s desconocida.
 # SET HOST /HOST2
 CYBER_SET_HOST_CHANGED
 	El host 12%s ha sido cambiado a 12%s.
@@ -1831,23 +1826,23 @@ CYBER_SET_IPNOFIJA_OFF
 CYBER_SET_EXPIRE_SYNTAX
 	SET <host> EXPIRE <tiempo>
 CYBER_SET_EXPIRE_SUCCEEDED
-	LA expiracion de la iline 12%s ajustada (12%s).
+	LA expiracion de la iline %s ajustada (%s).
 
 # SUSPEND responses
 CYBER_SUSPEND_SYNTAX
 	SUSPEND <host> <motivo>
 CYBER_SUSPEND_SUSPENDED
-	La iline 12%s ya estaba suspendida.
+	La iline %s ya estaba suspendida.
 CYBER_SUSPEND_SUCCEEDED
-	La iline 12%s SUSPENDida!.
+	La iline %s SUSPENDida!.
 
 # UNSUSPEND responses
 CYBER_UNSUSPEND_SYNTAX
 	SUSPEND <host>
 CYBER_UNSUSPEND_NOT_SUSPEND
-	La iline 12%s no estaba suspendida.
+	La iline %s no estaba suspendida.
 CYBER_UNSUSPEND_SUCCEEDED
-	La iline 12%s Reactivada!.
+	La iline %s Reactivada!.
 
 ###########################################################################
 #
@@ -2035,37 +2030,37 @@ OPER_STATS_CHANNEL_MEM
 OPER_STATS_NICKSERV_MEM
 	NickServ  : 12%6d registros, 12%5d kB
 OPER_STATS_NICKSERV_MEM_2
-	12%6d nicks forbids,   12%6d nicks suspendidos
+	%6d nicks forbids,   %6d nicks suspendidos
 OPER_STATS_NICKSERV_MEM_3
-	12%6d entradas access, 12%6d entradas ignore
+	%6d entradas access, %6d entradas ignore
 OPER_STATS_NICKSERV_MEM_4
-	12%6d memos totales,   12%6d memos sin leer
+	%6d memos totales,   %6d memos sin leer
 OPER_STATS_CHANSERV_MEM
 	ChanServ  : 12%6d registros, 12%5d kB
 OPER_STATS_CHANSERV_MEM_2
-	12%6d canales forbids, 12%6d canales suspendidos
+	%6d canales forbids, %6d canales suspendidos
 OPER_STATS_CHANSERV_MEM_3
-	12%6d entradas access, 12%6d entradas akick
+	%6d entradas access, %6d entradas akick
 OPER_STATS_CHANSERV_MEM_4
-	12%6d memos totales,   12%6d memos sin leer
+	%6d memos totales,   %6d memos sin leer
 OPER_STATS_OPERSERV_MEM
 	OperServ  : 12%6d registros, 12%5d kB
 OPER_STATS_OPERSERV_MEM_2
-	12%6d entradas gline,  12%6d entradas News
+	%6d entradas gline,  %6d entradas News
 OPER_STATS_CREGSERV_MEM
 	CregServ  : 12%6d registros, 12%5d kB
 OPER_STATS_CYBERSERV_MEM
 	CyberServ : 12%6d registros, 12%5d kB
 OPER_STATS_CYBERSERV_MEM_2
-	12%6d ilines suspendidas
+	%6d ilines suspendidas
 OPER_STATS_CYBERSERV_MEM_3
-	12%6d ilines no ip fija, 12%6d ilines con vhost
+	%6d ilines no ip fija, %6d ilines con vhost
 OPER_STATS_STATSERV_MEM
 	StatServ  : ^C12%6d^C registros, ^C12%5d^C kB
 OPER_STATS_MEMOSERV_TOTAL
-	Memos Totales : 12%d mensajes
+	Memos Totales : %d mensajes
 OPER_STATS_MEMOSERV_NOREAD
-	Memos por leer: 12%d mensajes
+	Memos por leer: %d mensajes
 
 
 OPER_STATS_AKILL_EXPIRE_DAYS
@@ -2915,7 +2910,7 @@ NICK_SERVADMIN_HELP
 	Los siguientes comandos están disponibles para los
 	4Operadores y Administradores de la RED:
 	
-	    12LISTEMAILS Lista todos los nicks asociados a un mail 
+	       LISTEMAILS   Lista todos los nicks asociados a un mail 
 	    12LISTLINKS  Lista todos los links de un nick
 	    12SENDPASS   Manda la contraseña al mail
 	    12GETPASS    Muestra la contraseña para un nick
@@ -2928,7 +2923,7 @@ NICK_SERVADMIN_HELP
 	Los 4Administradores de la RED pueden usar los siguientes
 	comandos sin necesidad de identificarse por el mismo:
 	
-	    12DROP, 12SET, 12ACCESS LIST, 12INFO ALL
+	    DROP, SET, ACCESS LIST, INFO ALL
 	
 	Lee la ayuda de cada comando para detalles especificos.
 
@@ -2967,11 +2962,11 @@ NICK_SERVADMIN_HELP_UNLINK
 	necesidad de proveer una contraseña.
 
 NICK_SERVADMIN_HELP_LISTEMAILS
-	12Sintaxis: LISTEMAILS <email>
+	Sintaxis: LISTEMAILS <email>
 	
 	Lista los nicks asociados al email dado.
 	
-	Limitado a 4Operadores de la RED.
+	Limitado a Operadores de la RED.
 
 NICK_SERVADMIN_HELP_LISTLINKS
 	Sintaxis: 12LISTLINKS <nick> [ALL]
@@ -3063,14 +3058,6 @@ NICK_SERVADMIN_HELP_UNFORBID
 	
 	Limitado a 4Administradores de la RED.
 
-NICK_SERVADMIN_HELP_REGUSER
-	Sintaxis: 12REGUSER <nick> <password> <email>
-	
-	Permite a un administrador registrar un nick en concreto
-	sin tenerse q cambiar de nick.
-	
-	Limitado a 4Administradores de la RED.
-
 
 ###########################################################################
 #
@@ -3101,7 +3088,7 @@ CHAN_HELP
 	    12KICK       Kickea a un usuario en un canal
 #	    12BAN        Poner un BAN en un canal
 	    12UNBAN      Quitar BAN's de un canal
-	    12GETKEY     Mostrar la key del canal si lo hay (modo +k)
+	       GETKEY     Mostrar la key del canal si lo hay (modo +k)
 	    12CLEAR      Reinicia los modos de un canal
 #	    12RESET      Resetea el canal
 
@@ -3185,7 +3172,7 @@ CHAN_HELP_SET
 	    12LEAVEVOICES Nunca devoice a usuarios excepto con el comando DEVOICE
 	    12MEMOALERT   Avisar cuando hay mensajes (memos) del canal
 	    12UNBANCYBER  Permitir los desbaneos de cybers en los canales
-	    12LEVELS      Evitar que usuarios con nivel inferior hagan
+	        LEVELS        Evitar que usuarios con nivel inferior hagan
 	                DEOP, DEVOICE o KICK a usuarios con mas nivel
 	    12ISSUED      Modo DEBUG, Envia una noticia al canal sobre
 	                los comandos usados
@@ -3402,7 +3389,7 @@ CHAN_HELP_SET_UNBANCYBER
 	4Administradores de la Red.	
 
 CHAN_HELP_SET_LEVELS
-	Sintaxis: 12SET <canal> LEVELS {ON | OFF}
+	Sintaxis: SET <canal> LEVELS {ON | OFF}
 	
 	Habilita o deshabilita la opción de LEVELS para el canal.
 	Cuando LEVELS está activada (ON), %S no dejará que usuarios
@@ -3484,7 +3471,7 @@ CHAN_HELP_AKICK
 	          12AKICK <canal> LIST [mascara]
 	          12AKICK <canal> VIEW [mascara]
 	          12AKICK <canal> ENFORCE
-	          12AKICK <canal> COUNT
+	          ^C12AKICK <canal> COUNT^C
 	
 	Definimos AKICK como "Expulsión automática".
 	Definimos BAN como "Entrada prohibida".
@@ -3877,7 +3864,7 @@ MEMO_HELP_SET
 	                    nuevos mensajes
 	    12LIMIT       Establece el MAXIMO número de mensajes que
 	                    usted puede recibir
-	    12FULLMEMO    Establece el mensaje que %S mostrara cuando
+	    FULLMEMO       Establece el mensaje que %S mostrara cuando
 	                     el buzon está lleno
 	
 	Escriba 12/msg %S HELP SET opción para obtener más
@@ -3910,9 +3897,9 @@ MEMO_HELP_SET_LIMIT
 	usted no puede establecer 12limite más alto que 12%d.
 
 MEMO_HELP_SET_FULLMEMO
-	Sintaxis: 12SET FULLMEMO [mensaje]
+	Sintaxis: SET FULLMEMO [mensaje]
 	
-	Establece el mensaje que 4%S mostrará al usuario que intenta
+	Establece el mensaje que %S mostrará al usuario que intenta
 	mandarte mensaje pero que tu buzón está lleno. Si no especificas
 	el mensaje, deshabilitas la funcion.
 
@@ -4288,7 +4275,7 @@ OPER_HELP
 	administradores:
 	
 	    12OP DEOP     Da op o deop por el servidor
-	    12GETKEY      Da la key (modo +k) de un canal
+	    GETKEY          Da la key (modo +k) de un canal
 	    12MODE        Cambia los modos de un canal
 	    12CLEARMODES  Quita todos los modos de un canal
 	    12KICK        Patea a un usuario de un canal
@@ -4987,12 +4974,12 @@ SERVICES_CREDITS_TERRA
 	de Terra Networks S.A. usando la base de los ircservices-4.3.3 original.
 
 	Miembros del Comite tecnico de developers:
-	   Marcos Rey          TeX         <tex@terra.es>
+	   Marcos Rey          TeX         <marcos.rey@terra.es>
 	   Daniel Fernandez    FreeMind    <animedes@terra.es>
-	   Toni García         zoltan      <zoltan@terra.es>
-	   Jordi Murgo         |savage|    <savage@apostols.org>
+	   Toni García         zoltan      <zolty@terra.es>
+	   Jordi Murgó         |savage|    <savage@apostols.org>
 	y los betateasters:
 	   Antonio Fernandes   KoGe        <koge@terra.es>
-	   Ripe, NiKoLaS y  CarlesBCN
+	   Ripe y  CarlesBCN
 	Y agradecimientos a los ircops, opers, y usuarios de la red por
 	las sugerencias, criticas... :)

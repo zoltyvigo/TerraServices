@@ -124,7 +124,6 @@ const char *make_special_ircop_host(const char *host)
   return host;
 } 
                                               
-
 /* Codigo sacado del ircu de Terra. Thz a FreeMind <animedes@terra.es> */
                
 const char *make_virtualhost(const char *host)
@@ -179,3 +178,4 @@ const char *make_virtualhost(const char *host)
   return host;
   
 }  
+

@@ -209,6 +209,50 @@ void save_akill(void)
 
 #undef SAFE
 
+
+/*************************************************************************/
+/************************** Internal functions ***************************/
+/*************************************************************************/
+
+static void send_akill(const Akill *akill)
+{
+    char *username;
+    char *host;
+    time_t now = time(NULL);
+
+    username = sstrdup(akill->mask);
+    host = strchr(username, '@');
+    if (!host) {
+	/* Glurp... this oughtn't happen, but if it does, let's not
+	 * play with null pointers.  Yell and bail out.
+	 */
+	canalopers(s_OperServ, "No hay @ en AKILL: %s", akill->mask);
+	log("Missing @ in AKILL: %s", akill->mask);
+	return;
+    }
+    *host++ = 0;
+
+#ifdef IRC_BAHAMUT
+    send_cmd(ServerName,
+	    "AKILL %s %s %ld %s %ld :%s",
+	    host, username, 
+	    (akill->expires && akill->expires > now)
+			? akill->expires - now 
+			: 0,
+	    akill->who ? akill->who : "<desconocido>", now, 
+	    StaticAkillReason ? StaticAkillReason : akill->reason);
+#elif defined(IRC_UNDERNET)
+    send_cmd(ServerName,
+	    "GLINE * +%s@%s %ld :%s",
+            username, host,
+	    (akills->expires && akills->expires > now)
+			? akills->expires - now
+			: 999999999,
+	    StaticAkillReason ? StaticAkillReason : akill->reason);
+#endif
+    free(username);
+}
+
 /*************************************************************************/
 /************************** External functions ***************************/
 /*************************************************************************/
@@ -219,7 +263,7 @@ int check_akill(const char *nick, const char *username, const char *host)
 {
     char buf[512];
     int i;
-    char *host2, *username2;
+//    char *host2, *username2;
 
     strscpy(buf, username, sizeof(buf)-2);
     i = strlen(buf);
@@ -227,33 +271,18 @@ int check_akill(const char *nick, const char *username, const char *host)
     strlower(strscpy(buf+i, host, sizeof(buf)-i));
     for (i = 0; i < nakill; i++) {
 	if (match_wild_nocase(akills[i].mask, buf)) {
-            time_t now = time(NULL);
 	    /* Don't use kill_user(); that's for people who have already
 	     * signed on.  This is called before the User structure is
 	     * created.
 	     */
 	    send_cmd(s_OperServ,
 			"KILL %s :%s (%s)",
-			nick, s_OperServ, akills[i].reason);
-	    username2 = sstrdup(akills[i].mask);
-	    host2 = strchr(username2, '@');
-	    if (!host2) {
-		/* Glurp... this oughtn't happen, but if it does, let's not
-		 * play with null pointers.  Yell and bail out.
-		 */
-		canalopers(NULL, "Falta @ en el GLINE: %s", akills[i].mask);
-		log("Falta @ en el GLINE: %s", akills[i].mask);
-		continue;
-	    }
-	    *host2++ = 0;
-	    send_cmd(ServerName,
-		    "GLINE * +%s@%s %ld :%s",
-		    username2, host2,
-		    akills[i].expires && akills[i].expires>now
-				? akills[i].expires-time(NULL)
-				: 999999999, akills[i].reason);
-	    free(username2);
-	    return 1;
+			nick, s_OperServ,
+				StaticAkillReason 
+				? StaticAkillReason 
+				: akills[i].reason);
+ 	    send_akill(&akills[i]);
+            return 1;
 	}
     }
     return 0;
@@ -267,12 +296,27 @@ void expire_akills(void)
 {
     int i;
     time_t now = time(NULL);
+#ifdef IRC_BAHAMUT
+    char *s;
+#endif
+
+    if (opt_noexpire)
+        return;
 
     for (i = 0; i < nakill; i++) {
 	if (akills[i].expires == 0 || akills[i].expires > now)
 	    continue;
 	canalopers(s_OperServ, "GLINE en %s ha expirado", akills[i].mask);
+#ifdef IRC_BAHAMUT
+	s = strchr(akills[i].mask, '@');
+	if (s) {
+	    *s++ = 0;
+	    strlower(s);
+	    send_cmd(ServerName, "RAKILL %s %s", s, akills[i].mask);
+	}
+#elif defined (IRC_UNDERNET)
         send_cmd(NULL, "GLINE * -%s", akills[i].mask);
+#endif
 	free(akills[i].mask);
 	free(akills[i].reason);
 	nakill--;
@@ -312,24 +356,10 @@ void add_akill(const char *mask, const char *reason, const char *who,
     akills[nakill].time = time(NULL);
     akills[nakill].expires = expiry;
     strscpy(akills[nakill].who, who, NICKMAX);
-/*
-    if (expiry) {
-	int amount = strtol(expiry, (char **)&expiry, 10);
-	if (amount == 0) {
-	    akills[nakill].expires = 0;
-	} else {
-	    switch (*expiry) {
-		case 'd': amount *= 24;
-		case 'h': amount *= 60;
-		case 'm': amount *= 60; break;
-		default : amount = -akills[nakill].time;
-	    }
-	    akills[nakill].expires = amount + akills[nakill].time;
-	}
-    } else {
-	akills[nakill].expires = AutokillExpiry + akills[nakill].time;
-    }
-*/
+
+    if (ImmediatelySendAkill)
+	send_akill(&akills[nakill]);
+    
     nakill++;
 }
 
@@ -393,14 +423,13 @@ void do_akill(User *u)
 	}
 
 	if (mask && (reason = strtok(NULL, ""))) {
-            char buf[256];
+            char buf[128];
             if (strchr(mask, '!')) {
                 notice_lang(s_OperServ, u, OPER_AKILL_NO_NICK);
                 notice_lang(s_OperServ, u, BAD_USERHOST_MASK);
                 return;
             }                                            
  	    s = strchr(mask, '@');
-
 	    if (!s) {
 		notice_lang(s_OperServ, u, BAD_USERHOST_MASK);
 		return;
@@ -415,12 +444,11 @@ void do_akill(User *u)
             
             strlower(mask);	
 	    add_akill(mask, reason, u->nick, expires);
-            send_cmd(NULL, "GLINE * +%s %lu :%s", mask, expires-time(NULL), reason);	    
-	    notice_lang(s_OperServ, u, OPER_AKILL_ADDED, mask);
+     	    notice_lang(s_OperServ, u, OPER_AKILL_ADDED, mask);
 
             if (expires == 0)
                 snprintf(buf, sizeof(buf),
-                         getstring(u->ni, OPER_AKILL_NO_EXPIRE));
+                         getstring(u->nick, OPER_AKILL_NO_EXPIRE));
             else
                 expires_in_lang(buf, sizeof(buf), u, expires - t + 59);
             canalopers(s_OperServ, "%s ha añadido un GLINE para %s (%s)",
@@ -435,9 +463,25 @@ void do_akill(User *u)
     } else if (stricmp(cmd, "DEL") == 0) {
 	mask = strtok(NULL, " ");
 	if (mask) {
+#ifdef IRC_BAHAMUT
+	    s = strchr(mask, '@');
+	    if (s)
+		strlower(s);
+#endif
 	    if (del_akill(mask)) {
 		notice_lang(s_OperServ, u, OPER_AKILL_REMOVED, mask);
+#ifdef IRC_BAHAMUT
+		if (s) {
+		    *s++ = 0;
+		    send_cmd(ServerName, "RAKILL %s %s", s, mask);
+		} else {
+		    /* We lose... can't figure out what's a username and what's
+		     * a hostname.  Ah well.
+		     */
+		}
+#elif defined (IRC_UNDERNET)
                 send_cmd(NULL, "GLINE * -%s", mask);
+#endif
 	if (readonly)
 		    notice_lang(s_OperServ, u, READ_ONLY_MODE);
 	    } else {
@@ -448,31 +492,56 @@ void do_akill(User *u)
 	}
 
     } else if (stricmp(cmd, "LIST") == 0) {
+	char *expiry;
+	int expires = -1;	/* Do not match on expiry time */
+	     
 	expire_akills();
 	s = strtok(NULL, " ");
 	if (!s)
 	    s = "*";
+	else {
+	    expiry = strtok(NULL, " ");
+
+	    /* This is a little longwinded for what it acheives - but we can
+	     * extend it later to allow for user defined expiry times. */
+	    if (expiry && stricmp(expiry, "NOEXPIRE") == 0)
+		expires = 0;	/* Akills that never expire */
+	}
+
 	if (strchr(s, '@'))
 	    strlower(strchr(s, '@'));
 	notice_lang(s_OperServ, u, OPER_AKILL_LIST_HEADER);
 	for (i = 0; i < nakill; i++) {
-	    if (!s || match_wild(s, akills[i].mask)) {
+	    if (!s || (match_wild(s, akills[i].mask) &&
+			(expires == -1 || akills[i].expires == expires))) {
 		notice_lang(s_OperServ, u, OPER_AKILL_LIST_FORMAT,
 					akills[i].mask, akills[i].reason);
 	    }
 	}
 
     } else if (stricmp(cmd, "VIEW") == 0) {
+	char *expiry;
+	int expires = -1;	/* Do not match on expiry time */
+
 	expire_akills();
 	s = strtok(NULL, " ");
 	if (!s)
 	    s = "*";
+	else {
+	    expiry = strtok(NULL, " ");
+
+	    /* This is a little longwinded for what it acheives - but we can
+	     * extend it later to allow for user defined expiry times. */
+	    if (expiry && stricmp(expiry, "NOEXPIRE") == 0)
+		expires = 0;	/* Akills that never expire */
+	}
+
 	if (strchr(s, '@'))
 	    strlower(strchr(s, '@'));
 	notice_lang(s_OperServ, u, OPER_AKILL_LIST_HEADER);
 	for (i = 0; i < nakill; i++) {
 	    if (!s || (match_wild(s, akills[i].mask) &&
-                      (expires == -1 || akills[i].expires == expires))) {
+                        (expires == -1 || akills[i].expires == expires))) {
 		char timebuf[32], expirebuf[256];
 		struct tm tm;
 		time_t t = time(NULL);
@@ -497,6 +566,8 @@ void do_akill(User *u)
 	    }
 	}
 
+    } else if (stricmp(cmd, "COUNT") == 0) {
+	notice_lang(s_OperServ, u, OPER_AKILL_COUNT, nakill);
     } else {
 	syntax_error(s_OperServ, u, "GLINE", OPER_AKILL_SYNTAX);
     }

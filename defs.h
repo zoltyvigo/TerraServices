@@ -1,4 +1,4 @@
- /* Set default values for any constants that should be in include files but
+/* Set default values for any constants that should be in include files but
  * aren't, or that have wacky values.
  *
  * Services is copyright (c) 1996-1999 Andrew Church.

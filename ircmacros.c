@@ -15,8 +15,18 @@
  */
 
 
+#ifdef IRC_UNDERNET
 # define NICK(nick,name) \
     do { \
         send_cmd(ServerName, "NICK %s 1 %ld %s %s %s :%s", (nick), time(NULL),\
                 ServiceUser, ServiceHost, ServerName, (name)); \
     } while (0)
+#else
+/* IRC_BAHAMUT */
+// NICK <nick> <hops> <TS> <umode> <user> <host> <server> <svsid> :<ircname>
+#  define NICK(nick,name) \
+    do { \
+        send_cmd(NULL, "NICK %s 1 %ld + %s %s %s 0 :%s", (nick), time(NULL), \
+                ServiceUser, ServiceHost, ServerName, (name)); \
+    } while (0)
+#endif

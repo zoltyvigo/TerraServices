@@ -249,7 +249,7 @@ int add_clones(const char *nick, const char *host)
             if (WebClones)
                 notice(s_CyberServ, nick, WebClones);
            
-                                               
+                                                                                           
             send_cmd(s_CyberServ, "KILL %s :En está red sólo se permiten "
                     "%d clones para tu ip (%s)", nick, limiteclones, host);
 
@@ -266,20 +266,8 @@ int add_clones(const char *nick, const char *host)
                 /* Pone el Vhost al usuario */
                 if (iline->vhost)
                     send_cmd(ServerName, "SVSVHOST %s :%s", nick, iline->vhost);
-//            }    
-            } else {
-/* MIGRACION */
-/* Si Tiene 3 o 4 o 5 clones MOSTRAR MENSAJE DE AVISO */
-                if ((clones->numeroclones >= 3) && (clones->numeroclones <= 5)) 
-                {
-                    privmsg(s_CyberServ, nick, "4ATENCION!!!, MIGRACION DEL LIMITE DE CLONES");
-                    privmsg(s_CyberServ, nick, "Tu actual limite de 5 clones sera reducido proximamente a 2 clones"
-                            " no obstante, puedes contratar gratuitamente más clones, escribe"
-                            " 12/msg Cyber CONTRATA  para más informacion.");
-                }
-/* Fin migracion */
-                return 1;
-            }
+            }    
+            return 1;
         }
     }
     nclones++;
@@ -433,11 +421,11 @@ void load_cyber_dbase(void)
                 SAFE(read_string(&il->nombreadmin, f));
                 SAFE(read_string(&il->dniadmin, f));                
                 SAFE(read_string(&il->email, f));
-                SAFE(read_string(&il->telefono, f));
+                SAFE(read_string(&il->telefono, f));                                                
                 SAFE(read_string(&il->comentario, f));
-                SAFE(read_string(&il->vhost, f));   
+                SAFE(read_string(&il->vhost, f));                                
                 SAFE(read_buffer(il->operwho, f));                
-                SAFE(read_int16(&il->limite, f)); 
+                SAFE(read_int16(&il->limite, f));                                              
                 SAFE(read_int32(&tmp32, f));
                 il->time_concesion = tmp32;
                 SAFE(read_int32(&tmp32, f));
@@ -482,12 +470,12 @@ void save_cyber_dbase(void)
     int i;
     IlineInfo *il;
     static time_t lastwarn = 0;
-                
+                                                                                              
     if (!(f = open_db(s_CyberServ, IlineDBName, "w", ILINE_VERSION)))
         return;
           
     for (i = 0; i < 256; i++) {
-        for (il = ilinelists[i]; il; il = il->next) {              
+        for (il = ilinelists[i]; il; il = il->next) {                                                                                                                                                                                                    
             SAFE(write_int8(1, f));
             SAFE(write_string(il->host, f));
             SAFE(write_string(il->host2, f));
@@ -507,7 +495,7 @@ void save_cyber_dbase(void)
             SAFE(write_int32(il->time_expiracion, f));
             SAFE(write_int16(il->record_clones, f));
             SAFE(write_int32(il->time_record, f));
-            SAFE(write_int16(il->estado, f));                       
+            SAFE(write_int16(il->estado, f));                                                                                                                                                                                                                                                                                        
 
         } /* for (ilinelists[i]) */
         
@@ -581,16 +569,16 @@ IlineInfo *find_iline_host(const char *host)
 {
  
      IlineInfo *il;
-//     int i;
+     int i;
     
-     for (il = ilinelists[tolower(*host)]; il; il = il->next) {
-//     for (i = 0; i < 256; i++) {
-//         for (il = ilinelists[i]; il; il = il->next) {
+//     for (il = ilinelists[tolower(*host)]; il; il = il->next) {
+     for (i = 0; i < 256; i++) {
+         for (il = ilinelists[i]; il; il = il->next) {
               
          if (stricmp(il->host, host) == 0)
              return il;
      }     
-//     }          
+     }          
 //     return NULL;
       return find_iline_host2(host); 
 }
@@ -660,7 +648,7 @@ int is_cyber_admin(User *u)
             if (stricmp(il->admin->nick, u->nick) == 0)               
                 if (nick_identified(u))            
                     return 1;
-                return 0;
+             
         }
     }    
     
@@ -731,7 +719,7 @@ static int deliline(IlineInfo *il)
     if (il->prev)
         il->prev->next = il->next;
     else
-        ilinelists[tolower(*il->host)] = il->next; 
+        ilinelists[tolower(*il->host)] = il->next;                                    
  
     if (il->host)
         free(il->host);
@@ -862,8 +850,6 @@ static void do_actualiza(User *u)
     } else if (find_iline_host(u->host)) {
         notice_lang(s_CyberServ, u, CYBER_ACTUALIZA_HOST, u->host);
     } else { 
- privmsg(s_CyberServ, u->nick, "COMANDO DESACTIVADO TEMPORALMENTE");
- return;
         change_host_iline(iline, u->host);   
         notice_lang(s_CyberServ, u, CYBER_ACTUALIZA_SUCCEEDED, 
                                           iline->host, iline->limite);
@@ -886,15 +872,15 @@ static void do_info(User *u)
         clones = findclones(host);    
         il = find_iline_host(host);
         if (il) {
-            notice_lang(s_CyberServ, u, CYBER_INFO_HEADER, il->comentario);    
+            notice_lang(s_CyberServ, u, CYBER_INFO_HEADER, il->comentario);          
             if (il->estado & IL_IPNOFIJA) {
                 notice_lang(s_CyberServ, u, CYBER_INFO_IPFIJA_ON);
-                notice_lang(s_CyberServ, u, CYBER_INFO_IPFIJA_HOST, il->host); 
+                notice_lang(s_CyberServ, u, CYBER_INFO_IPFIJA_HOST, il->host);                
             } else {
                 notice_lang(s_CyberServ, u, CYBER_INFO_IPFIJA_OFF);            
                 if (il->host2) {
                     notice_lang(s_CyberServ, u, CYBER_INFO_HOST2, il->host);
-                    notice_lang(s_CyberServ, u, CYBER_INFO_HOST, il->host2);  
+                    notice_lang(s_CyberServ, u, CYBER_INFO_HOST, il->host2);                
                 } else
                     notice_lang(s_CyberServ, u, CYBER_INFO_HOST, il->host);
             } 
@@ -932,7 +918,7 @@ static void do_info(User *u)
                 if (il->record_clones) {
                     tm = localtime(&il->time_record);
                     strftime_lang(timebuf, sizeof(timebuf), u,
-                                         STRFTIME_DATE_TIME_FORMAT, tm);  
+                                         STRFTIME_DATE_TIME_FORMAT, tm);                    
                     notice_lang(s_CyberServ, u, CYBER_INFO_RECORD,
                               il->record_clones, timebuf);
                 }
@@ -956,7 +942,7 @@ static void do_info(User *u)
                 } else
                     notice_lang(s_CyberServ, u, CYBER_INFO_HOST, il->host);
             }
-                                      
+                                                                                                                                                                                                    
         }
         
     }    
@@ -1086,12 +1072,15 @@ static void do_cyberunban(User *u)
        notice_lang(s_CyberServ, u, CHAN_X_NOT_REGISTERED, chan);
    } else if (!(ci->flags & CI_UNBANCYBER)) {    
        notice_lang(s_CyberServ, u, CYBER_UNBAN_NOT_UNBAN, chan);
-   } else if (!c->bancount) {
-       notice_lang(s_ChanServ, u, CHAN_UNBAN_NOT_FOUND, chan);
-       return;
    } else {
             
        int count = c->bancount;
+/*       
+       if (!count) {
+           notice_lang(s_ChanServ, u, CHAN_UNBAN_NOT_FOUND, chan);
+           return;
+       }
+*/       
        int desban = 0;
        char **bans = smalloc(sizeof(char *) * count);
        memcpy(bans, c->bans, sizeof(char *) * count);
@@ -1116,7 +1105,7 @@ static void do_cyberunban(User *u)
            notice_lang(s_CyberServ, u, CYBER_UNBAN_FAILED, chan);       
    }       
 
-}                                                       
+}                                                                                                    
  
 /*************************************************************************/
 
@@ -1221,7 +1210,7 @@ static void do_clones(User *u)
          }
       }
    }
-}                                           
+}                                                                                                                                                                                                                                                                                                                                                                                                      
                      
 /*************************************************************************/
 
@@ -1362,7 +1351,7 @@ static void do_iline(User *u)
         }
                                 
         
-        limit = (limite && isdigit((int)*limite)) ? atoi(limite) : -1;
+        limit = (limite && isdigit(*limite)) ? atoi(limite) : -1;
         if (limit < 0 || limit > MaximoClones) {
             notice_lang(s_CyberServ, u, CYBER_ILINE_INVALID_LIMIT,
                                 MaximoClones);
@@ -1493,9 +1482,6 @@ static void do_set_cyber(User *u)
 static void do_set_host(User *u, IlineInfo *il, char *param)
 {
     char *antiguo = il->host;
-
- privmsg(s_CyberServ, u->nick, "COMANDO DESACTIVADO TEMPORALMENTE");
- return;
     
     if (find_iline_host(param)) {
         notice_lang(s_CyberServ, u, CYBER_ACTUALIZA_HOST, param);

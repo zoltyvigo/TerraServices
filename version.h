@@ -6,18 +6,18 @@
  * details.
  */
 
-#define BUILD	"354"
+#define BUILD	"450"
 
 
-const char version_branchstatus[] = "BETA-STABLE";
+const char version_branchstatus[] = "BETA-RELEASE";
 const char version_number[] = "4.4.9";
-const char version_terra[] = "1.0RC7";
-const char version_build[] = "build #" BUILD ", compiled Tue Mar 20 02:07:46 CET 2001";
+const char version_terra[] = "1.0RC9";
+const char version_build[] = "build #" BUILD ", compiled jue feb 15 08:19:11 CET 2001";
 const char version_protocol[] =
-#if defined(IRC_UNDERNET_P09)
+#if defined(IRC_UNDERNET)
 	"ircu 2.10+Terra P9"
-#elif defined(IRC_UNDERNET_P10)
-	"ircu 2.10+Terra P10"
+#elif defined(IRC_BAHAMUT)
+	"Bahamut + Terra"
 #else
 	"desconocido"
 #endif 
@@ -56,7 +56,7 @@ const char *info_text[] =
 	"por el equipo de Developers de Terra Networks:",
 	"-",
 	"Programador principal de los Terra Services",
-        "Toni Garcia         zoltan    <zoltan@terra.es>",
+        "Toni Garcia         zoltan    <zolty@terra.es>",
 	"Otros programadores",
 	"Daniel Fernandez    Freemind  <animedes@terra.es>",
 	"Jordi Murgo         |savage|  <savage@apostols.org>",

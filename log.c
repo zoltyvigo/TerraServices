@@ -310,8 +310,7 @@ void fatal_perror(const char *fmt, ...)
     if (stderr)
 	fprintf(stderr, "%sFATAL: %s: %s\n", buf, buf2, strerror(errno_save));
     if (servsock >= 0)
-	canalopers(NULL, "FATAL ERROR!  %s: %s", buf2,
-strerror(errno_save));
+	canalopers(NULL, "FATAL ERROR!  %s: %s", buf2, strerror(errno_save));
     exit(1);
 }
 

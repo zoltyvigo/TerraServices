@@ -18,7 +18,7 @@
 
 int toupper(char c)
 {
-    if (islower((int)c))
+    if (islower(c))
 	return (unsigned char)c - ('a'-'A');
     else
 	return (unsigned char)c;
@@ -87,7 +87,7 @@ int NTL_toupper_tab[] = {
 
 int tolower(char c)
 {
-    if (isupper((int)c))
+    if (isupper(c))
 	return (unsigned char)c + ('a'-'A');
     else
 	return (unsigned char)c;
@@ -452,7 +452,7 @@ int process_numlist(const char *numstr, int *count_ret,
         if (*numstr == '-') {
             numstr++;
             numstr += strcspn(numstr, "0123456789,");
-            if (isdigit((int)*numstr)) {
+            if (isdigit(*numstr)) {
                 n2 = strtol(numstr, (char **)&numstr, 10);
                 numstr += strcspn(numstr, "0123456789,-");
             }

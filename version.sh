@@ -5,12 +5,12 @@
 
 
 VERSION=4.4.9
-BRANCHSTATUS=BETA-STABLE
+BRANCHSTATUS=BETA-RELEASE
 
 # Cambiar este siempre
 # Las versiones seran 1.a.b
 
-VERSION_TERRA=1.0RC7
+VERSION_TERRA=1.0RC9
 
 
 # Increment Services build number
@@ -46,10 +46,10 @@ const char version_number[] = "$VERSION";
 const char version_terra[] = "$VERSION_TERRA";
 const char version_build[] = "build #" BUILD ", compiled $DATE";
 const char version_protocol[] =
-#if defined(IRC_UNDERNET_P09)
+#if defined(IRC_UNDERNET)
 	"ircu 2.10+Terra P9"
-#elif defined(IRC_UNDERNET_P10)
-	"ircu 2.10+Terra P10"
+#elif defined(IRC_BAHAMUT)
+	"Bahamut + Terra"
 #else
 	"desconocido"
 #endif 
@@ -88,7 +88,7 @@ const char *info_text[] =
 	"por el equipo de Developers de Terra Networks:",
 	"-",
 	"Programador principal de los Terra Services",
-        "Toni Garcia         zoltan    <zoltan@terra.es>",
+        "Toni Garcia         zoltan    <zolty@terra.es>",
 	"Otros programadores",
 	"Daniel Fernandez    Freemind  <animedes@terra.es>",
 	"Jordi Murgo         |savage|  <savage@apostols.org>",

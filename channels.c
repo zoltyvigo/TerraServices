@@ -65,7 +65,7 @@ void send_channel_list(User *user)
 
     for (c = firstchan(); c; c = nextchan()) {
 	snprintf(s, sizeof(s), " %d", c->limit);
-	privmsg(s_OperServ, source, "%s %lu +%s%s%s%s%s%s%s%s%s%s%s%s %s",
+	privmsg(s_OperServ, source, "%s %lu +%s%s%s%s%s%s%s%s%s%s%s%s%s %s",
 				c->name, c->creation_time,
 				(c->mode&CMODE_I) ? "i" : "",
 				(c->mode&CMODE_M) ? "m" : "",
@@ -73,6 +73,11 @@ void send_channel_list(User *user)
 				(c->mode&CMODE_P) ? "p" : "",
 				(c->mode&CMODE_S) ? "s" : "",
 				(c->mode&CMODE_T) ? "t" : "",
+#ifdef IRC_BAHAMUT
+				(c->mode&CMODE_C) ? "c" : "",
+#else
+				"",
+#endif
 				(c->mode&CMODE_R) ? "R" : "",	
 				(c->limit)        ? "l" : "",
 				(c->key)          ? "k" : "",
@@ -272,7 +277,7 @@ void chan_deluser(User *user, Channel *c)
     int i;
 
     if (debug >= 2)
-        log("channel: chan_deluser() called...");
+	log("channel: chan_deluser() called...");
 
     for (u = c->users; u && u->user != user; u = u->next)
 	;
@@ -284,7 +289,7 @@ void chan_deluser(User *user, Channel *c)
 	u->prev->next = u->next;
     else
 	c->users = u->next;
-    free(u);    
+    free(u);
     for (u = c->chanops; u && u->user != user; u = u->next)
 	;
     if (u) {
@@ -308,16 +313,16 @@ void chan_deluser(User *user, Channel *c)
 	free(u);
     }
     if (!c->users) {
-	if (debug)
-	    log("debug: Borrando canal %s", c->name);
+        if (debug)
+            log("debug: Borrando canal %s", c->name);
         /* Contador Canales */
-        chancnt--;	    
+        chancnt--;
 	if (c->ci)
 	    c->ci->c = NULL;
 	if (c->topic)
 	    free(c->topic);
-	if (c->key)
-	    free(c->key);
+        if (c->key)
+            free(c->key);
 	for (i = 0; i < c->bancount; ++i) {
 	    if (c->bans[i])
 		free(c->bans[i]);
@@ -342,6 +347,7 @@ void chan_deluser(User *user, Channel *c)
 	free(c);
     }
 }
+
 
 /*************************************************************************/
 
@@ -427,6 +433,15 @@ void do_cmode(const char *source, int ac, char **av)
 	    else
 		chan->mode &= ~CMODE_T;
 	    break;
+
+#ifdef IRC_BAHAMUT
+	case 'c':
+	    if (add)
+		chan->mode |= CMODE_C;
+	    else
+		chan->mode &= ~CMODE_C;
+	    break;
+#endif /* IRC_BAHAMUT */
 
 	case 'R':
 	    if (add)
@@ -631,6 +646,25 @@ void do_cmode(const char *source, int ac, char **av)
 
 /* Handle a TOPIC command. */
 
+/* En Undernet P9 y P10 el comando topic es asi
+ *
+ *      source = Nick de kien pone el topic
+ *      av[0]  = Canal
+ *      av[1]  = Topic
+ *
+ * En el resto de ircds
+ *
+ *      source = ¨Servidor?
+ *      av[0]  = Canal
+ *      av[1]  = Nick de kien pone el topic
+ *      av[2]  = Tiempo ke fue cambiado el topic
+ *      av[3]  = Topic
+ *
+ * Por este motivo he hecho cambios en do_topic :)
+ *
+ * Toni García  -Zoltan-  1- Septiembre- 2000
+ */
+
 void do_topic(const char *source, int ac, char **av)
 {
     Channel *c = findchan(av[0]);
@@ -642,14 +676,24 @@ void do_topic(const char *source, int ac, char **av)
     }
     if (check_topiclock(av[0]))
 	return;
+#ifdef IRC_UNDERNET
     strscpy(c->topic_setter, source, sizeof(c->topic_setter));
     c->topic_time = time(NULL);
+#else
+    strscpy(c->topic_setter, av[1], sizeof(c->topic_setter));
+    c->topic_time = atol(av[2]);
+#endif
     if (c->topic) {
 	free(c->topic);
 	c->topic = NULL;
     }
+#ifdef IRC_UNDERNET
     if (ac > 1 && *av[1])
 	c->topic = sstrdup(av[1]);
+#else
+    if (ac > 3 && *av[3])
+        c->topic = sstrdup(av[3]);
+#endif
     record_topic(av[0]);
 }
 

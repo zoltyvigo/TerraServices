@@ -15,13 +15,21 @@
 /* Send a NICK command for the given pseudo-client.  If `user' is NULL,
  * send NICK commands for all the pseudo-clients. */
 
-
+#ifdef IRC_UNDERNET
 # define NICK(nick,name) \
     do { \
 	send_cmd(ServerName, "NICK %s 1 %ld %s %s %s :%s", (nick), time(NULL),\
 		ServiceUser, ServiceHost, ServerName, (name)); \
     } while (0)
-
+#else
+/* IRC_BAHAMUT */
+// NICK <nick> <hops> <TS> <umode> <user> <host> <server> <svsid> :<ircname>
+#  define NICK(nick,name) \
+    do { \
+	send_cmd(NULL, "NICK %s 1 %ld + %s %s %s 0 :%s", (nick), time(NULL), \
+		ServiceUser, ServiceHost, ServerName, (name)); \
+    } while (0)
+#endif
 
 void introduce_user(const char *user)
 {
@@ -64,9 +72,9 @@ void introduce_user(const char *user)
 	NICK(s_OperServ, desc_OperServ);
 	send_cmd(s_OperServ, "MODE %s +oikbBd", s_OperServ);
         send_cmd(s_OperServ, "JOIN #%s", CanalOpers);	
-        send_cmd(s_OperServ, "MODE #%s +o %s", CanalOpers, s_OperServ);        
-        send_cmd(s_OperServ, "JOIN #%s", CanalAdmins);
-        send_cmd(s_OperServ, "MODE #%s +o %s", CanalAdmins, s_OperServ);
+        send_cmd(s_OperServ, "MODE #%s +o %s", CanalOpers, s_OperServ);
+        send_cmd(s_OperServ, "JOIN #%s", CanalAdmins);      
+        send_cmd(s_OperServ, "MODE #%s +o %s", CanalAdmins, s_OperServ);        
     }
     if (s_DevNull && (!user || stricmp(user, s_DevNull) == 0)) {
 	NICK(s_DevNull, desc_DevNull);
@@ -76,14 +84,15 @@ void introduce_user(const char *user)
 	NICK(s_GlobalNoticer, desc_GlobalNoticer);
 	send_cmd(s_GlobalNoticer, "MODE %s +oibdk", s_GlobalNoticer);
     }
-#ifdef CYBER
+    
+#ifdef CYBER1
     if (!user || stricmp(user, s_CyberServ) == 0) {
         NICK(s_CyberServ, desc_CyberServ);
         send_cmd(s_CyberServ, "MODE %s +dkboB", s_CyberServ);
         send_cmd(s_CyberServ, "JOIN #%s", CanalOpers);
         send_cmd(s_CyberServ, "MODE #%s +o %s", CanalOpers, s_CyberServ);
         send_cmd(s_CyberServ, "JOIN #%s", CanalCybers);
-        send_cmd(ServerName, "MODE #%s +o %s", CanalCybers, s_CyberServ);
+        send_cmd(s_CyberServ, "MODE #%s +o %s", CanalCybers, s_CyberServ);
     }
 #endif
 }
@@ -264,8 +273,8 @@ static int parse_options(int ac, char **av)
 		nofork = 1;
 	    } else if (strcmp(s, "forceload") == 0) {
 		forceload = 1;
-            } else if (strcmp(s, "noexpire") == 0) {
-                opt_noexpire = 1;
+	    } else if (strcmp(s, "noexpire") == 0) {
+		opt_noexpire = 1;
 	    } else {
 		fprintf(stderr, "Unknown option -%s\n", s);
 		return -1;
@@ -404,11 +413,11 @@ int init(int ac, char **av)
     signal(SIGINT, sighandler);
     signal(SIGTERM, sighandler);
     signal(SIGQUIT, sighandler);
-    signal(SIGBUS, sighandler);
-    signal(SIGQUIT, sighandler);
 #ifndef DUMPCORE
     signal(SIGSEGV, sighandler);
 #endif
+    signal(SIGBUS, sighandler);
+    signal(SIGQUIT, sighandler);
     signal(SIGHUP, sighandler);
     signal(SIGILL, sighandler);
     signal(SIGTRAP, sighandler);
@@ -431,7 +440,7 @@ int init(int ac, char **av)
     os_init();
 #ifdef CYBER
     cyber_init();
-#endif
+#endif         
 
     /* Load up databases */
     if (!skeleton) {
@@ -462,9 +471,14 @@ int init(int ac, char **av)
     servsock = conn(RemoteServer, RemotePort, LocalHost, LocalPort);
     if (servsock < 0)
 	fatal_perror("Can't connect to server");
+#ifdef IRC_UNDERNET
     send_cmd(NULL, "PASS :%s", RemotePassword);
     send_cmd(NULL, "SERVER %s 1 %lu %lu P09 :%s",
 		ServerName, start_time, start_time, ServerDesc);
+#else /* IRC_BAHAMUT */
+    send_cmd(NULL, "PASS %s :TS", RemotePassword);
+    send_cmd(NULL, "SERVER %s 1 :%s", ServerName, ServerDesc);
+#endif
     sgets2(inbuf, sizeof(inbuf), servsock);
     if (strnicmp(inbuf, "ERROR", 5) == 0) {
 	/* Close server socket first to stop wallops, since the other
@@ -474,6 +488,11 @@ int init(int ac, char **av)
 	fatal("Remote server returned: %s", inbuf);
     }
 
+#ifdef IRC_BAHAMUT
+    send_cmd(NULL, "SVINFO 3 3 0 :%ld", time(NULL));
+    send_cmd(NULL, "CAPAB: TS3");
+#endif
+
     /* Announce a logfile error if there was one */
     if (openlog_failed) {
 	canalopers(NULL, "Warning: couldn't open logfile: %s",
@@ -482,11 +501,14 @@ int init(int ac, char **av)
 
     /* Bring in our pseudo-clients */
     introduce_user(NULL);
+
+#ifdef IRC_UNDERNET
     /* Sincroniza la red al tiempo real */
     send_cmd(ServerName, "SETTIME :%lu", time(NULL));
-    
+#endif    
+
     /* Manda global */
-#ifdef PROVISIONAL
+#ifdef PROVISIONAL    
 #if HAVE_ALLWILD_NOTICE
     notice(s_GlobalNoticer, "$*", "Restablecidos los servicios de la red");
 #else

@@ -3,7 +3,7 @@
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  *
- * Modulo de control de servidores hecho por zoltan <zoltan@terra.es>
+ * Modulo de control de servidores hecho por zoltan <zolty@terra.es>
  * A partir del codigo de CyBeRpUnK. Thanks a cyberpunk.
  * Julio 2000
  *
@@ -108,28 +108,6 @@ Server *find_servername(const char *servername)
 }
                             
 /*************************************************************************/
-
-Server *find_servernumeric(const char *numeric)
-{
-    Server *server;
-    
-    if (!numeric)
-        return NULL;
-                       
-    if (lastserver && strncmp(numeric, lastserver->numeric,1) == 0)
-        return lastserver;
-
-    for (server = serverlist; server; server = server->next) {
-        if (strcmp(numeric, server->numeric) == 0) {
-            lastserver = server;
-            return server;
-        }
-    }
-                  
-    return NULL;
-}
-
-/*************************************************************************/
 /*************************************************************************/
 
 /* Return statistics.  Pointers are assumed to be valid. */
@@ -200,7 +178,8 @@ void do_server(const char *source, int ac, char **av)
         tmpserver = tmpserver->rehijo;
         tmpserver->rehijo = server;
     }
-    if ((time(NULL) - start_time) >= 60)
+    /* En el 1º minuto no se muestra para evitar lag */
+    if ((time(NULL) - start_time) >= 60)    
         canalopers(s_OperServ, "SERVER 12%s Numeric 12%s entra en la RED.", av[0], sstrdup(av[5]));
     return;
 }    

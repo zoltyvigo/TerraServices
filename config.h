@@ -30,7 +30,7 @@
 #define LOG_FILENAME	"services.log"
 
 /* Maximum amount of data from/to the network to buffer (bytes). */
-#define NET_BUFSIZE	65536*64   /* 4 MB para Terra - zoltan */
+#define NET_BUFSIZE	65536*32   /* 2 MB para Terra - zoltan */
 
 
 /******* NickServ configuration *******/
@@ -41,10 +41,6 @@
  * leave this at LANG_EN_US. */
 #define DEF_LANGUAGE	LANG_ES /* ESPAÑOL para Terra - zoltan */
 
-/* Define this to enable OperServ's debugging commands (Services root
- * only).  These commands are undocumented; "use the source, Luke!" */
-/* #define DEBUG_COMMANDS */
-#define DEBUG_COMMANDS
 
 /******* OperServ configuration *******/
 
@@ -52,7 +48,7 @@
 
 /* Registro de nicks vía mail */
 
-#undef REG_NICK_MAIL
+#define REG_NICK_MAIL
 #define MAILSPOOL "mailnick"
 #define RUTA_SENDMAIL	"/usr/sbin/sendmail/"
 #define SMTP_HOST	"mailhost.terra.es"
@@ -75,6 +71,13 @@
 /* What is the maximum number of Services operators we will allow? */
 #define MAX_SERVOPERS	256   /* Terra - zoltan */
 
+
+/* Define this to enable OperServ's debugging commands (Services root
+ * only).  These commands are undocumented; "use the source, Luke!" */
+/* #define DEBUG_COMMANDS */
+#define DEBUG_COMMANDS
+
+
 /******************* END OF USER-CONFIGURABLE SECTION ********************/
 
 
@@ -89,12 +92,15 @@
 /* Maximum length of a channel name, including the trailing null.  Any
  * channels with a length longer than (CHANMAX-1) including the leading #
  * will not be usable with ChanServ. */
+
 #define CHANMAX		64 /* El ircu usa 64 para los canales */
+
 
 /* Maximum length of a nickname, including the trailing null.  This MUST be
  * at least one greater than the maximum allowable nickname length on your
  * network, or people will run into problems using Services!  The default
  * (32) works with all servers I know of. */
+
 #define NICKMAX		32 /* En el ircu esta a 16, pero lo dejo asi
                             * por si en un futuro lo ampliamos... */
 

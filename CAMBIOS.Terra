@@ -3,38 +3,36 @@ CAMBIOS de TERRA
 Version 1.a.b Fecha de Release dia/mes/año   <email-autor>
 ----------------------------------------------------------------------
 
-Version 1.0-R7     16-Febrero-2001     zoltan     <zoltan@terra.es>
+Version 1.0-R9    4-Febrero-2001     zoltan  <zoltan@terra.es>
 ----------------------------------------------------------------------
-
-  * Se añade strtok() y strtoken() propios y se cambia el process_numlist()
-    por el de los services 4.5.0pre6
-  * Optimizacion del codigo de busquedas de ilines de cyberServ, añadidos
-    los comandos SUSPEND, UNSUSPEND y VERIFY (para verificar si un nick
-    tiene iline o no.
-  * Nuevo campo en la DB de NickServ, la hora de ultimo cambio de la pass.
-  * Nuevo campo en la DB de NickServ, para el SET FULLMEMO de MemoServ,
-    si el buzon destino tiene los memos llenos, se muestra el mensaje
-    de fullmemo si lo tiene.
-  * Ahora al hacer forbid de un canal, el canal tiene que empezar por # o +
-    y no tener más de 64 caracteres.
-  * Numerosos FIXES, en canales con estado FORBID, se chequeaba los modos,
-    el topic cuando no debe hacerlo. Problemas detectados por NiKoLaS.
+  * FIX del AKICK VIEW, no se veia el tiempo
+  * FIX de un BUG Crashed en is_services_oper/admin.
+  * FIX, en un canal FORBID, se debe check_modes y restore_topic
+  * Al parecer no parsea bien el modo +o y el +x de users...
+ 
+Version 1.0-R8    3-Febrero-2001     zoltan  <zoltan@terra.es>
+----------------------------------------------------------------------
   * Ahora manda SETTIME cada un tiempo, configurable en services.conf
     en SettimeTimeout.
-  * Ahora el STATS ALL de OperServ es más completo, ahora sale los
+  * Ahora el STATS ALL de OperServ es m s completo, ahora sale los
     registros, memos, suspends, forbids, etc.. Sugerencia de |savage|.
   * A Los opers con modo +k ya no se pueden deopearlos ni kickearlos con
     los comandos de ChanServ, aunque s¡ con OperServ.
-  * ChanServ te dice que no está el usuario en el canal cuando se
-    intenta hacer una accion sobre el (OP, DEOP, etc..) y no está en el
+  * ChanServ te dice que no est  el usuario en el canal cuando se
+    intenta hacer una accion sobre el (OP, DEOP, etc..) y no est  en el
     canal.
   * ChanServ ahora te dice que ya estas en el canal, cuando intentas
     hacer un invite y estas dentro del canal.
   * Si intentas hacer un OP a un usuario que ya tiene OP, ChanServ te
-    dirá que ya tienes OP.. Lo mismo con DEOP, VOICE, DEVOICE.
+    dir  que ya tiene OP.. Lo mismo con DEOP, VOICE, DEVOICE.
   * Ahora en AKICK VIEW de ChanServ, te dice la fecha de cuando ha sido
     puesto un akick.
-  * Sincronizacion de los ircservices hasta la version 4.4.9.
+
+Version 1.0-R7     23-Enero-2001     zoltan     <zolty@terra.es>
+----------------------------------------------------------------------
+Sincronizacion de los ircservices hasta la version 4.4.9
+
+  * A¤adido Soporte BAHAMUT, por si.. nos cambiamos para bahamut..
   * Se ha quitado el StatServ, por innecesario.
 
 

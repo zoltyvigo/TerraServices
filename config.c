@@ -184,13 +184,13 @@ Directive directives[] = {
     { "AutokillExpiry",   { { PARAM_TIME, 0, &AutokillExpiry } } },
     { "BadPassLimit",     { { PARAM_POSINT, 0, &BadPassLimit } } },
     { "BadPassTimeout",   { { PARAM_TIME, 0, &BadPassTimeout } } },
-    { "CanalAdmins",      { { PARAM_STRING, 0, &CanalAdmins } } },
     { "CanalCybers",      { { PARAM_STRING, 0, &CanalCybers } } },
     { "CanalHelp",        { { PARAM_STRING, 0, &CanalHelp } } },    
     { "CanalOpers",       { { PARAM_STRING, 0, &CanalOpers } } },
+    { "CanalAdmins",      { { PARAM_STRING, 0, &CanalAdmins } } },
     { "ChanServDB",       { { PARAM_STRING, 0, &ChanDBName } } },
     { "ChanServName",     { { PARAM_STRING, 0, &s_ChanServ },
-                            { PARAM_STRING, 0, &desc_ChanServ } } },
+                            { PARAM_STRING, 0, &desc_ChanServ } } },                                  
     { "CyberServDB",      { { PARAM_STRING, 0, &IlineDBName } } },
     { "CyberServName",    { { PARAM_STRING, 0, &s_CyberServ },
                             { PARAM_STRING, 0, &desc_CyberServ } } },
@@ -257,8 +257,8 @@ Directive directives[] = {
     { "NSDefSecure",      { { PARAM_SET, 0, &NSDefSecure } } },
     { "NSDisableLinkCommand",{{PARAM_SET, 0, &NSDisableLinkCommand } } },
     { "NSEnforcerUser",   { { PARAM_STRING, 0, &temp_nsuserhost } } },
-    { "NSExpire",         { { PARAM_TIME, 0, &NSExpire } } },
     { "NSPassChanged",    { { PARAM_TIME, 0, &NSPassChanged } } },
+    { "NSExpire",         { { PARAM_TIME, 0, &NSExpire } } },
     { "NSSuspendExpire",  { { PARAM_TIME, 0, &NSSuspendExpire } } },
     { "NSSuspendGrace",   { { PARAM_TIME, 0, &NSSuspendGrace } } },    
     { "NSForceNickChange",{ { PARAM_SET, 0, &NSForceNickChange } } },
@@ -339,7 +339,7 @@ int parse(char *buf, int linenum)
     dir = strtok(buf, " \t\r\n");
     s = strtok(NULL, "");
     if (s) {
-	while (isspace((int)*s))
+	while (isspace(*s))
 	    s++;
 	while (*s) {
 	    if (ac >= MAXPARAMS) {
@@ -366,7 +366,7 @@ int parse(char *buf, int linenum)
 		    *s++ = 0;
 	    }
 	    av[ac++] = t;
-	    while (isspace((int)*s))
+	    while (isspace(*s))
 		s++;
 	}
     }
@@ -566,12 +566,12 @@ int read_config()
     CHECK(CSAutokickReason);
     CHECK(CSInhabit);
     CHECK(CSListMax);
-    CHECK(CSSuspendExpire);
-    CHECK(MSIgnoreMax);
+    CHECK(CSSuspendExpire); 
+    CHECK(MSIgnoreMax);   
     CHECK(ServicesRoot);
+    CHECK(CanalOpers); 
     CHECK(CanalAdmins);
     CHECK(CanalHelp);
-    CHECK(CanalOpers); 
     CHECK(AutokillExpiry);
 
     if (temp_userhost) {

@@ -1,11 +1,20 @@
 Cosas Pendientes....
 
  A CORTO PLAZO
-- Adaptar Akill por el de ircservices 4.5.0
+ACABAR CYBER!!!!
+- Optimizar el codigo de busqueda en memoria las ilines de Cyber.
 - Ordenado en memoria en cyber.
+- Expiraciones de Cyber.
+- Comando suspend/unsuspend de Cyber.
 - Posiblidad de NEWSLOGON para cybers (peticion de heyhey)
 - Comando en cyber, para ver los nicks de los clones
+- Verificar que parsea bien el modo +x de usuario, que al parecer
+  no va bien.
 - Sincronizar el codigo de cifrado de ips con la del ircu
+- Que los topics en el info de ChanServ, si el canal no tiene modos +s o +p
+  se mostraria normalmente, pero si tiene modos actuales y/o mlock con +s
+  y con +o, SOLO SE MOSTRARÖA si estamos dentro del canal o somos un oper
+  de los services o somos founder y usamos el ALL sin estar en el canal...
 
  A MEDIO PLAZO
 - IGNORE {ADD|DEL|LIST} En memo para ignorar a la gente que manda

@@ -463,6 +463,7 @@ E void privmsg(const char *source, const char *dest, const char *fmt, ...)
 E void send_nick(const char *nick, const char *user, const char *host,
                 const char *server, const char *name);
 
+
 /**** servers.c ****/
 
 E void get_server_stats(long *nrec, long *memuse);
@@ -522,6 +523,9 @@ E User *nextuser(void);
 
 E void do_nick(const char *source, int ac, char **av);
 E void do_join(const char *source, int ac, char **av);
+#ifdef IRC_BAHAMUT
+E void do_sjoin(const char *source, int ac, char **av);
+#endif
 E void do_part(const char *source, int ac, char **av);
 E void do_kick(const char *source, int ac, char **av);
 E void do_umode(const char *source, int ac, char **av);
