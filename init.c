@@ -404,7 +404,6 @@ int init(int ac, char **av)
     signal(SIGINT, sighandler);
     signal(SIGTERM, sighandler);
     signal(SIGQUIT, sighandler);
-    signal(SIGSEGV, sighandler);
     signal(SIGBUS, sighandler);
     signal(SIGQUIT, sighandler);
 #ifndef DUMPCORE

@@ -270,14 +270,16 @@ int add_clones(const char *nick, const char *host)
             } else {
 /* MIGRACION */
 /* Si Tiene 3 o 4 o 5 clones MOSTRAR MENSAJE DE AVISO */
-            if ((clones->numeroclones >= 3) && (clones->numeroclones <= 5))
-   privmsg(s_CyberServ, nick, "4ATENCION!!!, MIGRACION DEL LIMITE DE CLONES");
-   privmsg(s_CyberServ, nick, "Tu actual limite de 5 clones sera reducido proximamente a 2 clones"
-   " no obstante, puedes contratar gratuitamente más clones, escribe"
-   " 12/msg Cyber CONTRATA  para más informacion.");
-            }
+                if ((clones->numeroclones >= 3) && (clones->numeroclones <= 5)) 
+                {
+                    privmsg(s_CyberServ, nick, "4ATENCION!!!, MIGRACION DEL LIMITE DE CLONES");
+                    privmsg(s_CyberServ, nick, "Tu actual limite de 5 clones sera reducido proximamente a 2 clones"
+                            " no obstante, puedes contratar gratuitamente más clones, escribe"
+                            " 12/msg Cyber CONTRATA  para más informacion.");
+                }
 /* Fin migracion */
-            return 1;
+                return 1;
+            }
         }
     }
     nclones++;

@@ -268,6 +268,10 @@ NICK_PASSWORD_IS
 NICK_IN_MAIL
 	Revisa tu correo (12%s) en unos minutos, te llegará una password.
 
+# REGUSER responses
+NICK_REGUSER_SYNTAX
+	12REGUSER <nick> <password> <email>
+
 # IDENTIFY responses
 NICK_IDENTIFY_SYNTAX
 	12IDENTIFY <password>
@@ -3056,6 +3060,14 @@ NICK_SERVADMIN_HELP_UNFORBID
 	
 	Levanta la prohibicion de uso de un nick para que se pueda
 	usar y registrar el nick.
+	
+	Limitado a 4Administradores de la RED.
+
+NICK_SERVADMIN_HELP_REGUSER
+	Sintaxis: 12REGUSER <nick> <password> <email>
+	
+	Permite a un administrador registrar un nick en concreto
+	sin tenerse q cambiar de nick.
 	
 	Limitado a 4Administradores de la RED.
 

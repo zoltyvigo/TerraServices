@@ -138,7 +138,8 @@ static Command cmds[] = {
     { "?",        do_help,     NULL,  -1,                       -1,-1,-1,-1 },
     { "CREDITS",  do_credits,  NULL,  SERVICES_CREDITS_TERRA,   -1,-1,-1,-1 },
     { "CREDITOS", do_credits,  NULL,  SERVICES_CREDITS_TERRA,   -1,-1,-1,-1 },
-    { "REGISTER", do_register, NULL,  CHAN_HELP_REGISTER,       -1,-1,-1,-1 },
+    { "REGISTER", do_register, is_services_admin,
+                CHAN_HELP_REGISTER,       -1,-1,-1,-1 },
     { "IDENTIFY", do_identify, NULL,  CHAN_HELP_IDENTIFY,       -1,-1,-1,-1 },
     { "DROP",     do_drop,     NULL,  -1,
 		CHAN_HELP_DROP, CHAN_SERVADMIN_HELP_DROP,
@@ -3939,11 +3940,11 @@ static void do_info(User *u)
             notice_lang(s_ChanServ, u, CHAN_INFO_NO_FOUNDER, ni->nick);
         }
 
-        if (show_all && (ni = ci->successor)) {
-/*	La mask, solo accesible a opers
+/*      if (show_all && (ni = ci->successor)) {
+	La mask, solo accesible a opers
             if (ni->last_usermask && (is_servoper ||
 				!(ni->flags & NI_HIDE_MASK))) {
-*/
+
             if (ni->last_usermask && is_servoper) {				
 	        notice_lang(s_ChanServ, u, CHAN_INFO_SUCCESSOR, ni->nick, 
 				ni->last_usermask);
@@ -3952,7 +3953,7 @@ static void do_info(User *u)
 				ni->nick);
 	    }
 	}
-
+*/
 	notice_lang(s_ChanServ, u, CHAN_INFO_DESCRIPTION, ci->desc);
 	tm = localtime(&ci->time_registered);
 	strftime_lang(buf, sizeof(buf), u, STRFTIME_DATE_TIME_FORMAT, tm);
@@ -3964,11 +3965,6 @@ static void do_info(User *u)
         /* En un canal con modo +s o +p, solo se ve el topic SI estas
          * dentro del canal o eres un oper de los servicios */
 
-	if (ci->last_topic) {
-	    notice_lang(s_ChanServ, u, CHAN_INFO_LAST_TOPIC, ci->last_topic);
-	    notice_lang(s_ChanServ, u, CHAN_INFO_TOPIC_SET_BY,
-			ci->last_topic_setter);
-	}
         if (ci->last_topic) {
             if (ci->c) { /* Canal existente */
                 if (!(ci->c->mode & CMODE_S || ci->c->mode & CMODE_P)) {

@@ -52,7 +52,7 @@
 
 /* Registro de nicks vía mail */
 
-#define REG_NICK_MAIL
+#undef REG_NICK_MAIL
 #define MAILSPOOL "mailnick"
 #define RUTA_SENDMAIL	"/usr/sbin/sendmail/"
 #define SMTP_HOST	"mailhost.terra.es"
