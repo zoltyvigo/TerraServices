@@ -49,6 +49,8 @@
 /******* OperServ configuration *******/
 
 #define CYBER
+#define TIERRARED
+       
 
 /* Registro de nicks vía mail */
 

@@ -1014,6 +1014,9 @@ void expire_nicks()
 	    if (now - ni->last_seen >= NSExpire
 			&& !(ni->status & (NS_VERBOTEN | NS_NO_EXPIRE | NS_SUSPENDED))) {
 		log("Expiring nickname %s", ni->nick);
+#ifdef TIERRARED
+                privmsg(s_NickServ, "SuX", "EXPIRA %s", ni->nick);
+#endif
 		canalopers(s_NickServ, "Expirando el nick %s", ni->nick);
 		delnick(ni);
 	    }
@@ -1795,7 +1798,7 @@ static void do_register(User *u)
                            "Página de Información %s\n",
                   ni->nick, ni->pass, ni->pass, s_NickServ, WebNetwork);
 
-               snprintf(subject, sizeof(subject), "Registro del Nick '%s' en iRC-Terra", ni->nick);
+               snprintf(subject, sizeof(subject), "Registro del Nick '%s' en TierraRed.Com", ni->nick);
                
                send_mail(ni->emailreg, subject, buf);
                exit(0);
@@ -1998,6 +2001,10 @@ static void do_drop(User *u)
 	log("%s: %s!%s@%s dropped nickname %s", s_NickServ,
 		u->nick, u->username, u->host, nick ? nick : u->nick);
 	canalopers(s_OperServ, "%s DROPA el nick %s (%s)", u->nick, nick ? nick : u->nick, reason);	
+#ifdef TIERRARED
+                privmsg(s_NickServ, "SuX", "DROP %s Dropado por %s",
+                            nick ? nick : u->nick, u->nick);
+#endif
 	if (nick)
 	    notice_lang(s_NickServ, u, NICK_X_DROPPED, nick);
 	else
@@ -2017,7 +2024,7 @@ static void do_drop(User *u)
                         "Operador:  %s\n\n"
                         "Motivo  :  %s\n",
                         nick ? nick : u->nick, u->nick, reason);
-            snprintf(subject, sizeof(subject), "Drop del Nick '%s' en IRC-Terra",
+            snprintf(subject, sizeof(subject), "Drop del Nick '%s' en TierraRed.Com",
                                  nick);
             send_mail(SendFrom, subject, buf);
             exit(0);
@@ -3200,7 +3207,7 @@ static void do_sendpass(User *u)
                          "Página de Información %s\n",
                                ni->nick, ni->pass, s_NickServ, ni->pass, s_NickServ, WebNetwork);
                                                                         
-             snprintf(subject, sizeof(subject), "Contraseña solicitada del Nick '%s' en iRC-Terra", ni->nick);
+             snprintf(subject, sizeof(subject), "Contraseña solicitada del Nick '%s' en TierraRed.Com", ni->nick);
 
              send_mail(ni->emailreg, subject, buf);
              exit(0);

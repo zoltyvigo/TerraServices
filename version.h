@@ -6,13 +6,13 @@
  * details.
  */
 
-#define BUILD	"385"
+#define BUILD	"397"
 
 
 const char version_branchstatus[] = "BETA-STABLE";
 const char version_number[] = "4.4.9";
 const char version_terra[] = "1.0RC7";
-const char version_build[] = "build #" BUILD ", compiled Mon Nov 26 01:09:42 CET 2001";
+const char version_build[] = "build #" BUILD ", compiled mié ene 23 16:31:52 CET 2002";
 const char version_protocol[] =
 #if defined(IRC_UNDERNET_P09)
 	"ircu 2.10+Terra P9"

@@ -271,7 +271,7 @@ NICK_IDENTIFY_SYNTAX
 NICK_IDENTIFY_FAILED
 	4Contraseña incorrecta.
 NICK_IDENTIFY_SUCCEEDED
-	3Contraseña aceptada. Bienvenid@ a iRC-Terra.com ;)
+	3Contraseña aceptada. Bienvenid@ a TierraRed.Com ;)
 NICK_IDENTIFY_X_MODE_R
 	12%s, has sido AUTOidentificado por tu modo 12+r.
 NICK_IS_IDENTIFIED
@@ -1119,7 +1119,7 @@ CHAN_INFO_SYNTAX
 CHAN_INFO_HEADER
 	Información de canal 12%s:
 CHAN_INFO_OFICIAL
-	Es un Canal Oficial de iRC-Terra.Com
+	Es un Canal Oficial de TierraRed.Com
 CHAN_INFO_ACTIVED
 	Estado: 12ACTIVO
 CHAN_INFO_SUSPENDED
@@ -2551,7 +2551,7 @@ NICK_HELP
 	12/msg %S HELP comando.
 	
 	    12REGISTER   Registra un nick
-	    12MAIL       Lista de mails permitidos para el registro del nick
+#	    12MAIL       Lista de mails permitidos para el registro del nick
 	    12IDENTIFY   Identificarse con tu contraseña
 	    12ACCESS     Modificar la lista de direcciones autorizadas
 #	    12LINK       Hacer tu nick sea un alias de otro nick
@@ -2583,7 +2583,7 @@ NICK_HELP_EXPIRE_ZERO
 	12/msg %S HELP comando.
 	
 	    12REGISTER   Registra un nick
-	    12MAIL       Lista de mails permitidos para el registro del nick
+#	    12MAIL       Lista de mails permitidos para el registro del nick
 	    12IDENTIFY   Identificarse con tu contraseña
 	    12ACCESS     Modificar la lista de direcciones autorizadas
 #	    12LINK       Hacer tu nick sea un alias de otro nick
@@ -3113,7 +3113,7 @@ CHAN_HELP
 	    12CLEAR      Reinicia los modos de un canal
 #	    12RESET      Resetea el canal
 
-	Para registrar un canal, tienes que hacerlo a traves de 4Reg
+	Para registrar un canal, tienes que hacerlo a traves de 4CReG
 	escribe 12/msg Reg HELP para más información de cómo registrar
 	un canal.
 
@@ -3714,7 +3714,7 @@ CHAN_SERVADMIN_HELP_SET
 CHAN_SERVADMIN_HELP_SET_OFICIAL
 	Sintaxis: 12SET <canal> OFICIAL {ON | OFF}
 	
-	Define si el canal dado es un Canal Oficial de iRC-Terra.Com.
+	Define si el canal dado es un Canal Oficial de TierraRed.Com.
 	
 	Limitado a 4Administradores de la RED.
 
@@ -4012,7 +4012,7 @@ CYBER_HELP_CONTRATA
 	etc.. tienen derecho a tener un número de clones (un clon es
 	una conexion a la red). No se necesita IP fija para los clones.
 	Para solicitarlos, tienes que acudir a la siguiente dirección:
-	12http://www.irc-terra.com/clones/
+	12http://www.tierrared.com/clones/
 	Y cubrir el formulario para la solicitud de clones y en menos
 	de 24 horas tendrás los clones concedidos.
 
@@ -5040,13 +5040,13 @@ SERVICES_CREDITS_TERRA
 	usando la base de los ircservices-4.3.3 original.
 
 	Miembros del Comite tecnico de developers:
-	   Marcos Rey          FeRRoL      <ferrol@irc-terra.com>
+#	   Marcos Rey          FeRRoL      <ferrol@irc-terra.com>
 	   Daniel Fernandez    FreeMind    <freemind@unr.com>
 	   Toni García         zoltan      <zolty@zolty.net>
 #	   Jordi Murgo         |savage|    <savage@apostols.org>
 	y los betateasters:
 	   Antonio Fernandes   KoGe        <koge@unr.com>
-	   Ruben Cardenal      NiKoLaS     <nikolas@irc-terra.com>
-	   Command, |kike|, Manowar, etc..
+	   Ruben Cardenal      NiKoLaS     <nikolas@terra.es>
+	   Neo, Savage, Command, |kike|, Manowar, etc..
 	Y agradecimientos a los ircops, opers, y usuarios de la red por
 	las sugerencias, criticas... :)

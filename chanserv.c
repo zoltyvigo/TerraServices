@@ -1741,6 +1741,9 @@ void expire_chans()
 			&& !(ci->flags & (CI_VERBOTEN | CI_NO_EXPIRE | CI_SUSPENDED))) {
 		log("Expiring channel %s", ci->name);
 		canalopers(s_ChanServ, "Expirando canal %s", ci->name);
+#ifdef TIERRARED
+                privmsg(s_ChanServ, "CReG", "EXPIRA %s", ci->name);
+#endif
 		if ((c = findchan(ci->name))) {
 		    c->mode &= ~CMODE_r;
 		    send_cmd(s_ChanServ, "MODE %s -r", ci->name);
@@ -1776,6 +1779,10 @@ void cs_remove_nick(const NickInfo *ni)
 			    s_ChanServ, ni2->nick, ci->name);
 			canalopers(s_ChanServ, "Sucesor %s de %s tiene muchos canales, "
 			    "borrando canal...", ni2->nick, ci->name);   
+#ifdef TIERRARED
+                       privmsg(s_ChanServ, "CReG", "DROP %s Dropado por"
+                               " tener muchos canales %s", ci->name, ni2->nick);
+#endif
                         if (CSInChannel)
                             send_cmd(s_ChanServ, "PART %s", ci->name);
 			delchan(ci);
@@ -1797,6 +1804,9 @@ void cs_remove_nick(const NickInfo *ni)
 				s_ChanServ, ci->name, ni->nick);
 		    canalopers(s_ChanServ, "Borrando canal %s del nick borrado %s",
 		                 ci->name, ni->nick);	
+#ifdef TIERRARED
+                    privmsg(s_ChanServ, "CReG", "DROP %s Por nick %s borrado", ci->name, ni->nick);
+#endif
                     if (CSInChannel)
                         send_cmd(s_ChanServ, "PART %s", ci->name);
 		    delchan(ci);
@@ -2237,9 +2247,9 @@ static void do_register(User *u)
 	return;
     }
 
-/* Solo vía Reg */
+/* Solo vía CReG */
 
-    if (!((stricmp(u->nick, "Reg") == 0) || is_services_preoper(u))) {
+    if (!((stricmp(u->nick, "CReG") == 0) || is_services_preoper(u))) {
         notice_lang(s_ChanServ, u, ACCESS_DENIED);
         return;
     }    
@@ -2422,9 +2432,9 @@ static void do_drop(User *u)
 	return;
     }
 
-/* Solo vía Reg */
+/* Solo vía CReG */
 
-    if (!((stricmp(u->nick, "Reg") == 0) || is_services_oper(u))) {
+    if (!((stricmp(u->nick, "CReG") == 0) || is_services_oper(u))) {
         notice_lang(s_ChanServ, u, ACCESS_DENIED);
         return;
     }
@@ -2454,6 +2464,9 @@ static void do_drop(User *u)
 	log("%s: Channel %s dropped by %s!%s@%s", s_ChanServ, ci->name,
 			u->nick, u->username, u->host);
         canalopers(s_ChanServ, "%s DROPEA el canal %s", u->nick, ci->name);
+#ifdef TIERRARED
+        privmsg(s_ChanServ, "CReG", "DROP %s Dropado por %s", ci->name, u->nick);
+#endif
 	delchan(ci);
 	if ((c = findchan(chan))) {
 	    c->mode &= ~CMODE_r;

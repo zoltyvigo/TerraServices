@@ -467,8 +467,8 @@ int init(int ac, char **av)
     send_cmd(NULL, "SERVER %s 1 %lu %lu P09 :%s",
 		ServerName, start_time, start_time, ServerDesc);
 /* Compatiblidad deep.space */ 
-   send_cmd(ServerName, "SERVER deep.space 2 %lu %lu P10 :Servidor de compatiblidad",
-          start_time, start_time);
+//   send_cmd(ServerName, "SERVER deep.space 2 %lu %lu P10 :Servidor de compatiblidad",
+//          start_time, start_time);
     sgets2(inbuf, sizeof(inbuf), servsock);
     if (strnicmp(inbuf, "ERROR", 5) == 0) {
 	/* Close server socket first to stop wallops, since the other

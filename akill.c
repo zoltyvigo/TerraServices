@@ -370,7 +370,8 @@ void do_akill(User *u)
 	cmd = "";
 
     if (stricmp(cmd, "ADD") == 0) {
-        time_t t = time(NULL);
+        char buf[128];
+        time_t now = time(NULL);
         
 	if (nakill >= 32767) {
 	    notice_lang(s_OperServ, u, OPER_TOO_MANY_AKILLS);
@@ -384,53 +385,54 @@ void do_akill(User *u)
 	    expiry = NULL;
 	}
 
+        reason = strtok(NULL, "");
+        if (!reason) {
+            syntax_error(s_OperServ, u, "GLINE", OPER_AKILL_ADD_SYNTAX);
+            return;
+        }
+
 	expires = expiry ? dotime(expiry) : AutokillExpiry;
 	if (expires < 0) {
 	    notice_lang(s_OperServ, u, BAD_EXPIRY_TIME);
 	    return;
 	} else if (expires > 0) {
-	    expires += t;
+	    expires += now;
 	}
 
-	if (mask && (reason = strtok(NULL, ""))) {
-            char buf[128];
-            if (strchr(mask, '!')) {
-                notice_lang(s_OperServ, u, OPER_AKILL_NO_NICK);
-                notice_lang(s_OperServ, u, BAD_USERHOST_MASK);
-                return;
-            }                                            
- 	    s = strchr(mask, '@');
 
-	    if (!s) {
-		notice_lang(s_OperServ, u, BAD_USERHOST_MASK);
-		return;
-	    }
+        if (strchr(mask, '!')) {
+            notice_lang(s_OperServ, u, OPER_AKILL_NO_NICK);
+            notice_lang(s_OperServ, u, BAD_USERHOST_MASK);
+            return;
+        }                                            
+ 	s = strchr(mask, '@');
+	if (!s || s == mask || s[1] ==0) {
+	    notice_lang(s_OperServ, u, BAD_USERHOST_MASK);
+	    return;
+	}
 	
-            if (stricmp("*@*", mask) == 0) {
-                notice_lang(s_OperServ, u, ACCESS_DENIED);
-                canalopers(s_OperServ, "El LAMER , muuuuyyy LAMERRRRRRRRR, %s "
-                           "intenta meter un GLINE GLOBAL *@*", u->nick);
-                return;
-            }	
+        if (stricmp("*@*", mask) == 0) {
+            notice_lang(s_OperServ, u, ACCESS_DENIED);
+            canalopers(s_OperServ, "El LAMER , muuuuyyy LAMERRRRRRRRR, %s "
+                         "intenta meter un GLINE GLOBAL *@*", u->nick);
+            return;
+        }	
             
-            strlower(mask);	
-	    add_akill(mask, reason, u->nick, expires);
-            send_cmd(NULL, "GLINE * +%s %lu :%s", mask, expires-time(NULL), reason);	    
-	    notice_lang(s_OperServ, u, OPER_AKILL_ADDED, mask);
+        strlower(mask);	
+	add_akill(mask, reason, u->nick, expires);
+        send_cmd(NULL, "GLINE * +%s %lu :%s", mask, expires-time(NULL), reason);	    
+	notice_lang(s_OperServ, u, OPER_AKILL_ADDED, mask);
 
-            if (expires == 0)
-                snprintf(buf, sizeof(buf),
-                         getstring(u->nick, OPER_AKILL_NO_EXPIRE));
-            else
-                expires_in_lang(buf, sizeof(buf), u, expires - t + 59);
-            canalopers(s_OperServ, "%s ha añadido un GLINE para %s (%s)",
-                                u->nick, mask, buf);
+        if (expires == 0)
+            snprintf(buf, sizeof(buf),
+                        getstring(u->ni, OPER_AKILL_NO_EXPIRE));
+        else
+            expires_in_lang(buf, sizeof(buf), u, expires - now + 59);
+        canalopers(s_OperServ, "%s ha añadido un GLINE para %s (%s)",
+                      u->nick, mask, buf);
 
-	    if (readonly)
-		notice_lang(s_OperServ, u, READ_ONLY_MODE);
-	} else {
-	    syntax_error(s_OperServ, u, "GLINE", OPER_AKILL_ADD_SYNTAX);
-	}
+        if (readonly)
+	    notice_lang(s_OperServ, u, READ_ONLY_MODE);
 
     } else if (stricmp(cmd, "DEL") == 0) {
 	mask = strtok(NULL, " ");
@@ -438,7 +440,8 @@ void do_akill(User *u)
 	    if (del_akill(mask)) {
 		notice_lang(s_OperServ, u, OPER_AKILL_REMOVED, mask);
                 send_cmd(NULL, "GLINE * -%s", mask);
-	if (readonly)
+                canalopers(s_OperServ, "%s borra GLINE a %s", u->nick, mask);
+	        if (readonly)
 		    notice_lang(s_OperServ, u, READ_ONLY_MODE);
 	    } else {
 		notice_lang(s_OperServ, u, OPER_AKILL_NOT_FOUND, mask);
@@ -471,8 +474,9 @@ void do_akill(User *u)
 	    strlower(strchr(s, '@'));
 	notice_lang(s_OperServ, u, OPER_AKILL_LIST_HEADER);
 	for (i = 0; i < nakill; i++) {
-	    if (!s || (match_wild(s, akills[i].mask) &&
-                      (expires == -1 || akills[i].expires == expires))) {
+//	    if (!s || (match_wild(s, akills[i].mask) &&
+  //                    (expires == -1 || akills[i].expires == expires))) {
+if (!s || (match_wild(s, akills[i].mask))) {
 		char timebuf[32], expirebuf[256];
 		struct tm tm;
 		time_t t = time(NULL);
