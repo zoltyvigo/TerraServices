@@ -416,7 +416,7 @@ static void do_send(User *u)
 		    }
 		} else {
 		    u = finduser(name);
-		    if (u) {
+		    if (u && (nick_identified(u))) {
 			notice_lang(s_MemoServ, u, MEMO_NEW_MEMO_ARRIVED,
 					source, s_MemoServ, m->number);
 		    }

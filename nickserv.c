@@ -116,6 +116,7 @@ static Command cmds[] = {
     { "SET URL",      NULL,    NULL,  NICK_HELP_SET_URL,      -1,-1,-1,-1 },
     { "SET EMAIL",    NULL,    NULL,  NICK_HELP_SET_EMAIL,    -1,-1,-1,-1 },
     { "SET KILL",     NULL,    NULL,  NICK_HELP_SET_KILL,     -1,-1,-1,-1 },
+    { "SET CHANGE",   NULL,    NULL,  NICK_HELP_SET_CHANGE,   -1,-1,-1,-1 },
     { "SET SECURE",   NULL,    NULL,  NICK_HELP_SET_SECURE,   -1,-1,-1,-1 },
     { "SET PRIVATE",  NULL,    NULL,  NICK_HELP_SET_PRIVATE,  -1,-1,-1,-1 },
     { "SET HIDE",     NULL,    NULL,  NICK_HELP_SET_HIDE,     -1,-1,-1,-1 },
@@ -330,7 +331,7 @@ void nickserv(const char *source, char *buf)
 	    s = "\1";
 	notice(s_NickServ, source, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION\1") == 0) {
-        notice(s_NickServ, source, "\1VERSION ircservices-%s+Terra-1.0 %s :-- %s\1",
+        notice(s_NickServ, source, "\1VERSION ircservices-%s+Terra-1.0 %s -- %s\1",
                             version_number, s_NickServ, version_build);     
     } else if (skeleton) {
 	notice_lang(s_NickServ, u, SERVICE_OFFLINE, s_NickServ);
@@ -870,21 +871,16 @@ void cancel_user(User *u)
     NickInfo *ni = u->real_ni;
     if (ni) {
 
-#ifdef GUARDADO /* Guardo codigo */
-    /* Debatir si poner o no.... */
-	if (ni->status & NS_GUESTED) {
-	    send_cmd(NULL, "NICK %s %ld 1 %s %s %s :%s Enforcement",
-			u->nick, time(NULL), NSEnforcerUser, NSEnforcerHost, 
-			ServerName, s_NickServ);
+        if (ni->status & NS_GUESTED) {
+            send_cmd(NULL, "NICK %s %ld 1 %s %s %s :Protegiendo a %s",
+                        ni->nick, time(NULL), NSEnforcerUser, NSEnforcerHost,
+                        ServerName, ni->nick);
 	    add_ns_timeout(ni, TO_RELEASE, NSReleaseTimeout);
 	    ni->status &= ~NS_TEMPORARY;
 	    ni->status |= NS_KILL_HELD;
 	} else {
-#endif
 	    ni->status &= ~NS_TEMPORARY;
-#ifdef GUARDADO
 	}
-#endif
 	del_ns_timeout(ni, TO_COLLIDE);
     }
 }
@@ -1252,25 +1248,23 @@ static void collide(NickInfo *ni, int from_timeout)
     if (!from_timeout)
 	del_ns_timeout(ni, TO_COLLIDE);
 
-#ifdef GUARDADO /* Guardo codigo */
     if (NSForceNickChange) {
+#ifdef GUARDADO /* Guardo codigo */
 	struct timeval tv;
 	char guestnick[NICKMAX];
 
 	gettimeofday(&tv, NULL);
 	snprintf(guestnick, sizeof(guestnick), "%s%ld%ld", NSGuestNickPrefix,
 			tv.tv_usec / 10000, tv.tv_sec % (60*60*24));
-
-        notice_lang(s_NickServ, u, FORCENICKCHANGE_NOW, guestnick);
-
-	send_cmd(NULL, "SVSNICK %s %s :%ld", ni->nick, guestnick, time(NULL));
-	ni->status |= NS_GUESTED;
-    } else {
 #endif
+//        notice_lang(s_NickServ, u, FORCENICKCHANGE_NOW, guestnick);
+        notice_lang(s_NickServ, u, FORCENICKCHANGE_NOW, "ircXXXXXX");
+
+//	send_cmd(NULL, "SVSNICK %s %s :%ld", ni->nick, guestnick, time(NULL));
         /* Comando SVSNICK de TERRA */
-    if (NSForceNickChange) {
-        send_cmd(ServerName, "SVSNICK %s", ni->nick);    
-    } else {    
+        send_cmd(ServerName, "SVSNICK %s", ni->nick);        
+	ni->status |= NS_GUESTED;
+    } else {  
 	notice_lang(s_NickServ, u, DISCONNECT_NOW);
     	kill_user(s_NickServ, ni->nick, "Nick kill enforced");
     	send_cmd(NULL, "NICK %s %ld 1 %s %s %s :Protegiendo a %s",
@@ -1630,6 +1624,7 @@ static void do_register(User *u)
 		ni->flags |= NI_MEMO_SIGNON;
 	    if (NSDefMemoReceive)
 		ni->flags |= NI_MEMO_RECEIVE;
+            ni->flags |= NI_CHANGE_PASS;
 	    ni->memos.memomax = MSMaxMemos;
 	    ni->channelcount = 0;
 	    ni->channelmax = CSMaxReg;
@@ -1758,23 +1753,34 @@ static void do_identify(User *u)
                 u->mode |= UMODE_R;                
                 u->mode |= UMODE_H;
                 u->mode |= UMODE_A;
+                display_news(u, NEWS_OPER);
             } else {
                 send_cmd(ServerName, "SVSMODE %s +rh", u->nick);
                 u->mode |= UMODE_R;                
-                u->mode |= UMODE_H;                
+                u->mode |= UMODE_H;           
+                display_news(u, NEWS_OPER);     
             }
         } else {
             send_cmd(ServerName, "SVSMODE %s +r", u->nick);
             u->mode |= UMODE_R;            
         }        
+        if (ni->flags & NI_CHANGE_PASS) {
+            if (ni->time_registered == ni->last_seen)
+                notice_lang(s_NickServ, u, NICK_IDENTIFY_FIRST);
+            else
+                notice_lang(s_NickServ, u, NICK_IDENTIFY_PASSWORD_NO_CHANGED);
+        }
 /*
-        if (u->ni && !u->ni->email)
+        if (u->ni && !u->ni->emailreg)
             notice_help(s_NickServ, u, NICK_IDENTIFY_EMAIL_REQUIRED);
 */            
 	if (!(ni->status & NS_RECOGNIZED))
 	    check_memos(u);
 	    
-	check_ip_iline(u);    
+#ifdef CYBER
+        if (ni->flags & NI_ADMIN_CYBER)
+            check_ip_iline(u);    
+#endif	
 
     }
 }
@@ -1929,6 +1935,7 @@ static void do_set_password(User *u, NickInfo *ni, char *param)
     if (strlen(param) > PASSMAX-1) /* -1 for null byte */
 	notice_lang(s_NickServ, u, PASSWORD_TRUNCATED, PASSMAX-1);
     strscpy(ni->pass, param, PASSMAX);
+    ni->flags &= ~NI_CHANGE_PASS;
     notice_lang(s_NickServ, u, NICK_SET_PASSWORD_CHANGED_TO, ni->pass);
 #endif
     if (u->real_ni != ni) {
@@ -1996,25 +2003,42 @@ static void do_set_kill(User *u, NickInfo *ni, char *param)
     if (stricmp(param, "ON") == 0) {
 	ni->flags |= NI_KILLPROTECT;
 	ni->flags &= ~(NI_KILL_QUICK | NI_KILL_IMMED);
-	notice_lang(s_NickServ, u, NICK_SET_KILL_ON);
+        if (NSForceNickChange)
+            notice_lang(s_NickServ, u, NICK_SET_CHANGE_ON);
+        else
+	    notice_lang(s_NickServ, u, NICK_SET_KILL_ON);
     } else if (stricmp(param, "QUICK") == 0) {
 	ni->flags |= NI_KILLPROTECT | NI_KILL_QUICK;
 	ni->flags &= ~NI_KILL_IMMED;
-	notice_lang(s_NickServ, u, NICK_SET_KILL_QUICK);
+        if (NSForceNickChange)
+            notice_lang(s_NickServ, u, NICK_SET_CHANGE_QUICK);
+        else	
+            notice_lang(s_NickServ, u, NICK_SET_KILL_QUICK);
     } else if (stricmp(param, "IMMED") == 0) {
 	if (NSAllowKillImmed) {
 	    ni->flags |= NI_KILLPROTECT | NI_KILL_IMMED;
 	    ni->flags &= ~NI_KILL_QUICK;
-	    notice_lang(s_NickServ, u, NICK_SET_KILL_IMMED);
+            if (NSForceNickChange)
+                notice_lang(s_NickServ, u, NICK_SET_CHANGE_IMMED);
+            else	    
+     	        notice_lang(s_NickServ, u, NICK_SET_KILL_IMMED);
 	} else {
 	    notice_lang(s_NickServ, u, NICK_SET_KILL_IMMED_DISABLED);
 	}
     } else if (stricmp(param, "OFF") == 0) {
 	ni->flags &= ~(NI_KILLPROTECT | NI_KILL_QUICK | NI_KILL_IMMED);
-	notice_lang(s_NickServ, u, NICK_SET_KILL_OFF);
+        if (NSForceNickChange)
+            notice_lang(s_NickServ, u, NICK_SET_CHANGE_OFF);
+        else
+            notice_lang(s_NickServ, u, NICK_SET_KILL_OFF);
     } else {
-//	syntax_error(s_NickServ, u, "SET KILL",
-        syntax_error(s_NickServ, u, "SET CHANGE",
+        if (NSForceNickChange)            
+	    syntax_error(s_NickServ, u, "SET CHANGE",
+                NSAllowKillImmed ? NICK_SET_CHANGE_IMMED_SYNTAX
+                                 : NICK_SET_CHANGE_SYNTAX);
+                                                 	    
+        else
+            syntax_error(s_NickServ, u, "SET KILL",
 		NSAllowKillImmed ? NICK_SET_KILL_IMMED_SYNTAX
 		                 : NICK_SET_KILL_SYNTAX);
     }
@@ -2692,7 +2716,10 @@ static void do_recover(User *u)
 	int res = check_password(pass, ni->pass);
 	if (res == 1) {
 	    collide(ni, 0);
-	    notice_lang(s_NickServ, u, NICK_RECOVERED, s_NickServ, nick);
+	    if (NSForceNickChange)
+           	notice_lang(s_NickServ, u, NICK_REVOVERED_CHANGE, s_NickServ, nick);
+            else
+                notice_lang(s_NickServ, u, NICK_RECOVERED, s_NickServ, nick);                	
 	} else {
 	    notice_lang(s_NickServ, u, ACCESS_DENIED);
 	    if (res == 0) {
@@ -2704,7 +2731,10 @@ static void do_recover(User *u)
     } else {
 	if (!(ni->flags & NI_SECURE) && is_on_access(u, ni)) {
 	    collide(ni, 0);
-	    notice_lang(s_NickServ, u, NICK_RECOVERED, s_NickServ, nick);
+	    if (NSForceNickChange)
+                notice_lang(s_NickServ, u, NICK_REVOVERED_CHANGE, s_NickServ, nick);
+            else    
+                notice_lang(s_NickServ, u, NICK_RECOVERED, s_NickServ, nick);
 	} else {
 	    notice_lang(s_NickServ, u, ACCESS_DENIED);
 	}

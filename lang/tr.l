@@ -427,7 +427,7 @@ CHAN_REGISTER_NOT_LOCAL
 CHAN_MUST_REGISTER_NICK
 	Oncelikle nick'inizi kaydetmelisiniz. /msg %s HELP yazarak daha fazla bilgi alabilirsiniz.
 CHAN_MUST_IDENTIFY_NICK
-	Lutfen once /msg %s IDENTIFY sifre
+	Lutfen once /IDENTIFY sifre
 	komutu ile kendinizi tanitiniz.
 CHAN_MAY_NOT_BE_REGISTERED
 	%s kanali kaydedilemez.

@@ -555,7 +555,7 @@ CHAN_MUST_REGISTER_NICK
 	You must register your nickname first.  Type /msg %s HELP for information on registering nicknames.
 CHAN_MUST_IDENTIFY_NICK
 	Please identify with %s first, using the command:
-	/msg %s IDENTIFY password
+	/IDENTIFY password
 CHAN_MAY_NOT_BE_REGISTERED
 	Channel %s may not be registered.
 CHAN_ALREADY_REGISTERED

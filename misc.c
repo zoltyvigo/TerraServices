@@ -218,6 +218,17 @@ char *strlower(char *s)
 /* Para compatiblidad Undernet P10
  * zoltan 1/11/2000
  */
+char *strLower(char *s)
+{
+    char *t = s;
+    while (*t)
+        *t++ = toLower(*t);
+    return s;    
+}
+
+/* Para compatiblidad Undernet P10
+ * zoltan 1/11/2000
+ */
 int strCasecmp(const char *a, const char *b)
 {
     register const char *ra = a;

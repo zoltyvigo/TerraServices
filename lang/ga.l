@@ -538,7 +538,7 @@ CHAN_MUST_REGISTER_NICK
 	Debes registrar primeiro o teu nick. Escribe 12/msg %s HELP para obter información de como rexistra-lo tu nick.
 CHAN_MUST_IDENTIFY_NICK
 	Por favor identifíquese primeiro con 12%s, utilizando o comando:
-	12/msg %s IDENTIFY contrasinal
+	12/IDENTIFY contrasinal
 CHAN_MAY_NOT_BE_REGISTERED
 	O canal 12%s non pode ser rexistrado.
 CHAN_ALREADY_REGISTERED

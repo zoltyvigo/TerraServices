@@ -268,6 +268,15 @@ struct nickinfo_ {
 #define NI_KILL_QUICK	0x00000400  /* Kill in 20 seconds instead of 60 */
 #define NI_KILL_IMMED	0x00000800  /* Kill immediately instead of in 60 sec */
 #define NI_REG_IGNORE	0x00001000  /* Nick IGNORADO para los apoyos/registros */
+#define NI_CHANGE_PASS	0x00002000  /* Recordatorio para cambiar la pass */
+/* Reservado para futuras implementaciones */
+#define NI_CYBER_IPNOF	0x00010000  /* Nick admin con iline dinamica */
+#define NI_ADMIN_CYBER	0x00020000  /* Admin de cyber */
+#define NI_OPER_SERV	0x00040000  /* Operador de los servicios */
+#define NI_ADMIN_SERV	0x00080000  /* Administrador de los servicios */
+
+
+
 
 /* Languages.  Never insert anything in the middle of this list, or
  * everybody will start getting the wrong language!  If you want to change
@@ -313,7 +322,7 @@ typedef struct {
  * strictly less than any valid access level.
  */
 #define ACCESS_FOUNDER	500	/* Numeric level indicating founder access */
-#define ACCESS_INVALID	-3	/* Used in levels[] for disabled settings */
+#define ACCESS_INVALID	-100	/* Used in levels[] for disabled settings */
 
 /* AutoKick data. */
 typedef struct {
@@ -407,6 +416,10 @@ struct chaninfo_ {
 #define CI_SECUREVOICES	0x00004000
 /* Leave Voices */
 #define CI_LEAVEVOICES	0x00008000
+/* Permitir unban de cyberServ */
+#define CI_UNBANCYBER	0x00010000
+/* Canal Oficial de Terra Networks */
+#define CI_OFICIAL_CHAN	0x00020000
 
 /* Indices for cmd_access[]: */
 #define CA_INVITE	0
@@ -546,6 +559,10 @@ struct ilineinfo_ {
     char *comentario;           /* Comentario */
     char *vhost;                /* Virtual host del ciber */
     char operwho[NICKMAX];      /* Admin que puso la iline */
+
+//    char *suspendby;                    /* Quien lo suspendio */
+//    char *suspendreason;                /* Motivo de la suspension */         
+    
     int16 limite;               /* Limite Iline */
     time_t time_concesion;
     time_t time_expiracion;
@@ -627,6 +644,7 @@ struct creginfo_ {
 
 
 /* Who sends channel MODE (and KICK) commands? */
+/* Obsoleto */
 #if defined(IRC_DALNET) || (defined(IRC_UNDERNET) && !defined(IRC_UNDERNET_NEW))
 # define MODE_SENDER(service) service
 #else

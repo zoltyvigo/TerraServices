@@ -201,7 +201,7 @@ NICK_IS_REGISTERED
 	(Si es el tuyo, escribe 12/IDENTIFY contraseña.)
 NICK_IS_SECURE
 	Este nick esta registrado y protegido.
-	Si es su nick, escriba 12/IDENTIFY contraseña.
+	Si es tu nick, escribe 12/IDENTIFY contraseña.
 	Si no lo es, escoge un nick diferente.
 NICK_IS_SUSPENDED
 	Este nick ha sido suspendido temporalmente.
@@ -240,9 +240,9 @@ NICK_ALREADY_REGISTERED
 	El nick 12%s ya esta registrado!
 NICK_MAIL_INVALID
 	Dirección Email invalida, utiliza tu mail REAL!!
-#NICK_MAIL_ANONYMOUS
-#	Dominio de correo inaceptable.
-#	No utilice servicios anonimos.
+NICK_MAIL_ANONYMOUS
+	Dominio de correo inaceptable.
+	No utilice servicios anonimos.
 NICK_MAIL_TELELINE
 	Dirección E-mail inválida, Sólo se permiten cuentas de Terra.
 	Si tu mail es de 12teleline.es, cambia por 12terra.es, es decir
@@ -282,11 +282,13 @@ NICK_IDENTIFY_EMAIL_REQUIRED
 	Escribe 12/msg %S SET EMAIL <e-mail> para ajustarlo.
 	Este mensaje dejara de mostrarte cuando hayas ajustado tu email.
 NICK_IDENTIFY_FIRST
-	Recomiendo que cambies la contraseña que recibiste por email
-	por una que puedas recordar y que sea díficil para los demas.
+	Se recomienda que cambies la contraseña que recibiste por email
+	por una que puedas recordar y que sea díficil de advinarla para
+	los demas. Este mensaje dejará de mostrar cuando cambies la 
+	contraseña.
 
-NICK_IDENTIFY_PASSWORD_CHANGED
-	Para tu mayor seguridad, recomiendo que cambies la contraseña
+NICK_IDENTIFY_PASSWORD_NO_CHANGED
+	Para tu mayor seguridad, se recomienda que cambies la contraseña
 	cada cierto tiempo. Este mensaje se mostrará cada mes como
 	recordatorio para que cambies la contraseña con frecuencia.
 
@@ -356,11 +358,26 @@ NICK_SET_KILL_QUICK
 	Protección de KILL 12activada, con una espera reducida.
 NICK_SET_KILL_IMMED
 	Protección de KILL 12activada, sin espera.
-	Asegurate de identificar con /nick Tu_nick:tu_contraseña.
+NICK_SET_KILL_IMMED_MORE
+	Asegurate de identificar con 12/nick %s:tu_contraseña.
 NICK_SET_KILL_IMMED_DISABLED
 	La opción 12IMMED no esta disponible en esta red.
 NICK_SET_KILL_OFF
 	Protección de KILL 12desactivada.
+
+# SET CHANGE responses
+NICK_SET_CHANGE_SYNTAX
+	12SET CHANGE {ON | QUICK | OFF}
+NICK_SET_CHANGE_IMMED_SYNTAX
+	12SET CHANGE {ON | QUICK | IMMED | OFF}
+NICK_SET_CHANGE_ON
+	Protección de Nick 12activada.
+NICK_SET_CHANGE_QUICK
+	Protección de Nick 12activada.
+NICK_SET_CHANGE_IMMED
+	Protección de Nick 12activada, sin espera.
+NICK_SET_CHANGE_OFF
+	Protección de Nick 12desactivada.
 
 # SET SECURE responses
 NICK_SET_SECURE_SYNTAX
@@ -540,10 +557,14 @@ NICK_LIST_RESULTS
 NICK_RECOVER_SYNTAX
 	12RECOVER <nick> [password]
 NICK_NO_RECOVER_SELF
-	No puede recuperar su propio nick!
+	No puede recuperar tu propio nick!
 NICK_RECOVERED
-	Usuario utilizando su nick ha sido desconectado.
+	Usuario utilizando tu nick ha sido desconectado.
 	Escribe 12/msg %s RELEASE %s para recuperarlo antes de un minuto.
+NICK_REVOVERED_CHANGE
+	Usuario utilizando tu nick ha sido cambiado el nick.
+	Escribe C12/msg %s RELEASE %sC para recuperarlo antes de un minuto.
+
 
 # RELEASE responses
 NICK_RELEASE_SYNTAX
@@ -551,7 +572,7 @@ NICK_RELEASE_SYNTAX
 NICK_RELEASE_NOT_HELD
 	El nick 12%s no esta siendo protegido en este momento.
 NICK_RELEASED
-	La protección de Services en su nick ha sido liberada.
+	La protección de Services en tu nick ha sido liberada.
 
 # GHOST responses
 NICK_GHOST_SYNTAX
@@ -707,7 +728,7 @@ CHAN_MUST_REGISTER_NICK
 	Usted debe de registrar primero su nick. Escriba 12/msg %s HELP para obtener más información de como registrar nicks.
 CHAN_MUST_IDENTIFY_NICK
 	Por favor identifiquese primero con 12%s, utilizando el comando:
-	12/msg %s IDENTIFY contraseña
+	12/IDENTIFY contraseña
 CHAN_MAY_NOT_BE_REGISTERED
 	Canal 12%s no puede ser registrado.
 CHAN_ALREADY_REGISTERED
@@ -860,7 +881,7 @@ CHAN_SET_LEAVEOPS_OFF
 	Opción de Leave ops 12desactivada.
 
 
-# SET LEAVEOPS responses
+# SET LEAVEVOICES responses
 CHAN_SET_LEAVEVOICES_SYNTAX
 	12SET <canal> LEAVEVOICES {ON | OFF}
 CHAN_SET_LEAVEVOICES_ON
@@ -901,16 +922,29 @@ CHAN_SET_MEMOALERT_ON
 CHAN_SET_MEMOALERT_OFF
 	Opción de aviso de memos 12desactivada.
 
+# SET UNBANCYBER responses
+CHAN_SET_UNBANCYBER_SYNTAX
+	12SET <canal> UNBANCYBER {ON | OFF}
+CHAN_SET_UNBANCYBER_ON
+	Opción Unban por 4%s12 activada.
+CHAN_SET_UNBANCYBER_OFF
+	Opción Unban por 4%s12 desactivada.
 
 # SET STAY responses
-#CHAN_SET_STAY_SYNTAX
-#	12SET <canal> STAY {ON | OFF}
-#CHAN_SET_STAY_ON
-#	Opción Stay 12activada.
-#CHAN_SET_STAY_OFF
-#	Opción Stay 12desactivada.
+CHAN_SET_STAY_SYNTAX
+	12SET <canal> STAY {ON | OFF}
+CHAN_SET_STAY_ON
+	Opción Stay C12activada.
+CHAN_SET_STAY_OFF
+	Opción Stay 12desactivada.
 
-
+# SET OFICIAL responses
+CHAN_SET_OFICIAL_SYNTAX
+	12SET <canal> OFICIAL {ON | OFF}
+CHAN_SET_OFICIAL_ON
+	Opción de Canal Oficial 12activada.
+CHAN_SET_OFICIAL_OFF
+	Opción de Canal Oficial 12desactivada.
 
 # SET NOEXPIRE responses
 CHAN_SET_NOEXPIRE_SYNTAX
@@ -1029,6 +1063,8 @@ CHAN_INFO_SYNTAX
 	12INFO <canal> [ALL]
 CHAN_INFO_HEADER
 	Información de canal 12%s:
+CHAN_INFO_OFICIAL
+	Es un Canal Oficial de Terra
 CHAN_INFO_ACTIVED
 	Estado: 12ACTIVO
 CHAN_INFO_SUSPENDED
@@ -1087,6 +1123,8 @@ CHAN_INFO_OPT_ISSUED
 	12Issued
 CHAN_INFO_OPT_MEMOALERT
 	12Memo Alert
+CHAN_INFO_OPT_UNBANCYBER
+	12Unban de Cyber
 CHAN_INFO_OPT_NONE
 	12Ninguna
 CHAN_INFO_MODE_LOCK
@@ -1109,6 +1147,13 @@ CHAN_INVITE_SYNTAX
 	12INVITE <canal>
 
 # OP responses
+CHAN_IS_BOT_SERVICE
+	No puedes hacer 12%s a un Bot de Servicio de la red.
+CHAN_IS_ADMIN_SERVICE
+	No puedes hacer 12%s a un Administrador de la red.
+CHAN_IS_OPER_SERVICE
+	No puedes hacer 12%s a un Operador de la red.
+
 CHAN_OP_SYNTAX
 	12OP <canal> <nick>
 
@@ -1367,7 +1412,7 @@ MEMO_INFO_MEMO_UNREAD
 MEMO_INFO_MEMOS
 	Tienes 12%d mensajes.
 MEMO_INFO_MEMOS_ONE_UNREAD
-	Tienes %d mensajes, de los cuales12 1 no ha sido leído.
+	Tienes 12%d mensajes, de los cuales12 1 no ha sido leído.
 MEMO_INFO_MEMOS_SOME_UNREAD
 	Tienes 12%d mensajes, de los cuales 12%d no han sido leídos.
 MEMO_INFO_MEMOS_ALL_UNREAD
@@ -1495,6 +1540,14 @@ CYBER_UNBAN_SUCCEEDED
 # GLOBAL responses
 CYBER_GLOBAL_SYNTAX
 	 12GLOBAL <mensaje>
+
+# VERIFY response
+CYBER_VERIFY_SYNTAX
+	12VERIFY <nick>
+CYBER_VERIFY_NOT_CYBER
+	12%s no está registrado como admin de un cyber.
+CYBER_VERIFY_CYBER
+	12%s es admin del iline 12%s (%d clones).
 
 # LIST response
 CYBER_LIST_SYNTAX
@@ -1669,6 +1722,8 @@ OPER_GLOBAL_SYNTAX
 OPER_GLOBALN_SYNTAX
 	12GLOBALN <message>
 
+# SERVERS responses
+
 
 # STATS responses
 OPER_STATS_UNKNOWN_OPTION
@@ -1790,6 +1845,9 @@ OPER_KILL_SUCCEEDED
 # BLOCK responses
 OPER_BLOCK_SYNTAX
 	12BLOCK <nick> <motivo>
+OPER_BLOCK_CYBER
+	No puedes Glinear a 12%s, está en un cyber.
+	Consulta con un admin.
 OPER_BLOCK_SUCCEEDED
 	Has Glineado a 12%s y a sus clones.
 
@@ -2172,7 +2230,7 @@ NICK_HELP
 	utilizarlos, escribe 12/msg %S comando.
 	
 	Para más información sobre un comando especifico, escribe
-	12/msg %S HELP comando
+	12/msg %S HELP comando.
 	
 	    12REGISTER   Registra un nick
 	    12MAIL       Lista de mails permitidos para el registro del nick
@@ -2204,7 +2262,7 @@ NICK_HELP_EXPIRE_ZERO
 	escribe 12/msg %S comando.
 	
 	Para más información sobre un comando especifico, escribe
-	12/msg %S HELP comando
+	12/msg %S HELP comando.
 	
 	    12REGISTER   Registra un nick
 	    12MAIL       Lista de mails permitidos para el registro del nick
@@ -2245,28 +2303,28 @@ NICK_HELP_REGISTER
 
 NICK_HELP_MAIL
 	Para registrar el nick, el mail tiene que ser de una cuenta
-	de Terra, si no no podrás registrar el nick.
+	de Terra, si no, no podrás registrar el nick.
 	Consigue GRATIS una cuenta de correo de Terra en la web de tu
-	pais.	
+	pais.
 	
 	Dominio Correo      Pais     Pagina web para dar de alta una cuenta
 
-	12@terra.es      España      12http://www.terra.es
-	12@terra.com     EE.UU.      12http://www.terra.com
-	12@terra.com.ar  Argentina   12http://www.terra.com.ar
-	12@terra.com.br  Brasil      12http://www.terra.com.br
-	12@terra.co.cr   Costa Rica  12http://www.terra.co.cr
-	12@terra.com.co  Colombia    12http://www.terra.com.co
-	12@terra.cl      Chile       12http://www.terra.cl
-	12@terra.com.sv  El Salvador 12http://www.terra.com.sv
-	12@terra.com.gt  Guatemala   12http://www.terra.com.gt
-	12@terra.com.hn  Honduras    12http://www.terra.com.hn
-	12@terra.com.mx  México      12http://www.terra.com.mx
-	12@terra.com.ni  Nicaragua   12http://www.terra.com.ni
-	12@terra.com.pa  Panamá      12http://www.terra.com.pa
-	12@terra.com.pe  Perú        12http://www.terra.com.pe
-	12@terra.com.uy  Uruguay     12http://www.terra.com.uy
-	12@terra.com.ve  Venezuela   12http://www.terra.com.ve
+	12@terra.es           España      12http://www.terra.es	
+	12@terra.com.ar       Argentina   12http://www.terra.com.ar
+	12@terra.com.br       Brasil      12http://www.terra.com.br
+	12@terra.co.cr        Costa Rica  12http://www.terra.co.cr
+	12@terra.com.co       Colombia    12http://www.terra.com.co
+	12@terra.cl           Chile       12http://www.terra.cl
+	12@terra.com          EE.UU.      12http://www.terra.com
+	12@terra.com.sv       El Salvador 12http://www.terra.com.sv
+	12@terra.com.gt       Guatemala   12http://www.terra.com.gt
+	12@terra.com.hn       Honduras    12http://www.terra.com.hn
+	12@terra.com.mx       México      12http://www.terra.com.mx
+	12@terra.com.ni       Nicaragua   12http://www.terra.com.ni
+	12@terra.com.pa       Panamá      12http://www.terra.com.pa
+	12@terra.com.pe       Perú        12http://www.terra.com.pe
+	12@terra.com.uy       Uruguay     12http://www.terra.com.uy
+	12@terra.com.ve       Venezuela   12http://www.terra.com.ve
 
 
 NICK_HELP_IDENTIFY
@@ -2360,7 +2418,8 @@ NICK_HELP_SET
 	               te envié mensajes
 	    12URL        Asocia un URL con tu nick
 	    12EMAIL      Asocia una dirección de E-mail con tu nick
-	    12KILL       Activa/desactiva la protección del nick
+#	    12KILL       Activa/desactiva la protección de Kill
+	    12CHANGE     Activa/desactiva la protección del nick
 	    12SECURE     Activa/desactiva el modo SECURE para tu nick
 	    12PRIVATE    Evita que su nick aparezca en 12/msg %S LIST
 	    12HIDE       Esconde ciertas informaciones sobre tu nick
@@ -2402,14 +2461,30 @@ NICK_HELP_SET_EMAIL
 NICK_HELP_SET_KILL
 	Sintaxis: 12SET KILL {ON | QUICK | IMMED | OFF}
 	
-	Activa/desactiva la protección de kill para su nick. Con
+	Activa/desactiva la protección de kill para tu nick. Con
 	protección de kill activada, si algún otro usuario intenta
 	utilizar tu nick, se le dará un minuto para que cambie a
 	otro, si no sera removido forzosamente de IRC por 4%S.
 	
-	Si seleccione 12QUICK, el usuario solo tendrá 20 segundos para
+	Si seleccionas 12QUICK, el usuario solo tendrá 20 segundos para
 	cambiar de nick en lugar de lo usual (60 segundos). Si
 	seleccione 12IMMED, el usuario sera desconetcado (kill)
+	inmediatamente 4sin ser avisado primero o darle una
+	oportunidad de cambiar de nick, favor de no utilizar esta
+	opción a menos que sea verdaderamente necesario. Los
+	Administradores de la red pueden haber deshabilitado esta opción.
+
+NICK_HELP_SET_CHANGE
+	Sintaxis: 12SET CHANGE {ON | QUICK | IMMED | OFF}
+	
+	Activa/desactiva la protección de nick para tu nick. Con
+	protección de nick activada, si algún otro usuario intenta
+	utilizar tu nick, se le dará un minuto para que cambie a
+	otro, si no será cambiado de nick forzosamente por 4%S.
+	
+	Si seleccionas 12QUICK, el usuario solo tendrá 20 segundos para
+	cambiar de nick en lugar de lo usual (60 segundos). Si
+	seleccione 12IMMED, el usuario sera cambiado el nick
 	inmediatamente 4sin ser avisado primero o darle una
 	oportunidad de cambiar de nick, favor de no utilizar esta
 	opción a menos que sea verdaderamente necesario. Los
@@ -2424,7 +2499,8 @@ NICK_HELP_SET_SECURE
 	nick, sin importar si su dirección este o no en la lista de
 	acceso. Sin embargo, si aparece en la lista de acceso, 12%S
 	no lo desconectara automáticamente, independientemente de
-	como este la opción de 12KILL.
+#	como este la opción de 12KILL.
+	como esté la opción de 12CHANGE.
 
 NICK_HELP_SET_PRIVATE
 	Sintaxis: 12SET PRIVATE {ON | OFF}
@@ -2454,7 +2530,8 @@ NICK_HELP_RECOVER
 	
 	Permite que recuperes tu nick si alguien mas lo ha
 	tomado; esto es lo mismo que 4%S hace automáticamente si
-	alguien intenta utilizar un nick protegido con kill.
+#	alguien intenta utilizar un nick protegido con kill.
+	alguien intenta utilizar un nick protegido con change.	
 	
 	Cuando usted envía este comando, 4%S conectara en línea a un
 	usuario falso con el mismo nick que el usuario que usted
@@ -2490,7 +2567,7 @@ NICK_HELP_GHOST
 	Elimina una sesión "fantasma" de IRC que este utilizando tu
 	nick. Una sesión "fantasma" es aquella que no esta
 	realmente conectada, pero que un servidor de IRC acredita
-	como activa por cualquier razón.  Típicamente esto sucede si
+	como activa por cualquier razón. Típicamente esto sucede si
 	su ordenador se cuelga o su conexión a Internet se
 	desconecta por un periodo corto mientras esta en IRC.
 	
@@ -2533,7 +2610,7 @@ NICK_HELP_STATUS
 	Sintaxis: 12STATUS <nick1> <nick2>...
 	
 	Informa si el usuario de un nick es reconocido como el dueño
-	de el mismo.  La respuesta tiene el siguiente formato:
+	del mismo. La respuesta tiene el siguiente formato:
 	
 	    12nick 12código-de-status
 	
@@ -2725,8 +2802,8 @@ CHAN_HELP
 	    12CLEAR      Reinicia los modos de un canal
 #	    12RESET      Resetea el canal
 
-	Para registrar un canal, tienes que hacerlo a traves de 4ReG
-	escribe 12/msg ReG HELP para más información de cómo registrar
+	Para registrar un canal, tienes que hacerlo a traves de 4Reg
+	escribe 12/msg Reg HELP para más información de cómo registrar
 	un canal.
 
 CHAN_HELP_EXPIRES
@@ -2738,7 +2815,7 @@ CHAN_HELP_EXPIRES
 CHAN_HELP_REGISTER
 	Sintaxis: 12REGISTER <canal> <contraseña> <descripción>
 	
-	Registra un nuevo canal en la base de datos de 12%S.
+	Registra un nuevo canal en la base de datos de 4%S.
 	Para poder utilizar este comando, usted primero debe ser
 	operador del canal que está tratando de registrar (1). La
 	contraseña deberá ser utilizada con el comando 12IDENTIFY
@@ -2749,7 +2826,7 @@ CHAN_HELP_REGISTER
 	Cuando usted registra un canal, usted queda registrado como
 	el "fundador" del canal. El fundador de un canal puede
 	modificar cualquiera de las opciones del canal (excepto el
-	nombre mismo del canal); 12%S le dará automáticamente
+	nombre mismo del canal); 4%S le dará automáticamente
 	privilegio de operador al fundador del canal cuando el/ella
 	ingresen al canal.  Vea el comando 12ACCESS
 	(12/msg %S HELP ACCESS) para obtener información de como
@@ -2804,6 +2881,7 @@ CHAN_HELP_SET
 	    12LEAVEOPS    Nunca deopear a usuarios excepto con el comando DEOP
 	    12LEAVEVOICES Nunca devoice a usuarios excepto con el comando DEVOICE
 	    12MEMOALERT   Avisar cuando hay mensajes (memos) del canal
+	    12CYBERUNBAN  Permitir los desbaneos de cybers en los canales
 	    12ISSUED      Modo DEBUG, Envia una noticia al canal sobre
 	                los comandos usados
 #	    12STAY        %S en el canal aunque no haya nadie en el canal
@@ -2991,14 +3069,13 @@ CHAN_HELP_SET_OPNOTICE
 	4%S enviará un notice al canal cuando los usuarios usen los
 	comandos en el canal.
 
-#CHAN_HELP_SET_STAY
-#	Syntax: 12SET <canal> STAY {ON | OFF}
-#	 
-#	Habilita o deshabilita la opcion de 12stay para el
-#	canal. Cuando 12stay está activada (ON),
-#	12%S entrara en el canal y estara todo el tiempo aunque
-#	no haya nadie en el canal.
-
+CHAN_HELP_SET_STAY
+	Syntax: 12SET <canal> STAY {ON | OFF}
+	 
+	Habilita o deshabilita la opcion de 12stay para el
+	canal. Cuando 12stay está activada (ON),
+	4%S entrara en el canal y estara todo el tiempo aunque
+	no haya nadie en el canal.
 
 CHAN_HELP_SET_MEMOALERT
 	Sintaxis: 12SET <canal> MEMOALERT {ON | OFF}
@@ -3008,6 +3085,16 @@ CHAN_HELP_SET_MEMOALERT
 	4%s avisará los mensajes que tiene el canal a los usuarios 
 	con nivel de MEMO-READ.
 
+CHAN_HELP_SET_UNBANCYBER
+	Sintaxis: 12SET <canal> UNBANCYBER {ON | OFF}
+	
+	Habilita o deshabilita la opcion de 12unban por Cyber para
+	el canal. Cuando 12UNBANCYBER está activada (ON), 4%S
+	permitirá que los cybers pueda desbanear su IP en el canal
+	a través de 4%Cyber.
+
+	Esta opción en canales oficiales sólo pueden cambiarlo los
+	4Administradores de la Red.	
 
 CHAN_HELP_ACCESS
 	Sintaxis: 12ACCESS <canal> ADD <nick> <nivel>
@@ -3104,7 +3191,7 @@ CHAN_HELP_AKICK
 	lista de AKICK. Opcionalmente, solo lista aquellos
 	suministrados con la mascara dada.
 	
-	El comando 12AKICK VIEW contiene más informacion que el
+	El comando 12AKICK VIEW contiene más información que el
 	AKICK LIST, mostrando el autor del akick.
 	
 	El comando 12AKICK ENFORCE causa que 12%S impide que los
@@ -3286,9 +3373,17 @@ CHAN_SERVADMIN_HELP_SET
 	
 	Administradores de Services también pueden definir la opción
 	12NOEXPIRE, con la cual algún canal se puede prevenir que
-	expire. Adicionalmente, los Administradores de Services
+	expire; y la opcion 12OFICIAL para activar el flag de Canal
+	Oficial al canal. Adicionalmente, los Administradores de Services
 	pueden definir opciones para cualquier canal sin necesidad
 	de identificarse con contraseña para ese canal.
+
+CHAN_SERVADMIN_HELP_SET_OFICIAL
+	Sintaxis: 12SET <canal> OFICIAL {ON | OFF}
+	
+	Define si el canal dado es un Canal Oficial de Terra.
+	
+	Limitado a 4Administradores de Services.
 
 CHAN_SERVADMIN_HELP_SET_NOEXPIRE
 	Sintaxis: 12SET <canal> NOEXPIRE {ON | OFF}
@@ -3319,9 +3414,12 @@ CHAN_SERVADMIN_HELP_GETPASS
 
 
 CHAN_SERVADMIN_HELP_SUSPEND
-	Sintaxis: 12SUSPEND <canal> <motivo>
+	Sintaxis: 12SUSPEND [+expiracion] <canal> <motivo>
 	
-	Suspende ul canal temporalmente para ke no sea utilizado.
+	Suspende el canal temporalmente para ke no sea utilizado.
+	
+	Mira la ayuda de 12OPER GLINE para más detalles sobre el formato
+	del parametro opcional 12expiración.
 	
 	Limitado a 4Operadores de Servicios.
 
@@ -3399,7 +3497,7 @@ MEMO_HELP_SEND
 	recibirá inmediatamente si se encuentra en línea, o si no al
 	momento de identificarse la próxima vez que se conecte.
 	
-	Ejemplo: /msg %S SEND joselito Muy bueno tu trabajo de traducción! ;)
+	Ejemplo: /msg %S SEND Anonimus Muy bueno tu trabajo de traducción! ;)
 
 MEMO_HELP_CANCEL
 	Sintaxis: 12CANCEL { nick | canal }
@@ -3568,7 +3666,7 @@ CYBER_HELP_CONTRATA
 	etc.. tienen derecho a tener un número de clones (un clon es
 	una conexion a la red). No se necesita IP fija para los clones.
 	Para solicitarlos, tienes que acudir a la siguiente dirección:
-	12http://www.terra.es/personal/zoltanito/clones.htm
+	12http://www.terra.es/personal4/clones.irc/
 	Y cubrir el formulario para la solicitud de clones y en menos
 	de 24 horas tendrás los clones concedidos.
 
@@ -3621,7 +3719,7 @@ CYBER_SERVADMIN_HELP
 	Los siguientes comandos están disponibles para los
 	4Operadores de Services:
 	
-#	    12VERIFY     Verifica si una ip tiene clones
+	    12VERIFY     Verifica si un nick tiene Iline
 	    12LIST       Lista los ilines
 	    12CLONES     Informacion sobre clones
 	
@@ -3642,7 +3740,7 @@ CYBER_SERVADMIN_HELP_INFO
 	Bla bla
 
 CYBER_SERVADMIN_HELP_VERIFY
-	Sintaxis: C12VERIFY <host>
+	Sintaxis: C12VERIFY <nick>
 	
 	Bla bla
 
@@ -3737,7 +3835,6 @@ OPER_HELP
 	    12KILL        Expulsa a un tipejo
 	    12BLOCK       Expulsa 5 minutos a un tipejo
 	    12UNGLINE     Elimina un BLOCK/GLINE
-	    12GLINE       Manipula la lista de GLINEs
 	    12APODERA     MassDeop de los usuarios de un canal
 	    12LIMPIA      MassKick de los usuarios de un canal
 	
@@ -3749,6 +3846,7 @@ OPER_HELP
 	    12OPERNNEWS   Añade un OPERNNEWS
 	    12GLOBAL      Envía un mensaje a TODOS los usuarios por privmsg
 	    12GLOBALN     Envía un mensaje a TODOS los usuarios por notice
+	    12GLINE       Manipula la lista de GLINEs
 	    12JUPE        "Jupiter" un servidor
 	    12SETTIME     Sincroniza la RED a tiempo real
 	    12RAW         Envía un código RAW al servidor IRC
@@ -3787,14 +3885,14 @@ OPER_HELP_GLOBALN
 	usuarios en la red. El mensaje puede ser enviado para 12%s.
 
 OPER_HELP_STATS
-	Sintaxis: 12STATS [AKILL | ALL]
+	Sintaxis: 12STATS [GLINE | ALL]
 	
 	Sin opciones, muestra la cantidad de usuarios e IRCops en
 	línea, el mas alto numero de usuarios en línea desde que los
 	servicios se pusieron en funcionamiento, y desde cuando
 	están funcionando los servicios.
 	
-	Con el parámetro 12AKILL muestra la longitud de la lista de
+	Con el parámetro 12GLINE muestra la longitud de la lista de
 	AKILL y la fecha actual de expiración.
 	
 	El parámetro 12ALL solo está disponible para los
@@ -3866,45 +3964,45 @@ OPER_HELP_KICK
 	Solo disponible para los 4Operadores de Servicios.
 
 OPER_HELP_AKILL
-	Sintaxis: 12AKILL ADD [+expiracion] <mascara> <razón>
-	          12AKILL DEL <mascara>
-	          12AKILL LIST [mascara]
-	          12AKILL VIEW [mascara]
+	Sintaxis: 12GLINE ADD [+expiracion] <mascara> <razón>
+	          12GLINE DEL <mascara>
+	          12GLINE LIST [mascara]
+	          12GLINE VIEW [mascara]
 	
-	Habilita a los IRCops a manipular la lista de 12AKILL. Si un
+	Habilita a los IRCops a manipular la lista de 12GLINE. Si un
 	usuario que figura en dicha lista, intenta conectarse, los
 	Servicios bloquearán su conexión y darán instrucciones a
 	todos los servidores que lo soporten, que agreguen un ban
 	(k-line) para la máscara que coincida con la del usuario.
 	
-	12AKILL ADD agrega el usuario dado (con la mascara
+	12GLINE ADD agrega el usuario dado (con la mascara
 	usuario@host) a la lista de akill por la razón dada (que
 	debe ser dada).
 	
-	12AKILL DEL quita el usuario dado de la lista de 12AKILL si el
+	12GLINE DEL quita el usuario dado de la lista de 12GLINE si el
 	mismo está presente.
 	
-	12AKILL LIST muestra todos los usuarios que están actualmente
+	12GLINE LIST muestra todos los usuarios que están actualmente
 	en la lista. Si una máscara es dada, el listado estará
 	limitado a las ocurrencias.
 	
-	12AKILL VIEW es mas explícito que 12AKILL LIST, dado que muestra
-	quien agregó el 12AKILL, la fecha en que fue hecho, cuando
+	12GLINE VIEW es mas explícito que 12GLINE LIST, dado que muestra
+	quien agregó el 12GLINE, la fecha en que fue hecho, cuando
 	expira, la máscara utilizada y la razón.
 	
 	Opcionalmente, un tiempo de expiración puede ser
-	suministrado con el comando 12AKILL ADD. El tiempo de
+	suministrado con el comando 12GLINE ADD. El tiempo de
 	expiración PRECEDE a la máscara usuario@host y es
 	especificado como un entero (esto es, sin decimales) seguido
 	de: d para especificar días, h (horas), o m (minutos).
 	Combinaciones (como 1h30m) no están permitidas.  Si un
 	especificador de unidades no es incluido, por defecto se
 	asumen DIAS (entonces, poner +30 sin nada, significa 30
-	días). Para agregar un 12AKILL que NO expira, utilice +0.  Si
+	días). Para agregar un 12GLINE que NO expira, utilice +0.  Si
 	la máscara de usuario comienza con +, un período de
 	expiración deberá ser indicado, aún si es el mismo período
 	que el asignado por defecto. El tiempo de expiración por
-	defecto, se puede ver utilizando el comando STATS AKILL.
+	defecto, se puede ver utilizando el comando STATS GLINE.
 	
 	La 12razón está indicada para uso de los IRCops, y NO será
 	mostrada al usuario cuando se efectúe el KILL.

@@ -535,7 +535,7 @@ CHAN_MUST_REGISTER_NICK
 	Vosté ha de registrar primer el seu nick. Escrigui 12/msg %s HELP para obtener más información de como registrar nicks.
 CHAN_MUST_IDENTIFY_NICK
 	Si us plau, identifiqui`s primer amb 12%s, utilitzant la comanda:
-	12/msg %s IDENTIFY clau
+	12/IDENTIFY clau
 CHAN_MAY_NOT_BE_REGISTERED
 	Canal 12%s no pot ser registrat.
 CHAN_ALREADY_REGISTERED

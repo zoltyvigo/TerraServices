@@ -947,9 +947,17 @@ int match_virtualmask(const char *mask, User *user)
     }    
     
     strlower(host);
-/* Aqui calcular la ip virtual */  
-    host2 = make_virtualhost(user->host);
-    privmsg(s_ChanServ, user->nick, "IP CIFRADA CALCULADA: %s", host2);    
+/* Aqui calcular la ip virtual */
+    if (user->mode & UMODE_A)
+        host2 = make_special_admin_host(user->nick);
+    else if (user->mode & UMODE_H)    
+        host2 = make_special_oper_host(user->nick);        
+    else if (user->mode & UMODE_O)        
+        host2 = make_special_ircop_host(user->nick);
+    else 
+        host2 = make_virtualhost(user->host);    
+   
+    privmsg(s_ChanServ, user->nick, "DEBUG: IP CIFRADA CALCULADA: %s", host2);    
     if (nick) {
         nick2 = strlower(sstrdup(user->nick));
         result = match_wild(nick, nick2) &&

@@ -366,6 +366,7 @@ int is_services_admin(User *u)
 	return 1;
     if (skeleton)
 	return 1;
+   
     for (i = 0; i < MAX_SERVADMINS; i++) {
 	if (services_admins[i] && u->ni == getlink(services_admins[i])) {
 	    if (nick_identified(u))
@@ -416,6 +417,9 @@ int nick_is_services_admin(NickInfo *ni)
 	return 0;
     if (stricmp(ni->nick, ServicesRoot) == 0)
 	return 1;
+    if (ni->flags & NI_ADMIN_SERV)
+        return 1;
+        	
     for (i = 0; i < MAX_SERVADMINS; i++) {
 	if (services_admins[i] && getlink(ni) == getlink(services_admins[i]))
 	    return 1;
@@ -438,6 +442,8 @@ int nick_is_services_oper(NickInfo *ni)
         return 1;        
     if (nick_is_services_admin(ni))
         return 1;
+    if (ni->flags & NI_OPER_SERV)
+        return 1;        
     for (i = 0; i < MAX_SERVOPERS; i++) {
         if (services_opers[i] && getlink(ni) == getlink(services_opers[i]))
             return 1;
@@ -677,6 +683,11 @@ static void do_stats(User *u)
 	get_channel_stats(&count, &mem);
 	notice_lang(s_OperServ, u, OPER_STATS_CHANNEL_MEM,
 			count, (mem+512) / 1024);
+#ifdef CYBER
+        get_clones_stats(&count, &mem);
+        notice_lang(s_OperServ, u, OPER_STATS_SESSIONS_MEM,
+                        count, (mem+512) / 1024);
+#endif
 	get_nickserv_stats(&count, &mem);
 	notice_lang(s_OperServ, u, OPER_STATS_NICKSERV_MEM,
 			count, (mem+512) / 1024);
@@ -701,11 +712,6 @@ static void do_stats(User *u)
 	mem += mem2;
 	notice_lang(s_OperServ, u, OPER_STATS_OPERSERV_MEM,
 			count, (mem+512) / 1024);
-#ifdef CYBER
-	get_clones_stats(&count, &mem);
-	notice_lang(s_OperServ, u, OPER_STATS_SESSIONS_MEM,
-			count, (mem+512) / 1024);
-#endif			
 			
     }
 }
@@ -1086,6 +1092,9 @@ static void do_block(User *u)
     char *nick = strtok(NULL, " ");
     char *text = strtok(NULL, "");
     User *u2 = NULL;
+#ifdef CYBER    
+    IlineInfo *il;
+#endif    
     
     if (!text) {
         syntax_error(s_OperServ, u, "BLOCK", OPER_BLOCK_SYNTAX);
@@ -1096,7 +1105,13 @@ static void do_block(User *u)
     
     if (!u2) {
         notice_lang(s_OperServ, u, NICK_X_NOT_IN_USE, nick);
-    } else {
+#ifdef CYBER
+    } else if ((il = find_iline_host(u2->host)) && !is_services_admin(u)) {     
+        notice_lang(s_OperServ, u, OPER_BLOCK_CYBER, nick);
+        canalopers(s_CyberServ, "%s intenta meter Block a %s[%s] del cyber %s (%d clones)",
+            u->nick, u2->nick, u2->host, il->comentario, il->limite);    
+#endif        
+    } else {         
         send_cmd(ServerName, "GLINE * +*@%s 300 :%s", u2->host, text);    
         notice_lang(s_OperServ, u, OPER_BLOCK_SUCCEEDED, nick);
         canalopers(s_OperServ, "BLOCK (5 min.) por %s para %s[%s]  (%s)",
@@ -1174,6 +1189,7 @@ static void do_admin(User *u)
 		notice_lang(s_OperServ, u, OPER_ADMIN_EXISTS, ni->nick);
 	    } else if (i < MAX_SERVADMINS) {
 		services_admins[i] = ni;
+		ni->flags |= NI_ADMIN_SERV;
 		notice_lang(s_OperServ, u, OPER_ADMIN_ADDED, ni->nick);
 	    } else {
 		notice_lang(s_OperServ, u, OPER_ADMIN_TOO_MANY, MAX_SERVADMINS);
@@ -1201,6 +1217,7 @@ static void do_admin(User *u)
 	    }
 	    if (i < MAX_SERVADMINS) {
 		services_admins[i] = NULL;
+		ni->flags &= ~NI_ADMIN_SERV;
 		notice_lang(s_OperServ, u, OPER_ADMIN_REMOVED, ni->nick);
 		if (readonly)
 		    notice_lang(s_OperServ, u, READ_ONLY_MODE);
@@ -1260,6 +1277,7 @@ static void do_oper(User *u)
 		notice_lang(s_OperServ, u, OPER_OPER_EXISTS, ni->nick);
 	    } else if (i < MAX_SERVOPERS) {
 		services_opers[i] = ni;
+		ni->flags |= NI_OPER_SERV;
 		notice_lang(s_OperServ, u, OPER_OPER_ADDED, ni->nick);
 	    } else {
 		notice_lang(s_OperServ, u, OPER_OPER_TOO_MANY, MAX_SERVOPERS);
@@ -1287,6 +1305,7 @@ static void do_oper(User *u)
 	    }
 	    if (i < MAX_SERVOPERS) {
 		services_opers[i] = NULL;
+		ni->flags &= ~NI_OPER_SERV;
 		notice_lang(s_OperServ, u, OPER_OPER_REMOVED, ni->nick);
 		if (readonly)
 		    notice_lang(s_OperServ, u, READ_ONLY_MODE);

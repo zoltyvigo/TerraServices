@@ -79,16 +79,59 @@ void cifrado_tea(unsigned int v[], unsigned int k[], unsigned int x[])
 
 
 #define CLAVE_CIFRADO "Fr3tSEt2QftW"
+#define NICKLEN	9
+  
+const char *make_special_admin_host(const char *host)
+{
+  char virtualhost[64];
 
+  strcpy(virtualhost, host);
+  strLower(virtualhost);
+              
+  strcpy(virtualhost + strlen(virtualhost),
+               ".admin.terra.es\0"); 
+
+  host = sstrdup(virtualhost);
+  return host;               
+}
+
+const char *make_special_oper_host(const char *host)
+{
+  char virtualhost[64];
+    
+  strcpy(virtualhost, host);
+  strLower(virtualhost);
+  
+  strcpy(virtualhost + strlen(virtualhost),
+               ".oper.terra.es\0");
+                 
+  host = sstrdup(virtualhost);
+  return host;
+}
+
+const char *make_special_ircop_host(const char *host)
+{
+  char virtualhost[64];
+  
+  strcpy(virtualhost, host);                           
+  strLower(virtualhost);
+                
+  strcpy(virtualhost + strlen(virtualhost),
+               ".ircop.terra.es\0");
+                 
+  host = sstrdup(virtualhost);
+  return host;
+} 
+                                              
+               
 const char *make_virtualhost(const char *host)
 {
-#define NICKLEN 9
   unsigned int v[2], k[2], x[2];
 //  int cont = (NICKLEN + 8) / 8, 
   int ts = 0;
-  char clave[12 + 1];
+  char clave[12 + 1];  
   char virtualhost[64];
-  
+    
   strcpy(virtualhost, host);
   
   strncpy(clave, CLAVE_CIFRADO, 12);

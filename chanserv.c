@@ -100,6 +100,8 @@ static void do_set_restricted(User *u, ChannelInfo *ci, char *param);
 static void do_set_secure(User *u, ChannelInfo *ci, char *param);
 static void do_set_opnotice(User *u, ChannelInfo *ci, char *param);
 static void do_set_memoalert(User *u, ChannelInfo *ci, char *param);
+static void do_set_unbancyber(User *u, ChannelInfo *ci, char *param);
+static void do_set_oficial(User *u, ChannelInfo *ci, char *param);
 static void do_set_noexpire(User *u, ChannelInfo *ci, char *param);
 static void do_access(User *u);
 static void do_akick(User *u);
@@ -154,8 +156,13 @@ static Command cmds[] = {
     { "SET OPNOTICE",   NULL,  NULL,  CHAN_HELP_SET_OPNOTICE,   -1,-1,-1,-1 },
     { "SET ISSUED",     NULL,  NULL,  CHAN_HELP_SET_OPNOTICE,   -1,-1,-1,-1 },
     { "SET DEBUG",      NULL,  NULL,  CHAN_HELP_SET_OPNOTICE,   -1,-1,-1,-1 },    
-    { "SET MEMOALERT",  NULL,  NULL,  CHAN_HELP_SET_MEMOALERT, -1,-1,-1,-1 },
-    { "SET MEMOAVISE",  NULL,  NULL,  CHAN_HELP_SET_MEMOALERT, -1,-1,-1,-1 },        
+    { "SET MEMOALERT",  NULL,  NULL,  CHAN_HELP_SET_MEMOALERT,  -1,-1,-1,-1 },
+    { "SET MEMOAVISE",  NULL,  NULL,  CHAN_HELP_SET_MEMOALERT,  -1,-1,-1,-1 },        
+    { "SET UNBANCYBER", NULL,  NULL,  CHAN_HELP_SET_UNBANCYBER, -1,-1,-1,-1 },
+    { "SET OFICIAL",    NULL,  NULL,  -1, -1,
+                CHAN_SERVADMIN_HELP_SET_OFICIAL,
+                CHAN_SERVADMIN_HELP_SET_OFICIAL,
+                CHAN_SERVADMIN_HELP_SET_OFICIAL },                                                        
     { "SET NOEXPIRE",   NULL,  NULL,  -1, -1,
 		CHAN_SERVADMIN_HELP_SET_NOEXPIRE,
 		CHAN_SERVADMIN_HELP_SET_NOEXPIRE,
@@ -306,11 +313,7 @@ void listchans(int count_only, const char *chan)
 			(ci->mlock_on & CMODE_P) ? "p" : "",
 			(ci->mlock_on & CMODE_S) ? "s" : "",
 			(ci->mlock_on & CMODE_T) ? "t" : "",
-#ifdef GUARDAR /* Guardo codigo */
 			(ci->mlock_on & CMODE_R) ? "R" : "");
-#else
-			"");
-#endif
 	    }
 	    if (ci->mlock_off)
 		printf("-%s%s%s%s%s%s%s%s%s",
@@ -322,11 +325,7 @@ void listchans(int count_only, const char *chan)
 			(ci->mlock_off & CMODE_P) ? "p" : "",
 			(ci->mlock_off & CMODE_S) ? "s" : "",
 			(ci->mlock_off & CMODE_T) ? "t" : "",
-#ifdef GUARDAR /* Guardo codigo */
 			(ci->mlock_off & CMODE_R) ? "R" : "");
-#else
-			"");
-#endif
 
 	    if (ci->mlock_key)
 		printf(" %s", ci->mlock_key);
@@ -454,7 +453,7 @@ void chanserv(const char *source, char *buf)
 	    s = "\1";
 	notice(s_ChanServ, source, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION\1") == 0) {
-        notice(s_ChanServ, source, "\1VERSION ircservices-%s+Terra-1.0 %s :-- %s\1",
+        notice(s_ChanServ, source, "\1VERSION ircservices-%s+Terra-1.0 %s -- %s\1",
                                  version_number, s_ChanServ, version_build);
     } else if (skeleton) {
 	notice_lang(s_ChanServ, u, SERVICE_OFFLINE, s_ChanServ);
@@ -751,8 +750,8 @@ void load_cs_dbase(void)
 		if (s)
 		    ci->founder = findnick(s);
 		else
-//		    ci->founder = NULL;
-                    ci->founder = findnick("Reg");
+		    ci->founder = NULL;
+//                    ci->founder = findnick("Reg");
 		if (ver >= 7) {
 		    SAFE(read_string(&s, f));
 		    if (s)
@@ -1106,7 +1105,6 @@ void check_modes(const char *chan)
     c->chanserv_modecount++;
 
     if (!(ci = c->ci)) {
-#ifdef GUARDAR /* Guardo codigo */
 	/* Services _always_ knows who should be +r. If a channel tries to be
 	 * +r and is not registered, send mode -r. This will compensate for
 	 * servers that are split when mode -r is initially sent and then try
@@ -1114,9 +1112,8 @@ void check_modes(const char *chan)
 	 */
 	if (c->mode & CMODE_r) {
 	    c->mode &= ~CMODE_r;
-	    send_cmd(MODE_SENDER(s_ChanServ), "MODE %s -r", c->name);
+	    send_cmd(s_ChanServ, "MODE %s -r", c->name);
 	}
-#endif
 	return;
     }
 
@@ -1146,7 +1143,6 @@ void check_modes(const char *chan)
 	*end++ = 't';
 	c->mode |= CMODE_T;
     }
-#ifdef GUARDAR /* Guardo codigo */
     if (modes & CMODE_R) {
 	*end++ = 'R';
 	c->mode |= CMODE_R;
@@ -1155,7 +1151,6 @@ void check_modes(const char *chan)
 	*end++ = 'r';
 	c->mode |= CMODE_r;
     }
-#endif
 
     if (ci->mlock_limit && ci->mlock_limit != c->limit) {
 	*end++ = 'l';
@@ -1214,12 +1209,10 @@ void check_modes(const char *chan)
 	*end++ = 't';
 	c->mode &= ~CMODE_T;
     }
-#ifdef GUARDAR /* Guardo codigo */
     if (modes & CMODE_R) {
     	*end++ = 'R';
     	c->mode &= ~CMODE_R;
     }
-#endif
 
     if (c->key && (ci->mlock_off & CMODE_K)) {
 	*end++ = 'k';
@@ -1673,7 +1666,7 @@ int check_topiclock(const char *chan)
 void expire_chans()
 {
     ChannelInfo *ci, *next;
-//    Channel *c;
+    Channel *c;
     int i;
     time_t now = time(NULL);
 
@@ -1702,12 +1695,10 @@ void expire_chans()
 			&& !(ci->flags & (CI_VERBOTEN | CI_NO_EXPIRE | CI_SUSPENDED))) {
 		log("Expiring channel %s", ci->name);
 		canalopers(s_ChanServ, "Expirando canal %s", ci->name);
-#ifdef GUARDAR /* Guardo el codigo */
 		if ((c = findchan(ci->name))) {
 		    c->mode &= ~CMODE_r;
 		    send_cmd(s_ChanServ, "MODE %s -r", ci->name);
 		}
-#endif
 		delchan(ci);
 	    }	    
 	}
@@ -2200,8 +2191,7 @@ static void do_register(User *u)
     } else if (!ni) {
 	notice_lang(s_ChanServ, u, CHAN_MUST_REGISTER_NICK, s_NickServ);
     } else if (!nick_recognized(u)) {
-	notice_lang(s_ChanServ, u, CHAN_MUST_IDENTIFY_NICK,
-		s_NickServ, s_NickServ);
+	notice_lang(s_ChanServ, u, CHAN_MUST_IDENTIFY_NICK, s_NickServ);
 
     } else if ((ci = cs_findchan(chan)) != NULL) {
 	if (ci->flags & CI_VERBOTEN) {
@@ -2242,12 +2232,9 @@ static void do_register(User *u)
     } else {
 	c->ci = ci;
 	ci->c = c;
-	ci->flags = CI_KEEPTOPIC | CI_SECURE;
-#ifdef IRC_DAL4_4_15
+//	ci->flags = CI_KEEPTOPIC | CI_SECURE;
+	ci->flags = CI_SECURE;
 	ci->mlock_on = CMODE_N | CMODE_T | CMODE_r;
-#else
-	ci->mlock_on = CMODE_N | CMODE_T;
-#endif
 	ci->memos.memomax = MSMaxMemos;
 	ci->last_used = ci->time_registered;
 	ci->founder = u->real_ni;
@@ -2359,7 +2346,7 @@ static void do_drop(User *u)
     char *chan = strtok(NULL, " ");
     ChannelInfo *ci;
     NickInfo *ni;
-//    Channel *c;
+    Channel *c;
     int is_servadmin = is_services_admin(u);
 
     if (readonly && !is_servadmin) {
@@ -2398,12 +2385,10 @@ static void do_drop(User *u)
 			u->nick, u->username, u->host);
         canalopers(s_ChanServ, "%s DROPEA el canal %s", u->nick, ci->name);
 	delchan(ci);
-#ifdef IRC_DAL4_4_15
 	if ((c = findchan(chan))) {
 	    c->mode &= ~CMODE_r;
 	    send_cmd(s_ChanServ, "MODE %s -r", chan);
 	}
-#endif
         if (CSInChannel) 
             send_cmd(s_ChanServ, "PART %s", ci->name);                    
 	notice_lang(s_ChanServ, u, CHAN_DROPPED, chan);
@@ -2514,6 +2499,10 @@ static void do_set(User *u)
         do_set_memoalert(u, ci, param);        
     } else if (stricmp(cmd, "OPNOTICE") == 0) {
         do_set_opnotice(u, ci, param);            
+    } else if (stricmp(cmd, "UNBANCYBER") == 0) {
+        do_set_unbancyber(u, ci, param);
+    } else if (stricmp(cmd, "OFICIAL") == 0) {
+        do_set_oficial(u, ci, param);    
     } else if (stricmp(cmd, "NOEXPIRE") == 0) {
 	do_set_noexpire(u, ci, param);
     } else {
@@ -2819,7 +2808,6 @@ static void do_set_mlock(User *u, ChannelInfo *ci, char *param)
 		newlock_on &= ~CMODE_T;
 	    }
 	    break;
-#ifdef IRC_DAL4_4_15
 	  case 'R':
 	    if (add) {
 		newlock_on |= CMODE_R;
@@ -2829,7 +2817,6 @@ static void do_set_mlock(User *u, ChannelInfo *ci, char *param)
 	    	newlock_on &= ~CMODE_R;
 	    }
 	    break;
-#endif
 	  default:
 	    notice_lang(s_ChanServ, u, CHAN_SET_MLOCK_UNKNOWN_CHAR, c);
 	    break;
@@ -2858,11 +2845,7 @@ static void do_set_mlock(User *u, ChannelInfo *ci, char *param)
 				(ci->mlock_on & CMODE_P) ? "p" : "",
 				(ci->mlock_on & CMODE_S) ? "s" : "",
 				(ci->mlock_on & CMODE_T) ? "t" : "",
-#ifdef IRC_DAL4_4_15
 				(ci->mlock_on & CMODE_R) ? "R" : "");
-#else
-				"");
-#endif
     if (ci->mlock_off)
 	end += snprintf(end, sizeof(modebuf)-(end-modebuf), 
 			"-%s%s%s%s%s%s%s%s%s",
@@ -2874,11 +2857,7 @@ static void do_set_mlock(User *u, ChannelInfo *ci, char *param)
 				(ci->mlock_off & CMODE_P) ? "p" : "",
 				(ci->mlock_off & CMODE_S) ? "s" : "",
 				(ci->mlock_off & CMODE_T) ? "t" : "",
-#ifdef IRC_DAL4_4_15
 				(ci->mlock_off & CMODE_R) ? "R" : "");
-#else
-				"");
-#endif
 
     if (*modebuf) {
 	notice_lang(s_ChanServ, u, CHAN_MLOCK_CHANGED, ci->name, modebuf);
@@ -3059,6 +3038,44 @@ static void do_set_memoalert(User *u, ChannelInfo *ci, char *param)
     }
 }                                                        
 
+/*************************************************************************/
+
+static void do_set_unbancyber(User *u, ChannelInfo *ci, char *param)
+{
+    if ((ci->flags & CI_OFICIAL_CHAN) && (!is_services_admin(u))) {
+        notice_lang(s_ChanServ, u, PERMISSION_DENIED);
+        return;
+    }
+    if (stricmp(param, "ON") == 0) {
+        ci->flags |= CI_UNBANCYBER;
+        notice_lang(s_ChanServ, u, CHAN_SET_UNBANCYBER_ON, ci->name);
+    } else if (stricmp(param, "OFF") == 0) {
+        ci->flags &= ~CI_UNBANCYBER;
+        notice_lang(s_ChanServ, u, CHAN_SET_UNBANCYBER_OFF, ci->name);
+    } else {                    
+        syntax_error(s_ChanServ, u, "SET UNBANCYBER", CHAN_SET_UNBANCYBER_SYNTAX);
+    }
+}
+    
+/*************************************************************************/
+
+static void do_set_oficial(User *u, ChannelInfo *ci, char *param)
+{
+    if (!is_services_admin(u)) {
+        notice_lang(s_ChanServ, u, PERMISSION_DENIED);
+        return;
+    }
+    if (stricmp(param, "ON") == 0) {
+        ci->flags |= CI_OFICIAL_CHAN;
+        notice_lang(s_ChanServ, u, CHAN_SET_OFICIAL_ON, ci->name);
+    } else if (stricmp(param, "OFF") == 0) {
+        ci->flags &= ~CI_OFICIAL_CHAN;
+        notice_lang(s_ChanServ, u, CHAN_SET_OFICIAL_OFF, ci->name);
+   } else {
+      syntax_error(s_ChanServ, u, "SET OFICIAL", CHAN_SET_OFICIAL_SYNTAX);
+   }                                                
+}
+   
 /*************************************************************************/
 
 static void do_set_noexpire(User *u, ChannelInfo *ci, char *param)
@@ -3852,6 +3869,9 @@ static void do_info(User *u)
 
         notice_lang(s_ChanServ, u, CHAN_INFO_HEADER, chan);
         
+        if (ci->flags & CI_OFICIAL_CHAN)
+            notice_lang(s_ChanServ, u, CHAN_INFO_OFICIAL);
+        
         if (ci->flags & CI_SUSPENDED) {
             notice_lang(s_ChanServ, u, CHAN_INFO_SUSPENDED);
             notice_lang(s_ChanServ, u, CHAN_INFO_SUSPENDED_REASON,  ci->suspendreason);
@@ -3992,6 +4012,12 @@ static void do_info(User *u)
                         getstring(u->ni, CHAN_INFO_OPT_MEMOALERT));
             need_comma = 1;
         }        
+        if (ci->flags & CI_UNBANCYBER) {
+            end += snprintf(end, sizeof(buf)-(end-buf), "%s%s",
+                        need_comma ? commastr : "",
+                        getstring(u->ni, CHAN_INFO_OPT_UNBANCYBER));
+            need_comma = 1;
+        }        
 	notice_lang(s_ChanServ, u, CHAN_INFO_OPTIONS,
 		*buf ? buf : getstring(u->ni, CHAN_INFO_OPT_NONE));
 	end = buf;
@@ -4006,11 +4032,7 @@ static void do_info(User *u)
 				(ci->mlock_on & CMODE_P) ? "p" : "",
 				(ci->mlock_on & CMODE_S) ? "s" : "",
 				(ci->mlock_on & CMODE_T) ? "t" : "",
-#ifdef IRC_DAL4_4_15
 	    			(ci->mlock_on & CMODE_R) ? "R" : "");
-#else
-	    			"");
-#endif
 	if (ci->mlock_off)
 	    end += snprintf(end, sizeof(buf)-(end-buf), "-%s%s%s%s%s%s%s%s%s",
 				(ci->mlock_off & CMODE_I) ? "i" : "",
@@ -4021,11 +4043,7 @@ static void do_info(User *u)
 				(ci->mlock_off & CMODE_P) ? "p" : "",
 				(ci->mlock_off & CMODE_S) ? "s" : "",
 				(ci->mlock_off & CMODE_T) ? "t" : "",
-#ifdef IRC_DAL4_4_15
 	    			(ci->mlock_off & CMODE_R) ? "R" : "");
-#else
-	    			"");
-#endif
 	if (*buf)
 	    notice_lang(s_ChanServ, u, CHAN_INFO_MODE_LOCK, buf);
 
@@ -4064,6 +4082,8 @@ static void do_list(User *u)
 	        matchflags |= CI_NO_EXPIRE;
             if (stricmp(keyword, "SUSPEND") == 0)
                 matchflags |= CI_SUSPENDED;
+            if (stricmp(keyword, "OFICIAL") == 0)
+                matchflags |= CI_OFICIAL_CHAN;    
 	}
 	            
 	notice_lang(s_ChanServ, u, CHAN_LIST_HEADER, pattern);
@@ -4074,8 +4094,9 @@ static void do_list(User *u)
 		    continue;
 		if ((matchflags != 0) && !(ci->flags & matchflags))
 		    continue;    
-		snprintf(buf, sizeof(buf), "%-20s  %s", ci->name,
-						ci->desc ? ci->desc : "");
+		snprintf(buf, sizeof(buf), "%-20s  %s %s", ci->name,
+                              ci->flags & CI_OFICIAL_CHAN ? "[Oficial]" : "",
+                              ci->desc ? ci->desc : "");
 		if (stricmp(pattern, ci->name) == 0 ||
 					match_wild_nocase(pattern, buf)) {
 		    if (++nchans <= CSListMax) {
@@ -4089,6 +4110,7 @@ static void do_list(User *u)
 			    snprintf(buf, sizeof(buf), "%-20s [Prohibido]",
 			                ci->name);
 			}                 
+                                                                    			
                         if (ci->flags & CI_SUSPENDED) {
                             snprintf(buf, sizeof(buf), "%-20s [Suspendido]",
                                         ci->name);
@@ -4110,14 +4132,17 @@ static void do_list(User *u)
 static void do_invite(User *u)
 {
     char *chan = strtok(NULL, " ");
-    Channel *c;
+//    Channel *c;
     ChannelInfo *ci;
 
     if (!chan) {
 	syntax_error(s_ChanServ, u, "INVITE", CHAN_INVITE_SYNTAX);
+/*
     } else if (!(c = findchan(chan))) {
-	notice_lang(s_ChanServ, u, CHAN_X_NOT_IN_USE, chan);
+	notice_lang(s_ChanServ, u, CHAN_X_NOT_IN_USE, chan);	
     } else if (!(ci = c->ci)) {
+*/   
+    } else if (!(ci = cs_findchan(chan))) { 
 	notice_lang(s_ChanServ, u, CHAN_X_NOT_REGISTERED, chan);
     } else if (ci->flags & CI_VERBOTEN) {
 	notice_lang(s_ChanServ, u, CHAN_X_FORBIDDEN, chan);
@@ -4175,7 +4200,7 @@ static void do_op(User *u)
     } else if (!u || (!check_access(u, ci, CA_OPDEOP) && !is_services_oper(u))) {
 	notice_lang(s_ChanServ, u, PERMISSION_DENIED);
     } else if (is_services_bot(op_params)) {
-        privmsg(s_ChanServ, u->nick, "No puedes hacer OP a un bot de servicio");	
+        notice_lang(s_ChanServ, u, CHAN_IS_BOT_SERVICE, "OP");
     } else {
 	char *av[3];
         User *u2 = finduser(op_params);
@@ -4235,6 +4260,8 @@ static void do_deop(User *u)
         notice_lang(s_ChanServ, u, CHAN_X_SUSPENDED, chan);
     } else if (!u || (!check_access(u, ci, CA_OPDEOP) && !is_services_oper(u))) {
 	notice_lang(s_ChanServ, u, PERMISSION_DENIED);
+    } else if (is_services_bot(deop_params)) {
+        notice_lang(s_ChanServ, u, CHAN_IS_BOT_SERVICE, "DEOP");            
     } else {
 	char *av[3];
         User *u2 = finduser(deop_params);
@@ -4274,6 +4301,8 @@ static void do_voice(User *u)
         notice_lang(s_ChanServ, u, CHAN_X_SUSPENDED, chan);
     } else if (!u || (!check_access(u, ci, CA_VOICEDEVOICE) && !is_services_oper(u))) {
          notice_lang(s_ChanServ, u, PERMISSION_DENIED);
+    } else if (is_services_bot(voice_params)) {
+         notice_lang(s_ChanServ, u, CHAN_IS_BOT_SERVICE, "VOICE");                     
     } else {    
         char *av[3];
         User *u2 = finduser(voice_params);
@@ -4313,6 +4342,8 @@ static void do_devoice(User *u)
         notice_lang(s_ChanServ, u, CHAN_X_SUSPENDED, chan);
     } else if (!u || (!check_access(u, ci, CA_VOICEDEVOICE) && !is_services_oper(u))) {
         notice_lang(s_ChanServ, u, PERMISSION_DENIED);
+    } else if (is_services_bot(devoice_params)) {
+        notice_lang(s_ChanServ, u, CHAN_IS_BOT_SERVICE, "DEVOICE");
     } else {
         char *av[3];
         User *u2 = finduser(devoice_params);
@@ -4357,6 +4388,8 @@ static void do_cs_kick(User *u)
         notice_lang(s_ChanServ, u, CHAN_X_SUSPENDED, chan);
     } else if (!u || (!check_access(u, ci, CA_KICK) && !is_services_oper(u))) {
         notice_lang(s_ChanServ, u, PERMISSION_DENIED);
+    } else if (is_services_bot(nick)) {
+        notice_lang(s_ChanServ, u, CHAN_IS_BOT_SERVICE, "KICK");            
     } else {        
         char buf[BUFSIZE];
         User *u2 = finduser(nick);

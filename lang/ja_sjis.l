@@ -455,7 +455,7 @@ CHAN_REGISTER_NOT_LOCAL
 CHAN_MUST_REGISTER_NICK
 	チャンネルを登録するのには、ニックを登録する必要があります。ニック登録情報を見る場合、「/msg %s HELP」を入力して下さい。
 CHAN_MUST_IDENTIFY_NICK
-	チャンネルを登録するのには、ニックのパスワードを入力する必要があります。「/msg %s IDENTIFY password」を入力して下さい。
+	チャンネルを登録するのには、ニックのパスワードを入力する必要があります。「/IDENTIFY password」を入力して下さい。
 CHAN_MAY_NOT_BE_REGISTERED
 	%s は使用禁止ですので、登録出来ません。
 CHAN_ALREADY_REGISTERED

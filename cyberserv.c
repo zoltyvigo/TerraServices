@@ -38,6 +38,7 @@ static void do_cyberkill(User *u);
 static void do_cybergline(User *u);
 static void do_cyberunban(User *u);
 static void do_cyberglobal(User *u);
+static void do_verify(User *u);
 static void do_list(User *u);
 static void do_clones(User *u);
 static void do_iline(User *u);
@@ -66,6 +67,9 @@ static Command cmds[] = {
     { "GLINE",     do_cybergline,  NULL, CYBER_HELP_GLINE,      -1,-1,-1,-1 },
     { "UNBAN",     do_cyberunban,  NULL, CYBER_HELP_UNBAN,      -1,-1,-1,-1 },
     { "GLOBAL",    do_cyberglobal, NULL, CYBER_HELP_GLOBAL,     -1,-1,-1,-1 },       
+    { "VERIFY",    do_verify,      is_services_oper, -1, -1,
+             CYBER_SERVADMIN_HELP_VERIFY,
+             CYBER_SERVADMIN_HELP_VERIFY, CYBER_SERVADMIN_HELP_VERIFY },
     { "CLONES",    do_clones,      is_services_oper, -1, -1,
              CYBER_SERVADMIN_HELP_CLONES,
              CYBER_SERVADMIN_HELP_CLONES, CYBER_SERVADMIN_HELP_CLONES },  
@@ -473,11 +477,11 @@ void save_cyber_dbase(void)
 
 /*************************************************************************/
 
-
 void expire_ilines()
 {
 
 }
+
 /*************************************************************************/
 
 /* Return the ChannelInfo structure for the given channel, or NULL if the
@@ -487,8 +491,12 @@ IlineInfo *find_iline_host(const char *host)
 {
  
      IlineInfo *il;
+     int i;
     
-     for (il = ilinelists[tolower(*host)]; il; il = il->next) {
+//     for (il = ilinelists[tolower(*host)]; il; il = il->next) {
+     for (i = 0; i < 256; i++) {
+              for (il = ilinelists[i]; il; il = il->next) {
+              
          if (stricmp(il->host, host) == 0)
              return il;
 /* Para ver la IP num y inversa */
@@ -496,7 +504,8 @@ IlineInfo *find_iline_host(const char *host)
          if (il->host2)
              if (stricmp(il->host2, host) == 0)
                  return il;    
-*/                 
+*/            
+}     
      }          
      return NULL;
 }
@@ -506,8 +515,16 @@ IlineInfo *find_iline_admin(const char *nick)
 {
 
      IlineInfo *il;
+     NickInfo *ni;
      int i;
      
+     ni = findnick(nick);
+     
+     if (!ni)
+         return NULL;
+     
+     if (!(ni->flags & NI_ADMIN_CYBER))         
+         return NULL;
 
      for (i = 0; i < 256; i++) {
          for (il = ilinelists[i]; il; il = il->next) {
@@ -523,12 +540,20 @@ IlineInfo *find_iline_admin(const char *nick)
 int is_cyber_admin(User *u)
 {
     IlineInfo *il;
+    NickInfo *ni;
     int i;
     
     if (is_services_admin(u))
         return 1;
         
-    
+    ni = findnick(u->nick);    
+
+    if (!ni)
+        return 0;
+        
+    if ((ni->flags & NI_ADMIN_CYBER) && nick_identified(u))     
+        return 1;
+        
     for (i = 0; i < 256; i++) {
         for (il = ilinelists[i]; il; il = il->next) {
             if (stricmp(il->admin->nick, u->nick) == 0)               
@@ -551,7 +576,7 @@ void check_ip_iline(User *u)
     IlineInfo *il;
 
     if (!ni)
-        return;
+        return;        
     
     if (!(il = find_iline_admin(u->nick))) 
         return;
@@ -702,7 +727,7 @@ static void do_actualiza(User *u)
         notice_lang(s_CyberServ, u, CYBER_ACTUALIZA_IPFIJA, iline->host);
     } else {    
         iline->host = sstrdup(u->host);
-        alpha_insert_iline(iline);        
+//        alpha_insert_iline(iline);        
         notice_lang(s_CyberServ, u, CYBER_ACTUALIZA_SUCCEEDED, 
                                           iline->host, iline->limite);
     }
@@ -917,16 +942,13 @@ static void do_cyberunban(User *u)
        syntax_error(s_CyberServ, u, "UNBAN", CYBER_UNBAN_SYNTAX);
        return;
    }   
-   
-   privmsg(s_CyberServ, u->nick, "Comando no disponible aun");
-   return;
-   
+      
    if (!(c = findchan(chan))) {
        notice_lang(s_CyberServ, u, CHAN_X_NOT_IN_USE, chan);
    } else {
             
        int count = c->bancount;
-       int teniaban = 0;
+       int desban = 0;
        char **bans = smalloc(sizeof(char *) * count);
        memcpy(bans, c->bans, sizeof(char *) * count);
                                             
@@ -939,15 +961,27 @@ static void do_cyberunban(User *u)
                av[2] = sstrdup(bans[i]);
                do_cmode(s_CyberServ, 3, av);
                free(av[2]);
-               teniaban = 1;
+               desban = 1;
            }
        }
+            /* Desbanea la ip virtual */
+       if (!desban)
+           for (i = 0; i < count; i++) {
+               if (match_virtualmask(bans[i], u)) {
+                   send_cmd(s_CyberServ, "MODE %s -b %s",
+                           chan, bans[i]);
+                   av[2] = sstrdup(bans[i]);
+                   do_cmode(s_ChanServ, 3, av);
+                   free(av[2]);
+                   desban = 1;
+               }
+           }       
        free(av[1]);
-       if (teniaban)
+       free(bans);
+       if (desban)
            notice_lang(s_CyberServ, u, CYBER_UNBAN_SUCCEEDED, chan);
        else
-           notice_lang(s_CyberServ, u, CYBER_UNBAN_FAILED, chan);
-       free(bans);
+           notice_lang(s_CyberServ, u, CYBER_UNBAN_FAILED, chan);       
    }       
 
 }                                                                                                    
@@ -972,7 +1006,28 @@ static void do_cyberglobal(User *u)
    privmsg(s_CyberServ, "#%s", u->host, "Mensaje Global de %s", u->nick);
    privmsg(s_CyberServ, "#%s", u->host, "%s", mensaje);   
 }
-                                                                               
+                                       
+/*************************************************************************/
+
+static void do_verify(User *u)
+{                                                                               
+    char *nick = strtok(NULL, " ");
+    IlineInfo *iline;
+    
+    if (!nick) {
+        syntax_error(s_CyberServ, u, "VERIFY", CYBER_VERIFY_SYNTAX);
+        return;
+    }    
+    iline = find_iline_admin(nick);
+    
+    if (!iline)
+        notice_lang(s_CyberServ, u, CYBER_VERIFY_NOT_CYBER, nick);
+    else 
+        notice_lang(s_CyberServ, u, CYBER_VERIFY_CYBER, nick, 
+                                  iline->host, iline->limite);
+                   
+}
+
 /*************************************************************************/
 
 static void do_clones(User *u)
@@ -1068,7 +1123,7 @@ static void do_list(User *u)
             
                 if ((matchflags != 0) && !(il->estado & matchflags))
                     continue;
-                snprintf(buf, sizeof(buf), "%-20s  %s", il->host, 
+                snprintf(buf, sizeof(buf), "%-30s  %s", il->host, 
                                       il->comentario ? il->comentario : "");
                 if (stricmp(pattern, il->host) == 0 ||
                                         match_wild_nocase(pattern, buf)) {
@@ -1078,12 +1133,12 @@ static void do_list(User *u)
                             noexpire_char = '!';
                             
                         if (il->estado & IL_SUSPENDED) {
-                            snprintf(buf, sizeof(buf), "%-20s, [Suspendido] %s",
+                            snprintf(buf, sizeof(buf), "%-30s [Suspendido] %s",
                                         il->host, il->comentario);
                         }
                         
                         if (il->estado & IL_IPNOFIJA) {
-                            snprintf(buf, sizeof(buf), "%-20s, [IP NO Fija] %s",
+                            snprintf(buf, sizeof(buf), "%-30s [IP NO Fija] %s",
                                         il->host, il->comentario);
                         }   
                         privmsg(s_CyberServ, u->nick, "  %c%s",
@@ -1189,6 +1244,7 @@ static void do_iline(User *u)
         il = makeiline(host);
         if (il) {                  
             il->admin = ni;
+            ni->flags |= NI_ADMIN_CYBER;
             il->comentario = sstrdup(motivo);          
             strscpy(il->operwho, u->nick, NICKMAX);                        
             il->limite = limit;              
@@ -1209,6 +1265,7 @@ static void do_iline(User *u)
         }                                                                                                                                                                                                                    
     } else if (stricmp(comando, "DEL") == 0) {
         IlineInfo *il;
+        NickInfo *ni;
         host = strtok(NULL, " ");
         
         if (!host) {
@@ -1219,7 +1276,10 @@ static void do_iline(User *u)
         if (!(il = find_iline_host(host))) {
             notice_lang(s_CyberServ, u, CYBER_ILINE_NOT_FOUND, host);
 
-        } else {        
+        } else {     
+           ni = findnick(il->admin->nick);
+           if (ni)
+               ni->flags &= ~NI_ADMIN_CYBER;
            deliline(il);
            log("%s: %s!%s@%s Borra iline %s", s_CyberServ, u->nick,
                   u->username, u->host, u->host);
@@ -1298,7 +1358,7 @@ static void do_set_host(User *u, IlineInfo *il, char *param)
         antiguo = sstrdup(param);
     }    
     il->host = sstrdup(param);
-    alpha_insert_iline(il);    
+//    alpha_insert_iline(il);    
     notice_lang(s_CyberServ, u, CYBER_SET_HOST_CHANGED, antiguo, param);
                 
 }
@@ -1326,6 +1386,7 @@ static void do_set_host2(User *u, IlineInfo *il, char *param)
 static void do_set_admin(User *u, IlineInfo *il, char *param)
 {
     NickInfo *ni = findnick(param);    
+    NickInfo *antiguo;
     
     if (!ni) {
         notice_lang(s_CyberServ, u, NICK_X_NOT_REGISTERED, param);
@@ -1339,7 +1400,11 @@ static void do_set_admin(User *u, IlineInfo *il, char *param)
         notice_lang(s_CyberServ, u, CYBER_ILINE_ADMIN, ni->nick);
         return;
     }
+    antiguo = findnick(il->admin->nick);
+    if (antiguo)
+        antiguo->flags &= ~NI_ADMIN_CYBER;
     il->admin = ni;
+    ni->flags |= NI_ADMIN_CYBER;
     notice_lang(s_CyberServ, u, CYBER_SET_NICK_CHANGED, il->host, ni->nick);              
 
 }

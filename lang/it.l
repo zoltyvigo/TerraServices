@@ -538,7 +538,7 @@ CHAN_MUST_REGISTER_NICK
 	Devi prima registrare il tuo nick.  Scrivi /msg %s HELP per informazioni su come farlo.
 CHAN_MUST_IDENTIFY_NICK
 	Prima identificati con %s , usando il comando:
-	/msg %s IDENTIFY password
+	/IDENTIFY password
 CHAN_MAY_NOT_BE_REGISTERED
 	Il canale %s non puo' essere registrato.
 CHAN_ALREADY_REGISTERED

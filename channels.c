@@ -71,11 +71,7 @@ void send_channel_list(User *user)
 				(c->mode&CMODE_P) ? "p" : "",
 				(c->mode&CMODE_S) ? "s" : "",
 				(c->mode&CMODE_T) ? "t" : "",
-#ifdef GUARDAR /* Guardo codigo */
-				(c->mode&CMODE_R) ? "R" : "",
-#else
-                                 "",
-#endif				
+				(c->mode&CMODE_R) ? "R" : "",	
 				(c->limit)        ? "l" : "",
 				(c->key)          ? "k" : "",
 				(c->limit)        ?  s  : "",
@@ -221,10 +217,8 @@ void chan_adduser(User *user, const char *chan)
 	c->ci = cs_findchan(chan);
 	if (c->ci) {
 	    /* This is a registered channel, ensure it's mode locked +r */
-#ifdef GUARDAR /* Guardo codigo */
 	    c->ci->mlock_on |= CMODE_r;
 	    c->ci->mlock_off &= ~CMODE_r;	/* just to be safe */
-#endif
 
 	    /* Store return pointer in ChannelInfo record */
 	    c->ci->c = c;
@@ -429,7 +423,6 @@ void do_cmode(const char *source, int ac, char **av)
 		chan->mode &= ~CMODE_T;
 	    break;
 
-#ifdef GUARDAR /* Guardo codigo */
 	case 'R':
 	    if (add)
 		chan->mode |= CMODE_R;
@@ -443,7 +436,6 @@ void do_cmode(const char *source, int ac, char **av)
 	    else
 		chan->mode &= ~CMODE_r;
 	    break;
-#endif
 
 	case 'k':
 	    if (--ac < 0) {

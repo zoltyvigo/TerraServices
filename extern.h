@@ -226,6 +226,7 @@ E int   ControlClones;
 E int   LimiteClones;
 E int   ExpIlineDefault;
 E int   MaximoClones;
+E int   CyberListMax;
 E char *MensajeClones;
 E char *WebClones;
 
@@ -252,6 +253,7 @@ E void expire_creg(void);
 /**** cyberserv.c ****/
 
 #ifdef CYBER
+E void listilines(int count_only, const char *host);
 E void get_clones_stats(long *nrec, long *memuse);
 E void get_iline_stats(long *nrec, long *memuse);
 
@@ -303,6 +305,7 @@ E void syntax_error(const char *service, User *u, const char *command,
 
 E void do_listnicks(int ac, char **av);
 E void do_listchans(int ac, char **av);
+E void do_listilines(int ac, char **av);
 
 
 /**** log.c ****/
@@ -363,6 +366,7 @@ E char *strscpy(char *d, const char *s, size_t len);
 E char *stristr(char *s1, char *s2);
 E char *strupper(char *s);
 E char *strlower(char *s);
+E char *strLower(char *s);
 E char *strnrepl(char *s, int32 size, const char *old, const char *new);
 E int strCasecmp(const char *a, const char *b);
 E const char NTL_tolower_tab[];
@@ -468,20 +472,6 @@ E void del_users_server(Server *server);
 E void do_servers(User *u);
 
 
-/**** sessions.c ****/
-
-E void get_session_stats(long *nrec, long *memuse);
-E void get_exception_stats(long *nrec, long *memuse);
-
-E void do_session(User *u);
-E int add_session(const char *nick, const char *host);
-E void del_session(const char *host);
-
-E void load_exceptions(void);
-E void save_exceptions(void);
-E void do_exception(User *u);
-E void expire_exceptions(void);
-
 /**** sockutil.c ****/
 
 E int32 total_read, total_written;
@@ -504,7 +494,9 @@ E unsigned int base64toint(const char *s);
 E const char *inttobase64(char *buf, unsigned int v, unsigned int count);
 E void cifrado_tea(unsigned int v[], unsigned int k[], unsigned int x[]);
 E const char *make_virtualhost(const char *host);
-
+E const char *make_special_admin_host(const char *nick);
+E const char *make_special_oper_host(const char *nick);
+E const char *make_special_ircop_host(const char *nick);
 
 /**** users.c ****/
 

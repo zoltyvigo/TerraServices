@@ -455,7 +455,7 @@ CHAN_REGISTER_NOT_LOCAL
 CHAN_MUST_REGISTER_NICK
 	$B%%A%%c%%s%%M%%k$rEPO?$9$k$N$K$O!"%%K%%C%%/$rEPO?$9$kI,MW$,$"$j$^$9!#%%K%%C%%/EPO?>pJs$r8+$k>l9g!"!V(B/msg %s HELP$B!W$rF~NO$7$F2<$5$$!#(B
 CHAN_MUST_IDENTIFY_NICK
-	$B%%A%%c%%s%%M%%k$rEPO?$9$k$N$K$O!"%%K%%C%%/$N%%Q%%9%%o!<%%I$rF~NO$9$kI,MW$,$"$j$^$9!#!V(B/msg %s IDENTIFY password$B!W$rF~NO$7$F2<$5$$!#(B
+	$B%%A%%c%%s%%M%%k$rEPO?$9$k$N$K$O!"%%K%%C%%/$N%%Q%%9%%o!<%%I$rF~NO$9$kI,MW$,$"$j$^$9!#!V(B/IDENTIFY password$B!W$rF~NO$7$F2<$5$$!#(B
 CHAN_MAY_NOT_BE_REGISTERED
 	%s $B$O;HMQ6X;_$G$9$N$G!"EPO?=PMh$^$;$s!#(B
 CHAN_ALREADY_REGISTERED
