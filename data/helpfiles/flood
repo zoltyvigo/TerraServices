@@ -1,0 +1,6 @@
+¿Que es 12FLOOD?:
+
+Envio masivo de información a otro usuario(generalmente por CTCP) que,
+al ser contestada con más información, desconecta a este usuario, ya
+que si mandamos demasiada información, el server nos desconecta con el
+mensaje Excess Flood.

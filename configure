@@ -428,12 +428,12 @@ echo ""
 ok=0
 echo "Which of the following is closest to the type of server on your IRC"
 echo "network?"
-echo "     1) Base irc2 distribution (RFC 1459 compliant)"
-echo "     2) irc2 with TS8 protocol"
-echo "    11) Undernet (ircu) 2.9.32 or earlier"
-#echo "    12) Undernet (ircu) 2.10.x (version 9 protocol support required)"
-echo "    21) DALnet (ircd.dal) prior to 4.4.15"
-echo "    22) DALnet (ircd.dal) 4.4.15 or later"
+#echo "     1) Base irc2 distribution (RFC 1459 compliant)"
+#echo "     2) irc2 with TS8 protocol"
+#echo "    11) Undernet (ircu) 2.9.32 or earlier"
+echo "    12) Undernet (ircu) 2.10.x + Terra (Soporte P9 requerido)"
+#echo "    21) DALnet (ircd.dal) prior to 4.4.15"
+#echo "    22) DALnet (ircd.dal) 4.4.15 or later"
 while [ $ok -eq 0 ] ; do
 	echo2 "[$IRCTYPE] "
 	if read INPUT ; then : ; else echo "" ; exit 1 ; fi
@@ -445,32 +445,32 @@ while [ $ok -eq 0 ] ; do
 			echo "You must specify your IRC server type in order for Services to function"
 			echo "correctly."
 			;;
-		1)
-			IRCTYPE_DEF="IRC_CLASSIC"
-			ok=1
-			;;
-		2)
-			IRCTYPE_DEF="IRC_TS8"
-			ok=1
-			;;
-		11)
-			IRCTYPE_DEF="IRC_UNDERNET"
-			ok=1
-			;;
-#		12)
-#			IRCTYPE_DEF="IRC_UNDERNET"
-#			IRCTYPE_DEF2="IRC_UNDERNET_NEW"
+#		1)
+#			IRCTYPE_DEF="IRC_CLASSIC"
 #			ok=1
 #			;;
-		21)
-			IRCTYPE_DEF="IRC_DALNET"
+#		2)
+#			IRCTYPE_DEF="IRC_TS8"
+#			ok=1
+#			;;
+#		11)
+#			IRCTYPE_DEF="IRC_UNDERNET"
+#			ok=1
+#			;;
+		12)
+			IRCTYPE_DEF="IRC_UNDERNET"
+			IRCTYPE_DEF2="IRC_UNDERNET_NEW"
 			ok=1
 			;;
-		22)
-			IRCTYPE_DEF="IRC_DALNET"
-			IRCTYPE_DEF2="IRC_DAL4_4_15"
-			ok=1
-			;;
+#		21)
+#			IRCTYPE_DEF="IRC_DALNET"
+#			ok=1
+#			;;
+#		22)
+#			IRCTYPE_DEF="IRC_DALNET"
+#			IRCTYPE_DEF2="IRC_DAL4_4_15"
+#			ok=1
+#			;;
 		*)
 			echo "Please enter a valid option number."
 			;;
@@ -481,39 +481,39 @@ echo ""
 
 ####
 
-if [ "$ENCRYPTION" = "ENCRYPT_MD5" ] ; then
-	DEF=y
-else
-	DEF=n
-fi
-
-ok=0
-echo "Do you want to use the MD5 message-digest algorithm to encrypt passwords?"
-echo "(Selecting "\"yes\"" protects your passwords from being stolen if someone"
-echo "gains access to the Services databases, but makes it impossible to recover"
-echo "forgotten passwords.)"
-echo "NOTICE: this should be considered an EXPERIMENTAL feature."
-while [ $ok -eq 0 ] ; do
-	echo2 "[$DEF] "
-	if read INPUT ; then : ; else echo "" ; exit 1 ; fi
-	if [ ! "$INPUT" ] ; then
-		INPUT=$DEF
-	fi
-	case $INPUT in
-		n*|N*)
-			ENCRYPTION=
-			ok=1
-			;;
-		y*|Y*)
-			ENCRYPTION=ENCRYPT_MD5
-			ok=1
-			;;
-		*)
-			echo "Please enter `y' or `n'."
-			;;
-	esac
-done
-echo ""
+#if [ "$ENCRYPTION" = "ENCRYPT_MD5" ] ; then
+#	DEF=y
+#else
+#	DEF=n
+#fi
+#
+#ok=0
+#echo "Do you want to use the MD5 message-digest algorithm to encrypt passwords?"
+#echo "(Selecting "\"yes\"" protects your passwords from being stolen if someone"
+#echo "gains access to the Services databases, but makes it impossible to recover"
+#echo "forgotten passwords.)"
+#echo "NOTICE: this should be considered an EXPERIMENTAL feature."
+#while [ $ok -eq 0 ] ; do
+#	echo2 "[$DEF] "
+#	if read INPUT ; then : ; else echo "" ; exit 1 ; fi
+#	if [ ! "$INPUT" ] ; then
+#		INPUT=$DEF
+#	fi
+#	case $INPUT in
+#		n*|N*)
+#			ENCRYPTION=
+#			ok=1
+#			;;
+#		y*|Y*)
+#			ENCRYPTION=ENCRYPT_MD5
+#			ok=1
+#			;;
+#		*)
+#			echo "Please enter `y' or `n'."
+#			;;
+#	esac
+#done
+#echo ""
 
 ####
 
@@ -1166,11 +1166,11 @@ EOT
 if [ "$IRCTYPE_DEF2" ] ; then cat >>sysconf.h <<EOT ; fi
 #define $IRCTYPE_DEF2
 EOT
-if [ "$ENCRYPTION" ] ; then cat >>sysconf.h <<EOT ; fi
-
-#define USE_ENCRYPTION
-#define $ENCRYPTION
-EOT
+#if [ "$ENCRYPTION" ] ; then cat >>sysconf.h <<EOT ; fi
+#
+##define USE_ENCRYPTION
+##define $ENCRYPTION
+#EOT
 cat >>sysconf.h <<EOT
 
 typedef   signed $TYPE_INT16  int16;
@@ -1246,7 +1246,7 @@ NETWORK_DOMAIN="$NETWORK_DOMAIN"
 IRCTYPE=$IRCTYPE
 IRCTYPE_DEF="$IRCTYPE_DEF"
 IRCTYPE_DEF2="$IRCTYPE_DEF2"
-ENCRYPTION="$ENCRYPTION"
+#ENCRYPTION="$ENCRYPTION"
 
 
 CC="$CC"

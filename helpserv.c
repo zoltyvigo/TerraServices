@@ -27,7 +27,7 @@ void helpserv(const char *whoami, const char *source, char *buf)
     if (cmd && stricmp(cmd, "\1PING") == 0) {
 	if (!(s = strtok(NULL, "")))
 	    s = "\1";
-	notice(s_HelpServ, source, "\1PING %s", s);
+	privmsg(s_HelpServ, source, "\1PING %s", s);
     } else {
 	do_help(whoami, source, topic);
     }
@@ -92,7 +92,7 @@ static void do_help(const char *whoami, const char *source, char *topic)
 	if (u) {
 	    notice_lang(whoami, u, NO_HELP_AVAILABLE, old_topic);
 	} else {
-	    notice(whoami, source,
+	    privmsg(whoami, source,
 			"Sorry, no help available for \2%s\2.", old_topic);
 	}
 	free(old_topic);
@@ -104,7 +104,7 @@ static void do_help(const char *whoami, const char *source, char *topic)
 	 * doing weird stuff to the output.  Also replace blank lines by
 	 * spaces (see send.c/notice_list() for an explanation of why).
 	 */
-	notice(whoami, source, "%s", s ? s : " ");
+	privmsg(whoami, source, "%s", s ? s : " ");
     }
     fclose(f);
     free(old_topic);

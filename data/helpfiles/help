@@ -1,14 +1,18 @@
-HelpServ is a service designed to give out information on
-IRC and Services.  Help files for Services can be accessed
-through HelpServ, but are more commonly accessed via the HELP
-commands of the other Services clients:
+4HeLP te permite obtener ayuda sobre la red.
+Los comandos son los siguientes:
 
-   /msg NickServ HELP
-        for information on registering nicknames
+    12FAQ        Preguntas más frecuentes.
+    12NICK       Instrucciones de como registrar un nick.
+    12UMODES     Muestra los modos de usuario disponibles.
+    12CANAL      Instrucciones de como registrar un canal.
+    12CMODES     Muestra los modos de canal disponibles.
+    12BOTS       Muestra información sobre los bots que funcionan en esta red
+    12SERVERS    Muestra los servidores de esta red
+    12IRCOPS     Muestra los IrcOps/Opers/Admins OnLine
+    12CREDITOS   Muestra los autores de todos los servicios de esta red
 
-   /msg ChanServ HELP
-        for information on registering and controlling
-        channels
+Tambien puedes escribir una palabra como por ejemplo "flood" para ver el
+significado.
 
-   /msg MemoServ HELP
-        for information on sending messages to off-line users
+Si necesitas soporte de ayuda humano, la podras encontrar en #opers-help.
+Muchas gracias por utilizar esta red ;)

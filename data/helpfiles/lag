@@ -1,0 +1,5 @@
+¿Que es el 12LAG?:
+
+Es el retraso en enviar/recibir los datos por el irc. Para medir el lag se
+usa comando 12/ctcp <nick> ping eso devuelve el tiempo que tardó en
+devolver una información el nick.

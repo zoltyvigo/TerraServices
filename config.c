@@ -20,6 +20,7 @@ int   LocalPort;
 
 char *ServerName;
 char *ServerDesc;
+char *ServerHUB;
 char *ServiceUser;
 char *ServiceHost;
 static char *temp_userhost;
@@ -50,6 +51,10 @@ char *OperDBName;
 char *AutokillDBName;
 char *NewsDBName;
 
+char *SendMailPatch;
+char *SendFrom;
+char *WebNetwork;
+
 int   NoBackupOkay;
 int   NoSplitRecovery;
 int   StrictPasswords;
@@ -61,6 +66,7 @@ int   ReadTimeout;
 int   WarningTimeout;
 int   TimeoutCheck;
 
+int   NSNicksMail;
 static int NSDefNone;
 int   NSForceNickChange;
 char *NSGuestNickPrefix;
@@ -84,8 +90,10 @@ int   NSAllowKillImmed;
 int   NSDisableLinkCommand;
 int   NSListOpersOnly;
 int   NSListMax;
-int   NSSecureAdmins;
+int   NSSuspendExpire;
+int   NSSuspendGrace;
 
+int   CSInChannel;
 int   CSMaxReg;
 int   CSExpire;
 int   CSAccessMax;
@@ -95,24 +103,18 @@ int   CSInhabit;
 int   CSRestrictDelay;
 int   CSListOpersOnly;
 int   CSListMax;
+int   CSSuspendExpire;
+int   CSSuspendGrace;
 
 int   MSMaxMemos;
 int   MSSendDelay;
 int   MSNotifyAll;
 
 char *ServicesRoot;
+char *CanalOpers;
 int   LogMaxUsers;
+int   LogMaxChans;
 int   AutokillExpiry;
-int   WallOper;
-int   WallBadOS;
-int   WallOSMode;
-int   WallOSClearmodes;
-int   WallOSKick;
-int   WallOSAkill;
-int   WallAkillExpire;
-int   WallExceptionExpire;
-int   WallGetpass;
-int   WallSetpass;
 int   CheckClones;
 int   CloneMinUsers;
 int   CloneMaxDelay;
@@ -174,6 +176,7 @@ Directive directives[] = {
     { "AutokillExpiry",   { { PARAM_TIME, 0, &AutokillExpiry } } },
     { "BadPassLimit",     { { PARAM_POSINT, 0, &BadPassLimit } } },
     { "BadPassTimeout",   { { PARAM_TIME, 0, &BadPassTimeout } } },
+    { "CanalOpers",       { { PARAM_STRING, 0, &CanalOpers } } },
     { "ChanServDB",       { { PARAM_STRING, 0, &ChanDBName } } },
     { "ChanServName",     { { PARAM_STRING, 0, &s_ChanServ },
                             { PARAM_STRING, 0, &desc_ChanServ } } },
@@ -181,15 +184,19 @@ Directive directives[] = {
                             { PARAM_POSINT, 0, &CloneMinUsers },
                             { PARAM_TIME, 0, &CloneMaxDelay },
                             { PARAM_TIME, 0, &CloneWarningDelay } } },
+    { "CSInChannel",      { { PARAM_SET, 0, &CSInChannel } } },
     { "CSAccessMax",      { { PARAM_POSINT, 0, &CSAccessMax } } },
     { "CSAutokickMax",    { { PARAM_POSINT, 0, &CSAutokickMax } } },
     { "CSAutokickReason", { { PARAM_STRING, 0, &CSAutokickReason } } },
     { "CSExpire",         { { PARAM_TIME, 0, &CSExpire } } },
     { "CSInhabit",        { { PARAM_TIME, 0, &CSInhabit } } },
+    { "CSInChannel",      { { PARAM_SET, 0, &CSInChannel } } },    
     { "CSListMax",        { { PARAM_POSINT, 0, &CSListMax } } },
     { "CSListOpersOnly",  { { PARAM_SET, 0, &CSListOpersOnly } } },
     { "CSMaxReg",         { { PARAM_POSINT, 0, &CSMaxReg } } },
     { "CSRestrictDelay",  { { PARAM_TIME, 0, &CSRestrictDelay } } },
+    { "CSSuspendExpire",  { { PARAM_TIME, 0, &CSSuspendExpire } } },
+    { "CSSuspendGrace",   { { PARAM_TIME, 0, &CSSuspendGrace } } },    
     { "DefSessionLimit",  { { PARAM_POSINT, 0, &DefSessionLimit } } },
     { "DevNullName",      { { PARAM_STRING, 0, &s_DevNull },
                             { PARAM_STRING, 0, &desc_DevNull } } },
@@ -210,6 +217,12 @@ Directive directives[] = {
     { "LocalAddress",     { { PARAM_STRING, 0, &LocalHost },
                             { PARAM_PORT, PARAM_OPTIONAL, &LocalPort } } },
     { "LogMaxUsers",      { { PARAM_SET, 0, &LogMaxUsers } } },
+    { "LogMaxChans",      { { PARAM_SET, 0, &LogMaxChans } } },    
+    /* Mail */
+    { "SendMailPatch",    { { PARAM_STRING, 0, &SendMailPatch } } },
+    { "NSNicksMail",      { { PARAM_POSINT, 0, &NSNicksMail } } },
+    { "SendFrom",         { { PARAM_STRING, 0, &SendFrom } } },
+    { "WebNetwork",       { { PARAM_STRING, 0, &WebNetwork } } },    
     { "MaxSessionLimit",  { { PARAM_POSINT, 0, &MaxSessionLimit } } },
     { "MemoServName",     { { PARAM_STRING, 0, &s_MemoServ },
                             { PARAM_STRING, 0, &desc_MemoServ } } },
@@ -238,13 +251,14 @@ Directive directives[] = {
     { "NSDisableLinkCommand",{{PARAM_SET, 0, &NSDisableLinkCommand } } },
     { "NSEnforcerUser",   { { PARAM_STRING, 0, &temp_nsuserhost } } },
     { "NSExpire",         { { PARAM_TIME, 0, &NSExpire } } },
+    { "NSSuspendExpire",  { { PARAM_TIME, 0, &NSSuspendExpire } } },
+    { "NSSuspendGrace",   { { PARAM_TIME, 0, &NSSuspendGrace } } },    
     { "NSForceNickChange",{ { PARAM_SET, 0, &NSForceNickChange } } },
     { "NSGuestNickPrefix",{ { PARAM_STRING, 0, &NSGuestNickPrefix } } },
     { "NSListMax",        { { PARAM_POSINT, 0, &NSListMax } } },
     { "NSListOpersOnly",  { { PARAM_SET, 0, &NSListOpersOnly } } },
     { "NSRegDelay",       { { PARAM_TIME, 0, &NSRegDelay } } },
     { "NSReleaseTimeout", { { PARAM_TIME, 0, &NSReleaseTimeout } } },
-    { "NSSecureAdmins",   { { PARAM_SET, 0, &NSSecureAdmins } } },
     { "OperServDB",       { { PARAM_STRING, 0, &OperDBName } } },
     { "OperServName",     { { PARAM_STRING, 0, &s_OperServ },
                             { PARAM_STRING, 0, &desc_OperServ } } },
@@ -255,6 +269,7 @@ Directive directives[] = {
                             { PARAM_STRING, 0, &RemotePassword } } },
     { "ServerDesc",       { { PARAM_STRING, 0, &ServerDesc } } },
     { "ServerName",       { { PARAM_STRING, 0, &ServerName } } },
+    { "ServerHUB",        { { PARAM_STRING, 0, &ServerHUB } } },
     { "ServicesRoot",     { { PARAM_STRING, 0, &ServicesRoot } } },
     { "ServiceUser",      { { PARAM_STRING, 0, &temp_userhost } } },
     { "SessionLimitDetailsLoc",{{PARAM_STRING, 0, &SessionLimitDetailsLoc}}},
@@ -262,16 +277,6 @@ Directive directives[] = {
     { "StrictPasswords",  { { PARAM_SET, 0, &StrictPasswords } } },
     { "TimeoutCheck",     { { PARAM_TIME, 0, &TimeoutCheck } } },
     { "UpdateTimeout",    { { PARAM_TIME, 0, &UpdateTimeout } } },
-    { "WallAkillExpire",  { { PARAM_SET, 0, &WallAkillExpire } } },
-    { "WallExceptionExpire",{{PARAM_SET, 0, &WallExceptionExpire } } },
-    { "WallBadOS",        { { PARAM_SET, 0, &WallBadOS } } },
-    { "WallGetpass",      { { PARAM_SET, 0, &WallGetpass } } },
-    { "WallOper",         { { PARAM_SET, 0, &WallOper } } },
-    { "WallOSAkill",      { { PARAM_SET, 0, &WallOSAkill } } },
-    { "WallOSClearmodes", { { PARAM_SET, 0, &WallOSClearmodes } } },
-    { "WallOSKick",       { { PARAM_SET, 0, &WallOSKick } } },
-    { "WallOSMode",       { { PARAM_SET, 0, &WallOSMode } } },
-    { "WallSetpass",      { { PARAM_SET, 0, &WallSetpass } } },
     { "WarningTimeout",   { { PARAM_TIME, 0, &WarningTimeout } } },
 };
 
@@ -508,6 +513,7 @@ int read_config()
 
     CHECK(RemoteServer);
     CHECK(ServerName);
+    CHECK(ServerHUB);
     CHECK(ServerDesc);
     CHEK2(temp_userhost, ServiceUser);
     CHEK2(s_NickServ, NickServName);
@@ -525,6 +531,9 @@ int read_config()
     CHEK2(AutokillDBName, AutokillDB);
     CHEK2(NewsDBName, NewsDB);
     CHEK2(ExceptionDBName, ExceptionDB);
+    CHECK(SendMailPatch);
+    CHECK(SendFrom);
+    CHECK(WebNetwork);    
     CHECK(UpdateTimeout);
     CHECK(ExpireTimeout);
     CHECK(ReadTimeout);
@@ -532,6 +541,8 @@ int read_config()
     CHECK(TimeoutCheck);
     CHECK(NSAccessMax);
     CHEK2(temp_nsuserhost, NSEnforcerUser);
+    CHECK(NSNicksMail);
+    CHECK(NSSuspendExpire);    
     CHECK(NSReleaseTimeout);
     CHECK(NSListMax);
     CHECK(CSAccessMax);
@@ -539,7 +550,9 @@ int read_config()
     CHECK(CSAutokickReason);
     CHECK(CSInhabit);
     CHECK(CSListMax);
+    CHECK(CSSuspendExpire);    
     CHECK(ServicesRoot);
+    CHECK(CanalOpers); 
     CHECK(AutokillExpiry);
 
     if (temp_userhost) {

@@ -1,0 +1,18 @@
+¿Como se registra un 12canal?
+
+Primero hay que hacer una peticion de pre-registro del canal,
+necesitas tener el nick registrado para hacer la peticion.
+El pre-registro se solicita al bot 4ReG, la sintaxis es la siguiente:
+
+Sintaxis: 12/msg ReG REGISTRA <canal> <password> <descripcion>
+
+    12<canal>          El canal que quieres registrar
+    12<password>       Una password para identificar como founder
+    12<descripcion>    Una descripcion sobre el tematica del canal
+
+Tienes una semana de plazo para conseguir12 9 apoyos para tu canal,
+para apoyar, necesitan tener el nick registrado y deben poner
+12/msg CReG APOYA <#canal>
+	
+Una vez conseguido los apoyos, tienes que esperar 24/48 horas para la
+aprobación del canal por la Comision de Canales de la red.

@@ -52,7 +52,7 @@ void bad_password(User *u)
     u->invalid_pw_count++;
     u->invalid_pw_time = now;
     if (u->invalid_pw_count >= BadPassLimit)
-	kill_user(NULL, u->nick, "Too many invalid passwords");
+	kill_user(s_NickServ, u->nick, "Demasiadas passwords incorrectas");
 }
 
 /*************************************************************************/

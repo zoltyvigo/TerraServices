@@ -33,7 +33,7 @@ int get_file_version(dbFILE *f)
 		f->filename);
 #endif
 	return 0;
-    } else if (version > FILE_VERSION || version < 1) {
+    } else if (version < 1) {
 #ifndef NOT_MAIN
 	log("Invalid version number (%d) on %s", version, f->filename);
 #endif
@@ -48,14 +48,14 @@ int get_file_version(dbFILE *f)
  * success.
  */
 
-int write_file_version(dbFILE *f)
+int write_file_version(dbFILE *f, uint32 version)
 {
     FILE *fp = f->fp;
     if (
-	fputc(FILE_VERSION>>24 & 0xFF, fp) < 0 ||
-	fputc(FILE_VERSION>>16 & 0xFF, fp) < 0 ||
-	fputc(FILE_VERSION>> 8 & 0xFF, fp) < 0 ||
-	fputc(FILE_VERSION     & 0xFF, fp) < 0
+	fputc(version>>24 & 0xFF, fp) < 0 ||
+	fputc(version>>16 & 0xFF, fp) < 0 ||
+	fputc(version>> 8 & 0xFF, fp) < 0 ||
+	fputc(version     & 0xFF, fp) < 0
     ) {
 #ifndef NOT_MAIN
 	log_perror("Error writing version number on %s", f->filename);
@@ -73,7 +73,8 @@ static dbFILE *open_db_read(const char *service, const char *filename)
     dbFILE *f;
     FILE *fp;
 
-    f = malloc(sizeof(*f));
+//    f = malloc(sizeof(*f));
+    f = scalloc(sizeof(*f), 1);    
     if (!f) {
 #ifndef NOT_MAIN
 	log_perror("Can't read %s database %s", service, filename);
@@ -100,12 +101,13 @@ static dbFILE *open_db_read(const char *service, const char *filename)
 
 /*************************************************************************/
 
-static dbFILE *open_db_write(const char *service, const char *filename)
+static dbFILE *open_db_write(const char *service, const char *filename, uint32 version)
 {
     dbFILE *f;
     int fd;
 
-    f = malloc(sizeof(*f));
+//    f = malloc(sizeof(*f));
+    f = scalloc(sizeof(*f), 1);
     if (!f) {
 #ifndef NOT_MAIN
 	log_perror("Can't read %s database %s", service, filename);
@@ -156,13 +158,13 @@ static dbFILE *open_db_write(const char *service, const char *filename)
     /* Use open() to avoid people sneaking a new file in under us */
     fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, 0666);
     f->fp = fdopen(fd, "wb");	/* will fail and return NULL if fd < 0 */
-    if (!f->fp || !write_file_version(f)) {
+    if (!f->fp || !write_file_version(f, version)) {
 	int errno_save = errno;
 #ifndef NOT_MAIN
 	static int walloped = 0;
 	if (!walloped) {
 	    walloped++;
-	    wallops(NULL, "Can't write to %s database %s", service, filename);
+	    canalopers(NULL, "Can't write to %s database %s", service, filename);
 	}
 	errno = errno_save;
 	log_perror("Can't write to %s database %s", service, filename);
@@ -194,12 +196,12 @@ static dbFILE *open_db_write(const char *service, const char *filename)
  * made but cannot be restored.
  */
 
-dbFILE *open_db(const char *service, const char *filename, const char *mode)
+dbFILE *open_db(const char *service, const char *filename, const char *mode, uint32 version)
 {
     if (*mode == 'r') {
 	return open_db_read(service, filename);
     } else if (*mode == 'w') {
-	return open_db_write(service, filename);
+	return open_db_write(service, filename, version);
     } else {
 	errno = EINVAL;
 	return NULL;
@@ -369,7 +371,8 @@ int read_string(char **ret, dbFILE *f)
 	*ret = NULL;
 	return 0;
     }
-    s = smalloc(len);
+//    s = smalloc(len);
+    s = scalloc(len, 1);
     if (len != fread(s, 1, len, f->fp)) {
 	free(s);
 	return -1;

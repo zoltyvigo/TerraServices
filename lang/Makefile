@@ -3,8 +3,8 @@
 include ../Makefile.inc
 
 
-LANGOBJS = en_us es it ja_euc ja_jis ja_sjis pt tr
-LANGSRCS = en_us.l es.l it.l ja_euc.l ja_jis.l ja_sjis.l pt.l tr.l
+LANGOBJS = en_us es it ja_euc ja_jis ja_sjis pt tr ca ga
+LANGSRCS = en_us.l es.l it.l ja_euc.l ja_jis.l ja_sjis.l pt.l tr.l ca.l ga.l
 
 LANGCOMP = ./langcomp
 #LANGCOMP = ./langcomp -w
@@ -31,7 +31,7 @@ endif
 
 
 clean:
-	rm -f $(LANGOBJS) langcomp
+	rm -f *~ $(LANGOBJS) langcomp
 
 spotless: clean
 	rm -f language.h
@@ -53,6 +53,10 @@ ja_sjis:  ja_sjis.l  langcomp index
 pt:       pt.l       langcomp index
 	./langcomp $@.l
 tr:       tr.l       langcomp index
+	./langcomp $@.l
+ca:       ca.l       langcomp index
+	./langcomp $@.l
+ga:       ga.l       langcomp index
 	./langcomp $@.l
 
 ja_jis.l: ja_euc.l jconv.pl

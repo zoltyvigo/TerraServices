@@ -80,6 +80,8 @@ extern int shutdown(int, int);
 #define tolower tolower_
 #define toupper toupper_
 extern int toupper(char), tolower(char);
+#define toLower(c)      (NTL_tolower_tab[(c)-CHAR_MIN])
+#define toUpper(c)      (NTL_toupper_tab[(c)-CHAR_MIN])
 
 /* We also have our own encrypt(). */
 #define encrypt encrypt_
@@ -123,6 +125,31 @@ extern int toupper(char), tolower(char);
 
 #define FILE_VERSION	7
 
+/* Defino versiones de las DB de forma independiente... :) */
+
+#define AKILL_VERSION   7
+#define CHAN_VERSION    8
+#define NICK_VERSION    9
+#define OPER_VERSION    8
+#define NEWS_VERSION    7
+#define ILINE_VERSION   7
+
+/*************************************************************************/
+/* Estructura de los servidores */
+
+typedef struct server_ Server;
+
+struct server_ {
+    Server *next, *prev;
+    Server *hub;
+    Server *hijo, *rehijo;
+    int padre;
+    char *name;
+    int  users;
+    char *numeric;
+};
+
+
 /*************************************************************************/
 
 /* Memo info structures.  Since both nicknames and channels can have memos,
@@ -151,6 +178,14 @@ typedef struct {
  * are stored in alphabetical order within lists. */
 
 
+typedef struct mail_ Mail;
+struct mail_ {
+    Mail *next, *prev;
+    char *domain;
+};    
+    
+
+
 typedef struct nickinfo_ NickInfo;
 
 struct nickinfo_ {
@@ -159,6 +194,7 @@ struct nickinfo_ {
     char pass[PASSMAX];
     char *url;
     char *email;
+    char *emailreg;           /* Mail de registro del nick */    
 
     char *last_usermask;
     char *last_realname;
@@ -166,6 +202,13 @@ struct nickinfo_ {
     time_t time_registered;
     time_t last_seen;
     int16 status;	/* See NS_* below */
+    
+    char *suspendby;           /* Quien lo suspendio */
+    char *suspendreason;       /* Motivo de la suspension */
+    time_t time_suspend;       /* Tiempo cuando suspendio el nick */
+    time_t time_expiresuspend; /* Expiracion suspension */
+    char *forbidby;            /* Quien lo forbideo */
+    char *forbidreason;        /* Motivo del forbid */
 
     NickInfo *link;	/* If non-NULL, nick to which this one is linked */
     int16 linkcount;	/* Number of links to this nick */
@@ -194,6 +237,7 @@ struct nickinfo_ {
 #define NS_ENCRYPTEDPW	0x0001      /* Nickname password is encrypted */
 #define NS_VERBOTEN	0x0002      /* Nick may not be registered or used */
 #define NS_NO_EXPIRE	0x0004      /* Nick never expires */
+#define NS_SUSPENDED    0x0008      /* Nick SUSPENDido */
 
 #define NS_IDENTIFIED	0x8000      /* User has IDENTIFY'd */
 #define NS_RECOGNIZED	0x4000      /* ON_ACCESS true && SECURE flag not set */
@@ -223,17 +267,19 @@ struct nickinfo_ {
  * the order the languages are displayed in for NickServ HELP SET LANGUAGE,
  * do it in language.c.
  */
-#define LANG_EN_US	0	/* United States English */
-#define LANG_JA_JIS	1	/* Japanese (JIS encoding) */
-#define LANG_JA_EUC	2	/* Japanese (EUC encoding) */
-#define LANG_JA_SJIS	3	/* Japanese (SJIS encoding) */
-#define LANG_ES		4	/* Spanish */
+#define LANG_ES         0       /* Castellano */
+#define LANG_EN_US	1	/* United States English */
+#define LANG_JA_JIS	2	/* Japanese (JIS encoding) */
+#define LANG_JA_EUC	3	/* Japanese (EUC encoding) */
+#define LANG_JA_SJIS	4	/* Japanese (SJIS encoding) */
 #define LANG_PT		5	/* Portugese */
 #define LANG_FR		6	/* French */
 #define LANG_TR		7	/* Turkish */
 #define LANG_IT		8	/* Italian */
+#define LANG_CA         9       /* Catalan */
+#define LANG_GA         10      /* Gallego */
 
-#define NUM_LANGS	9	/* Number of languages */
+#define NUM_LANGS	11	/* Number of languages */
 
 /* Sanity-check on default language value */
 #if DEF_LANGUAGE < 0 || DEF_LANGUAGE >= NUM_LANGS
@@ -259,8 +305,8 @@ typedef struct {
  * than any valid access level, and ACCESS_INVALID may be assumed to be
  * strictly less than any valid access level.
  */
-#define ACCESS_FOUNDER	10000	/* Numeric level indicating founder access */
-#define ACCESS_INVALID	-10000	/* Used in levels[] for disabled settings */
+#define ACCESS_FOUNDER	500	/* Numeric level indicating founder access */
+#define ACCESS_INVALID	-3	/* Used in levels[] for disabled settings */
 
 /* AutoKick data. */
 typedef struct {
@@ -272,6 +318,7 @@ typedef struct {
 	NickInfo *ni;	/* Same */
     } u;
     char *reason;
+    char who[NICKMAX];  /* Nick de quien puso el akick */
 } AutoKick;
 
 typedef struct chaninfo_ ChannelInfo;
@@ -294,6 +341,13 @@ struct chaninfo_ {
 
     int32 flags;			/* See below */
 
+    char *suspendby;                    /* Quien lo suspendio */
+    char *suspendreason;                /* Motivo de la suspension */
+    time_t time_suspend;                /* Tiempo cuando suspendio el nick */
+    time_t time_expiresuspend;          /* Expiracion suspension */
+    char *forbidby;                     /* Quien lo forbideo */
+    char *forbidreason;                 /* Motivo del forbid */
+
     int16 *levels;			/* Access levels for commands */
 
     int16 accesscount;
@@ -306,6 +360,7 @@ struct chaninfo_ {
     char *mlock_key;			/* NULL if no key */
 
     char *entry_message;		/* Notice sent on entering channel */
+    char entrymsg_setter[NICKMAX];      /* Quien ha puesto el entrymsg */
 
     MemoInfo memos;
 
@@ -337,6 +392,14 @@ struct chaninfo_ {
 #define CI_MEMO_HARDMAX	0x00000400
 /* Send notice to channel on use of OP/DEOP */
 #define CI_OPNOTICE	0x00000800
+/* Canal suspendido */
+#define CI_SUSPENDED	0x00001000
+/* Aviso de memos */
+#define CI_MEMOALERT	0x00002000
+/* Secure voices */
+#define CI_SECUREVOICES	0x00004000
+/* Leave Voices */
+#define CI_LEAVEVOICES	0x00008000
 
 /* Indices for cmd_access[]: */
 #define CA_INVITE	0
@@ -351,9 +414,14 @@ struct chaninfo_ {
 #define CA_CLEAR	9
 #define CA_NOJOIN	10	/* Maximum */
 #define CA_ACCESS_CHANGE 11
-#define CA_MEMO		12
+#define CA_MEMO_READ	12      /* Leer memos */
+#define CA_MEMO_DEL	13      /* Borrar memos */
+#define CA_AUTODEVOICE	14	/* Autodevoice */
+#define CA_VOICEDEVOICE	15      /* Voice/devoice */
+#define CA_KICK		16      /* kick */
+#define CA_GETKEY	17	/* Dar la key del canal */
 
-#define CA_SIZE		13
+#define CA_SIZE		18
 
 /*************************************************************************/
 
@@ -388,13 +456,17 @@ struct user_ {
     time_t lastnickreg;			/* Last time NS REGISTER cmd used */
 };
 
-#define UMODE_O 0x00000001
-#define UMODE_I 0x00000002
-#define UMODE_S 0x00000004
-#define UMODE_W 0x00000008
-#define UMODE_G 0x00000010
-#define UMODE_H 0x00000020
-
+#define UMODE_O 0x00000001              /* IRCOP */
+#define UMODE_I 0x00000002              /* Invisible */
+#define UMODE_S 0x00000004              /* Noticias servidor */
+#define UMODE_W 0x00000008              /* Wallops */
+#define UMODE_G 0x00000010              /* Debug */
+#define UMODE_R 0x00000020              /* Nick registrado */ 
+#define UMODE_x 0x00000040              /* Ip virtual */
+#define UMODE_X 0x00000080              /* Ver ips virtuales */
+#define UMODE_H 0x00000100              /* Operador de la red */
+#define UMODE_A 0x00000200              /* Administrador de la red */
+#define UMODE_AWAY 0x00000400              /* MODO AWAY */
 
 struct channel_ {
     Channel *next, *prev;
@@ -445,6 +517,9 @@ struct channel_ {
 #else
 # define MODE_SENDER(service) ServerName
 #endif
+
+#define NUMNICKBASE 64
+#define NUMNICKMAXCHAR 'z'
 
 /*************************************************************************/
 

@@ -13,41 +13,13 @@
 /* Send a NICK command for the given pseudo-client.  If `user' is NULL,
  * send NICK commands for all the pseudo-clients. */
 
-#if defined(IRC_DALNET)
-# ifdef IRC_DAL4_4_15
-#  define NICK(nick,name) \
-    do { \
-	send_cmd(NULL, "NICK %s 1 %ld %s %s %s 0 :%s", (nick), time(NULL), \
-		ServiceUser, ServiceHost, ServerName, (name)); \
-    } while (0)
-# else
-#  define NICK(nick,name) \
-    do { \
-	send_cmd(NULL, "NICK %s 1 %ld %s %s %s :%s", (nick), time(NULL), \
-		ServiceUser, ServiceHost, ServerName, (name)); \
-    } while (0)
-# endif
-#elif defined(IRC_UNDERNET)
+
 # define NICK(nick,name) \
     do { \
 	send_cmd(ServerName, "NICK %s 1 %ld %s %s %s :%s", (nick), time(NULL),\
 		ServiceUser, ServiceHost, ServerName, (name)); \
     } while (0)
-#elif defined(IRC_TS8)
-# define NICK(nick,name) \
-    do { \
-	send_cmd(NULL, "NICK %s :1", (nick)); \
-	send_cmd((nick), "USER %ld %s %s %s :%s", time(NULL), \
-		ServiceUser, ServiceHost, ServerName, (name)); \
-    } while (0)
-#else
-# define NICK(nick,name) \
-    do { \
-	send_cmd(NULL, "NICK %s :1", (nick)); \
-	send_cmd((nick), "USER %s %s %s :%s", \
-		ServiceUser, ServiceHost, ServerName, (name)); \
-    } while (0)
-#endif
+
 
 void introduce_user(const char *user)
 {
@@ -62,33 +34,41 @@ void introduce_user(const char *user)
 
     if (!user || stricmp(user, s_NickServ) == 0) {
 	NICK(s_NickServ, desc_NickServ);
-	send_cmd(s_NickServ, "MODE %s +o", s_NickServ);
+	send_cmd(s_NickServ, "MODE %s +dkob", s_NickServ);
+        send_cmd(s_NickServ, "JOIN #%s", CanalOpers);
+        send_cmd(ServerName, "MODE #%s +o %s", CanalOpers, s_NickServ);
     }
     if (!user || stricmp(user, s_ChanServ) == 0) {
 	NICK(s_ChanServ, desc_ChanServ);
-	send_cmd(s_ChanServ, "MODE %s +o", s_ChanServ);
+	send_cmd(s_ChanServ, "MODE %s +dkboB", s_ChanServ);
+        send_cmd(s_ChanServ, "JOIN #%s", CanalOpers);	
+        send_cmd(ServerName, "MODE #%s +o %s", CanalOpers, s_ChanServ);        
     }
     if (!user || stricmp(user, s_HelpServ) == 0) {
 	NICK(s_HelpServ, desc_HelpServ);
+        send_cmd(s_HelpServ, "MODE %s +bdk", s_HelpServ);
     }
     if (s_IrcIIHelp && (!user || stricmp(user, s_IrcIIHelp) == 0)) {
 	NICK(s_IrcIIHelp, desc_IrcIIHelp);
+        send_cmd(s_IrcIIHelp, "MODE %s +bd", s_IrcIIHelp);	
     }
     if (!user || stricmp(user, s_MemoServ) == 0) {
 	NICK(s_MemoServ, desc_MemoServ);
-	send_cmd(s_MemoServ, "MODE %s +o", s_MemoServ);
+	send_cmd(s_MemoServ, "MODE %s +bkd", s_MemoServ);
     }
     if (!user || stricmp(user, s_OperServ) == 0) {
 	NICK(s_OperServ, desc_OperServ);
-	send_cmd(s_OperServ, "MODE %s +oi", s_OperServ);
+	send_cmd(s_OperServ, "MODE %s +oikbBd", s_OperServ);
+        send_cmd(s_OperServ, "JOIN #%s", CanalOpers);	
+        send_cmd(ServerName, "MODE #%s +o %s", CanalOpers, s_OperServ);        
     }
     if (s_DevNull && (!user || stricmp(user, s_DevNull) == 0)) {
 	NICK(s_DevNull, desc_DevNull);
-	send_cmd(s_DevNull, "MODE %s +i", s_DevNull);
+	send_cmd(s_DevNull, "MODE %s +ibBk", s_DevNull);
     }
     if (!user || stricmp(user, s_GlobalNoticer) == 0) {
 	NICK(s_GlobalNoticer, desc_GlobalNoticer);
-	send_cmd(s_GlobalNoticer, "MODE %s +oi", s_GlobalNoticer);
+	send_cmd(s_GlobalNoticer, "MODE %s +oibdk", s_GlobalNoticer);
     }
 }
 
@@ -458,12 +438,8 @@ int init(int ac, char **av)
     if (servsock < 0)
 	fatal_perror("Can't connect to server");
     send_cmd(NULL, "PASS :%s", RemotePassword);
-#ifdef IRC_UNDERNET_NEW
     send_cmd(NULL, "SERVER %s 1 %lu %lu P09 :%s",
 		ServerName, start_time, start_time, ServerDesc);
-#else
-    send_cmd(NULL, "SERVER %s 1 :%s", ServerName, ServerDesc);
-#endif
     sgets2(inbuf, sizeof(inbuf), servsock);
     if (strnicmp(inbuf, "ERROR", 5) == 0) {
 	/* Close server socket first to stop wallops, since the other
@@ -475,12 +451,36 @@ int init(int ac, char **av)
 
     /* Announce a logfile error if there was one */
     if (openlog_failed) {
-	wallops(NULL, "Warning: couldn't open logfile: %s",
+	canalopers(NULL, "Warning: couldn't open logfile: %s",
 		strerror(openlog_errno));
     }
 
     /* Bring in our pseudo-clients */
     introduce_user(NULL);
+    /* Sincroniza la red al tiempo real */
+    send_cmd(ServerName, "SETTIME :%lu", time(NULL));
+    
+    /* Manda global */
+#if HAVE_ALLWILD_NOTICE
+    notice(s_GlobalNoticer, "$*", "Restablecidos los servicios de la red");
+#else
+# ifdef NETWORK_DOMAIN    
+    notice(s_GlobalNoticer, "$*." NETWORK_DOMAIN, "Restablecidos los servicios de la red");
+# else
+    /* Go through all common top-level domains.  If you have others,
+     * add them here.
+     */
+    notice(s_GlobalNoticer, "$*.es", "Restablecidos los servicios de la red");
+    notice(s_GlobalNoticer, "$*.com", "Restablecidos los servicios de la red");
+    notice(s_GlobalNoticer, "$*.net", "Restablecidos los servicios de la red");
+    notice(s_GlobalNoticer, "$*.org", "Restablecidos los servicios de la red");
+    notice(s_GlobalNoticer, "$*.edu", "Restablecidos los servicios de la red");
+# endif
+#endif
+
+    /* Entra chan a los canales */
+    if (CSInChannel)    
+        join_chanserv();
 
     /* Success! */
     return 0;

@@ -143,10 +143,10 @@ CHAN_X_FORBIDDEN
 	%s kanali kaydedilemez ve/veya kullanilamaz.
 NICK_IDENTIFY_REQUIRED
 	Bu komutu kullanabilmeniz icin sifrenizi girmelisiniz.
-	/msg %s IDENTIFY sifreniz yazarak yeniden deneyiniz.
+	/IDENTIFY sifreniz yazarak yeniden deneyiniz.
 CHAN_IDENTIFY_REQUIRED
 	Bu komutu kullanabilmeniz icin sifrenizi girmelisiniz.
-	(/msg %s IDENTIFY %s sifreniz) yazarak yeniden deneyiniz.
+	(/IDENTIFY %s sifreniz) yazarak yeniden deneyiniz.
 	
 ###########################################################################
 #
@@ -157,10 +157,10 @@ CHAN_IDENTIFY_REQUIRED
 # Automatic messages
 NICK_IS_REGISTERED
 	Bu kayitli bir nick'tir. Lutfen degistiriniz.
-	(Eger sizinse,/msg %s IDENTIFY sifreniz yaziniz).
+	(Eger sizinse,/IDENTIFY sifreniz yaziniz).
 NICK_IS_SECURE
 	Bu kayitli ve sifre korumali bir nick'tir.Eger sizinse
-	/msg %s IDENTIFY sifreniz yaziniz. Aksi takdirde lutfen
+	/IDENTIFY sifreniz yaziniz. Aksi takdirde lutfen
 	baska bir nick seciniz.
 NICK_MAY_NOT_BE_USED
 	Bu nick'in kullanimi yasaklanmistir.  Lutfen degistiriniz.

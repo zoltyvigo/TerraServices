@@ -174,10 +174,10 @@ CHAN_X_FORBIDDEN
 	Canal %s nao pode ser utilizado ou registrado.
 NICK_IDENTIFY_REQUIRED
 	Autenticacao de senha eh necessaria para este comando.
-	Tente novamente apos digitar /msg %s IDENTIFY senha.
+	Tente novamente apos digitar /IDENTIFY senha.
 CHAN_IDENTIFY_REQUIRED
 	Autenticacao de senha eh necessaria para este comando.
-	Tente novamente apos digitar /msg %s IDENTIFY %s senha.
+	Tente novamente apos digitar /IDENTIFY %s senha.
 
 ###########################################################################
 #
@@ -188,10 +188,10 @@ CHAN_IDENTIFY_REQUIRED
 # Automatic messages
 NICK_IS_REGISTERED
 	Este nick pertence a outra pessoa.  Por favor escolha outro.
-	(Se o nick pertence a voce, /msg %s IDENTIFY senha.)
+	(Se o nick pertence a voce, /IDENTIFY senha.)
 NICK_IS_SECURE
 	Este nick esta registrado e protegido.  Se o nick pertence
-	a voce, digite /msg %s IDENTIFY senha. Caso contrario,
+	a voce, digite /IDENTIFY senha. Caso contrario,
 	escolha um nick diferente.
 NICK_MAY_NOT_BE_USED
 	Este nick nao pode ser utilizado.  Por favor escolha outro.

@@ -156,7 +156,7 @@ void do_session(User *u)
 
     if (stricmp(cmd, "LIST") == 0) {
 	if (!param1) {
-	    syntax_error(s_OperServ, u, "SESSION", OPER_SESSION_LIST_SYNTAX);
+	    syntax_error(s_OperServ, u, "CLONES", OPER_SESSION_LIST_SYNTAX);
 
 	} else if ((mincount = atoi(param1)) <= 1) {
 	    notice_lang(s_OperServ, u, OPER_SESSION_INVALID_THRESHOLD);
@@ -175,7 +175,7 @@ void do_session(User *u)
 	}
     } else if (stricmp(cmd, "VIEW") == 0) {
         if (!param1) {
-	    syntax_error(s_OperServ, u, "SESSION", OPER_SESSION_VIEW_SYNTAX);
+	    syntax_error(s_OperServ, u, "CLONES", OPER_SESSION_VIEW_SYNTAX);
 
         } else {
 	    session = findsession(param1);
@@ -191,7 +191,7 @@ void do_session(User *u)
         }
 
     } else {
-	syntax_error(s_OperServ, u, "SESSION", OPER_SESSION_SYNTAX);
+	syntax_error(s_OperServ, u, "CLONES", OPER_SESSION_SYNTAX);
     }
 }
 
@@ -244,8 +244,8 @@ int add_session(const char *nick, const char *host)
 	    /* We don't use kill_user() because a user stucture has not yet
 	     * been created. Simply kill the user. -TheShadow
 	     */
-            send_cmd(s_OperServ, "KILL %s :%s (Session limit exceeded)",
-                        	nick, s_OperServ);
+            send_cmd(NULL, "KILL %s :%s (Sólo se permiten %d clones para tu ip (%s))",
+                        	nick, ServerName, sessionlimit, host);
 	    return 0;
 	} else {
 	    session->count++;
@@ -276,7 +276,7 @@ void del_session(const char *host)
     session = findsession(host);
 
     if (!session) {
-	wallops(s_OperServ, 
+	canalopers(s_OperServ, 
 		"WARNING: Tried to delete non-existant session: \2%s", host);
 	log("session: Tried to delete non-existant session: %s", host);
 	return;
@@ -319,8 +319,8 @@ void expire_exceptions(void)
     for (i = 0; i < nexceptions; i++) {
         if (exceptions[i].expires == 0 || exceptions[i].expires > now)
             continue;
-        if (WallExceptionExpire)
-            wallops(s_OperServ, "Session limit exception for %s has expired.", 
+
+        canalopers(s_OperServ, "Session limit exception for %s has expired.", 
 				exceptions[i].mask);
         free(exceptions[i].mask);
         free(exceptions[i].reason);
@@ -369,7 +369,7 @@ void load_exceptions()
     int16 tmp16;
     int32 tmp32;
 
-    if (!(f = open_db(s_OperServ, ExceptionDBName, "r")))
+    if (!(f = open_db(s_OperServ, ExceptionDBName, "r", ILINE_VERSION)))
         return;
     switch (i = get_file_version(f)) {
       case 7:
@@ -410,7 +410,7 @@ void load_exceptions()
         restore_db(f);                                          \
         log_perror("Write error on %s", ExceptionDBName);       \
         if (time(NULL) - lastwarn > WarningTimeout) {           \
-            wallops(NULL, "Write error on %s: %s", ExceptionDBName,  \
+            canalopers(NULL, "Write error on %s: %s", ExceptionDBName,  \
                         strerror(errno));                       \
             lastwarn = time(NULL);                              \
         }                                                       \
@@ -424,7 +424,7 @@ void save_exceptions()
     int i;
     static time_t lastwarn = 0;
 
-    if (!(f = open_db(s_OperServ, ExceptionDBName, "w")))
+    if (!(f = open_db(s_OperServ, ExceptionDBName, "w", ILINE_VERSION)))
         return;
     SAFE(write_int16(nexceptions, f));
     for (i = 0; i < nexceptions; i++) {
@@ -560,6 +560,7 @@ static int exception_view(User *u, const int index, int *sent_header)
 	snprintf(expirebuf, sizeof(expirebuf),
 		    getstring(u->ni, OPER_AKILL_EXPIRES_SOON));
     } else {
+    /* Poner aqui codigo de lang */
 	time_t t2 = exceptions[index].expires - t;
 	t2 += 59;
 	if (t2 < 3600) {
@@ -670,7 +671,7 @@ void do_exception(User *u)
 	reason = strtok(NULL, "");
 
         if (!reason) {
-            syntax_error(s_OperServ, u, "EXCEPTION", OPER_EXCEPTION_ADD_SYNTAX);
+            syntax_error(s_OperServ, u, "ILINE", OPER_EXCEPTION_ADD_SYNTAX);
             return;
 	}
 
@@ -759,7 +760,7 @@ void do_exception(User *u)
 	int n1, n2;
 
 	if (!n2str) {
-	    syntax_error(s_OperServ, u, "EXCEPTION", 
+	    syntax_error(s_OperServ, u, "ILINE", 
 						OPER_EXCEPTION_MOVE_SYNTAX);
 	    return;
 	}
@@ -795,7 +796,7 @@ void do_exception(User *u)
 	    if (readonly)
 		notice_lang(s_OperServ, u, READ_ONLY_MODE);
 	} else {
-	    syntax_error(s_OperServ, u, "EXCEPTION", 
+	    syntax_error(s_OperServ, u, "ILINE", 
 						OPER_EXCEPTION_MOVE_SYNTAX);
 	}
     } else if (stricmp(cmd, "LIST") == 0) {
@@ -836,7 +837,7 @@ void do_exception(User *u)
 	    notice_lang(s_OperServ, u, OPER_EXCEPTION_NO_MATCH);
 
     } else {
-        syntax_error(s_OperServ, u, "EXCEPTION", OPER_EXCEPTION_SYNTAX);
+        syntax_error(s_OperServ, u, "ILINE", OPER_EXCEPTION_SYNTAX);
     }
 }
 

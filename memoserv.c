@@ -15,6 +15,7 @@ static int delmemo(MemoInfo *mi, int num);
 
 static void do_help(User *u);
 static void do_send(User *u);
+static void do_cancel(User *u);
 static void do_list(User *u);
 static void do_read(User *u);
 static void do_del(User *u);
@@ -26,10 +27,19 @@ static void do_info(User *u);
 /*************************************************************************/
 
 static Command cmds[] = {
+    { "AYUDA",      do_help, NULL,  -1,                      -1,-1,-1,-1 },
     { "HELP",       do_help, NULL,  -1,                      -1,-1,-1,-1 },
+    { "?",          do_help, NULL,  -1,                      -1,-1,-1,-1 },
+    { ":?",         do_help, NULL,  -1,                      -1,-1,-1,-1 },    
+    { "ENVIA",      do_send, NULL,  MEMO_HELP_SEND,          -1,-1,-1,-1 },
     { "SEND",       do_send, NULL,  MEMO_HELP_SEND,          -1,-1,-1,-1 },
+    { "CANCELA",    do_cancel, NULL, MEMO_HELP_CANCEL,       -1,-1,-1,-1 },
+    { "CANCEL",     do_cancel, NULL, MEMO_HELP_CANCEL,       -1,-1,-1,-1 },
+    { "LISTA",      do_list, NULL,  MEMO_HELP_LIST,          -1,-1,-1,-1 },
     { "LIST",       do_list, NULL,  MEMO_HELP_LIST,          -1,-1,-1,-1 },
+    { "LEE",        do_read, NULL,  MEMO_HELP_READ,          -1,-1,-1,-1 },
     { "READ",       do_read, NULL,  MEMO_HELP_READ,          -1,-1,-1,-1 },
+    { "BORRA",      do_del,  NULL,  MEMO_HELP_DEL,           -1,-1,-1,-1 },    
     { "DEL",        do_del,  NULL,  MEMO_HELP_DEL,           -1,-1,-1,-1 },
     { "SET",        do_set,  NULL,  MEMO_HELP_SET,           -1,-1,-1,-1 },
     { "SET NOTIFY", NULL,    NULL,  MEMO_HELP_SET_NOTIFY,    -1,-1,-1,-1 },
@@ -69,7 +79,7 @@ void memoserv(const char *source, char *buf)
 
     if (!u) {
 	log("%s: user record for %s not found", s_MemoServ, source);
-	notice(s_MemoServ, source,
+	privmsg(s_MemoServ, source,
 		getstring((NickInfo *)NULL, USER_RECORD_NOT_FOUND));
 	return;
     }
@@ -80,7 +90,7 @@ void memoserv(const char *source, char *buf)
     } else if (stricmp(cmd, "\1PING") == 0) {
 	if (!(s = strtok(NULL, "")))
 	    s = "\1";
-	notice(s_MemoServ, source, "\1PING %s", s);
+	privmsg(s_MemoServ, source, "\1PING %s", s);
     } else if (skeleton) {
 	notice_lang(s_MemoServ, u, SERVICE_OFFLINE, s_MemoServ);
     } else {
@@ -106,8 +116,8 @@ void memoserv(const char *source, char *buf)
 
 void load_old_ms_dbase(void)
 {
-    dbFILE *f;
-    int ver, i, j, c;
+    dbFILE *f = NULL;
+    int ver = 0, i, j, c;
     NickInfo *ni;
     Memo *memos;
     struct memolist_ {
@@ -128,9 +138,10 @@ void load_old_ms_dbase(void)
     } oldmemo;
     int failed = 0;
 
-    if (!(f = open_db(s_MemoServ, "memo.db", "r")))
-	return;
-    switch (ver = get_file_version(f)) {
+    
+//    if (!(f = open_db(s_MemoServ, "memo.db", "r")))
+//	return;
+    switch (ver) {
       case 4:
       case 3:
       case 2:
@@ -182,6 +193,9 @@ void check_memos(User *u)
 {
     NickInfo *ni;
     int i, newcnt = 0;
+    struct u_chanlist *ul; 
+    ChannelInfo *ci;
+            
 
     if (!(ni = u->ni) || !nick_recognized(u) ||
 			 !(ni->flags & NI_MEMO_SIGNON))
@@ -213,8 +227,45 @@ void check_memos(User *u)
 	else
 	    notice_lang(s_MemoServ, u, MEMO_AT_LIMIT, ni->memos.memomax);
     }
+    /* Notificacion de Memos de canales
+     * Al hacer un check_memos(), hay ke
+     * mirar los memos de los canales que
+     * está en ese momento
+     * - zoltan 8/12/2000
+     */    
+
+    for (ul = u->chans ; ul; ul = ul->next)
+        if ((ci = cs_findchan(ul->chan->name))) {
+            check_cs_memos(u,ci);
+        }     
 }
 
+/* Chequea los memos de canales */
+
+void check_cs_memos(User *u, ChannelInfo *ci) 
+{
+    if (!u || !ci)
+        return; /* No registrado */        
+    
+    if ((!ci->flags & CI_MEMOALERT) || (ci->flags & CI_SUSPENDED))
+        return; /* Aviso de memos desactivado */
+        
+    if (check_access(u, ci, CA_MEMO_READ) && (ci->memos.memocount > 0)) {
+        if (ci->memos.memocount == 1) {
+            notice(s_MemoServ, u->nick, "3Eo! Tienes12 13 mensaje del canal 12%s.",
+                                              ci->name);
+//            privmsg(s_MemoServ, u->nick, "Escribe 12/msg %s READ %s LAST para leer el mensaje.",
+//                                                s_MemoServ, ci->name);
+                                              
+        } else {
+            notice(s_MemoServ, u->nick, "3Eo! Tienes 12%d3 mensajes del canal 12%s.",
+                                               ci->memos.memocount, ci->name);                                              
+//            privmsg(s_MemoServ, u->nick, "Escribe 12/msg %s LIST %s para listar los mensajes.",
+//                          s_MemoServ, ci->name);
+       }                                              
+    }                                
+
+}
 /*************************************************************************/
 /*********************** MemoServ private routines ***********************/
 /*************************************************************************/
@@ -300,6 +351,7 @@ static void do_send(User *u)
     char *source = u->nick;
     int ischan;
     MemoInfo *mi;
+    ChannelInfo *ci;
     Memo *m;
     char *name = strtok(NULL, " ");
     char *text = strtok(NULL, "");
@@ -315,7 +367,8 @@ static void do_send(User *u)
     } else if (!(mi = getmemoinfo(name, &ischan))) {
 	notice_lang(s_MemoServ, u,
 		ischan ? CHAN_X_NOT_REGISTERED : NICK_X_NOT_REGISTERED, name);
-
+    } else if (ischan && (ci = cs_findchan(name)) && (ci->flags & CI_VERBOTEN)) {
+            notice_lang(s_MemoServ, u, CHAN_X_FORBIDDEN, name);
     } else if (MSSendDelay > 0 &&
 		u && u->lastmemosend+MSSendDelay > now && !is_servadmin) {
 	u->lastmemosend = now;
@@ -370,6 +423,50 @@ static void do_send(User *u)
     } /* if command is valid */
 }
 
+/*************************************************************************/
+
+/* Cancela el memo enviado por si has equivocado
+ * de usuario o de mensaje y quieres borrarlo
+ * solo borra SI el memo AUN NO está leido por
+ * el remitente
+ * - zoltan 25 Noviembre 2000
+ */
+
+static void do_cancel(User *u)
+{
+
+    char *nick = strtok(NULL, " ");
+    ChannelInfo *ci;
+    MemoInfo *mi;
+    int ischan;
+    
+    if (!nick) {
+        syntax_error(s_MemoServ, u, "CANCEL", MEMO_CANCEL_SYNTAX);
+    } else if (!nick_recognized(u)) {
+        notice_lang(s_MemoServ, u, NICK_IDENTIFY_REQUIRED, s_NickServ);
+    } else if (!(mi = getmemoinfo(nick, &ischan))) {
+        notice_lang(s_MemoServ, u,
+               ischan ? CHAN_X_NOT_REGISTERED : NICK_X_NOT_REGISTERED, nick);
+    } else if (ischan && (ci = cs_findchan(nick)) && (ci->flags & CI_VERBOTEN)) {
+            notice_lang(s_MemoServ, u, CHAN_X_FORBIDDEN, nick);      
+    } else {    
+        int i;
+        /* Empiezo desde el final, ya que solo quiero
+         * ver memos NO Leidos y los no leidos suelen
+         * estar en los ultimos puestos
+         */    
+        for (i = mi->memocount -1; i >= 0; i--) {
+            if ((mi->memos[i].flags & MF_UNREAD) &&
+                     !stricmp(mi->memos[i].sender, u->ni->nick)) {
+                delmemo(mi, mi->memos[i].number);
+                notice_lang(s_MemoServ, u, MEMO_CANCEL_SUCCEEDED, nick);
+                return;
+            }
+        }         
+        notice_lang(s_MemoServ, u, MEMO_CANCEL_NONE);
+    }
+}   
+     
 /*************************************************************************/
 
 /* Display a single memo entry, possibly printing the header first. */
@@ -439,7 +536,13 @@ static void do_list(User *u)
 	if (!(ci = cs_findchan(chan))) {
 	    notice_lang(s_MemoServ, u, CHAN_X_NOT_REGISTERED, chan);
 	    return;
-	} else if (!check_access(u, ci, CA_MEMO)) {
+	} else if (ci->flags & CI_VERBOTEN) {
+	    notice_lang(s_MemoServ, u, CHAN_X_FORBIDDEN, chan);    
+	    return;
+        } else if (ci->flags & CI_SUSPENDED) {
+            notice_lang(s_MemoServ, u, CHAN_X_SUSPENDED, chan);
+            return;	    
+	} else if (!check_access(u, ci, CA_MEMO_READ)) {
 	    notice_lang(s_MemoServ, u, ACCESS_DENIED);
 	    return;
 	}
@@ -545,7 +648,13 @@ static void do_read(User *u)
 	if (!(ci = cs_findchan(chan))) {
 	    notice_lang(s_MemoServ, u, CHAN_X_NOT_REGISTERED, chan);
 	    return;
-	} else if (!check_access(u, ci, CA_MEMO)) {
+        } else if (ci->flags & CI_VERBOTEN) {
+            notice_lang(s_MemoServ, u, CHAN_X_FORBIDDEN, chan);
+            return;	    
+        } else if (ci->flags & CI_SUSPENDED) {
+            notice_lang(s_MemoServ, u, CHAN_X_SUSPENDED, chan);
+            return;
+	} else if (!check_access(u, ci, CA_MEMO_READ)) {
 	    notice_lang(s_MemoServ, u, ACCESS_DENIED);
 	    return;
 	}
@@ -652,7 +761,13 @@ static void do_del(User *u)
 	if (!(ci = cs_findchan(chan))) {
 	    notice_lang(s_MemoServ, u, CHAN_X_NOT_REGISTERED, chan);
 	    return;
-	} else if (!check_access(u, ci, CA_MEMO)) {
+        } else if (ci->flags & CI_VERBOTEN) {
+            notice_lang(s_MemoServ, u, CHAN_X_FORBIDDEN, chan);
+            return;	    
+        } else if (ci->flags & CI_SUSPENDED) {
+            notice_lang(s_MemoServ, u, CHAN_X_SUSPENDED, chan);
+            return;
+	} else if (!check_access(u, ci, CA_MEMO_DEL)) {
 	    notice_lang(s_MemoServ, u, ACCESS_DENIED);
 	    return;
 	}
@@ -785,7 +900,13 @@ static void do_set_limit(User *u, MemoInfo *mi, char *param)
 	if (!(ci = cs_findchan(chan))) {
 	    notice_lang(s_MemoServ, u, CHAN_X_NOT_REGISTERED, chan);
 	    return;
-	} else if (!is_servadmin && !check_access(u, ci, CA_MEMO)) {
+        } else if (ci->flags & CI_VERBOTEN) {
+            notice_lang(s_MemoServ, u, CHAN_X_FORBIDDEN, chan);
+            return;	    
+        } else if (ci->flags & CI_SUSPENDED) {
+            notice_lang(s_MemoServ, u, CHAN_X_SUSPENDED, chan);
+            return;
+	} else if (!is_servadmin && !check_access(u, ci, CA_MEMO_DEL)) {
 	    notice_lang(s_MemoServ, u, ACCESS_DENIED);
 	    return;
 	}
@@ -905,7 +1026,13 @@ static void do_info(User *u)
 	if (!ci) {
 	    notice_lang(s_MemoServ, u, CHAN_X_NOT_REGISTERED, name);
 	    return;
-	} else if (!check_access(u, ci, CA_MEMO)) {
+        } else if (ci->flags & CI_VERBOTEN) {
+            notice_lang(s_MemoServ, u, CHAN_X_FORBIDDEN, name);
+            return;	    
+        } else if (ci->flags & CI_SUSPENDED) {
+            notice_lang(s_MemoServ, u, CHAN_X_SUSPENDED, name);
+            return;
+	} else if (!check_access(u, ci, CA_MEMO_READ)) {
 	    notice_lang(s_MemoServ, u, ACCESS_DENIED);
 	    return;
 	}

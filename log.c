@@ -57,7 +57,7 @@ int rename_log(User *u, const char *newname)
 	if (u) {
 	    notice_lang(s_OperServ, u, OPER_ROTATELOG_FILE_EXISTS, newname);
 	} else {
-            wallops(NULL, "WARNING: Could not rename logfile, a file with "
+            canalopers(NULL, "WARNING: Could not rename logfile, a file with "
 			"the name \2%s\2 already exists!", newname);
 	}
 	log("ERROR: Could not rename logfile, a file with the name \2%s\2 "
@@ -83,7 +83,7 @@ int rename_log(User *u, const char *newname)
 	    notice_lang(s_OperServ, u, OPER_ROTATELOG_RENAME_FAIL, 
 			strerror(errno));
 	} else {
-	    wallops(NULL, "WARNING: Logfile could not be renamed: %s", 
+	    canalopers(NULL, "WARNING: Logfile could not be renamed: %s", 
 			strerror(errno));
 	}
 	success = 0;
@@ -99,9 +99,9 @@ int rename_log(User *u, const char *newname)
 	     * for help and tell who ever is listening to find the services
 	     * administrator (root) and notify them. -TheShadow */
 
-            wallops(NULL, "WARNING: Logging could not be restarted: \2%s\2",
+            canalopers(NULL, "WARNING: Logging could not be restarted: \2%s\2",
 			strerror(errno));
-	    wallops(NULL, "Please notify your services administrator, \2%s\2, "
+	    canalopers(NULL, "Please notify your services administrator, \2%s\2, "
 			"and include the above error message.", ServicesRoot);
 	    success = 0;
 	}

@@ -38,8 +38,13 @@ static void m_away(char *source, int ac, char **av)
 {
     User *u = finduser(source);
 
-    if (u && (ac == 0 || *av[0] == 0))	/* un-away */
+    if (u && (ac == 0 || *av[0] == 0)) {
+       /* Quita el away */
+        u->mode &= ~UMODE_AWAY;
 	check_memos(u);
+    } else 	
+       /* Se pone away */
+        u->mode |= UMODE_AWAY;
 }
 
 /*************************************************************************/
@@ -67,9 +72,12 @@ static void m_kill(char *source, int ac, char **av)
     if (ac != 2)
 	return;
     /* Recover if someone kills us. */
-    if (stricmp(av[0], s_OperServ) == 0 ||
-        stricmp(av[0], s_NickServ) == 0 ||
-        stricmp(av[0], s_ChanServ) == 0 ||
+    if (stricmp(av[0], s_ChanServ) == 0) {
+        introduce_user(av[0]);    
+        join_chanserv();
+    }    
+    if (stricmp(av[0], s_NickServ) == 0 ||
+        stricmp(av[0], s_OperServ) == 0 ||
         stricmp(av[0], s_MemoServ) == 0 ||
         stricmp(av[0], s_HelpServ) == 0 ||
         (s_IrcIIHelp && stricmp(av[0], s_IrcIIHelp) == 0) ||
@@ -106,7 +114,7 @@ static void m_motd(char *source, int ac, char **av)
     char buf[BUFSIZE];
 
     f = fopen(MOTDFilename, "r");
-    send_cmd(ServerName, "375 %s :- %s Message of the Day",
+    send_cmd(ServerName, "375 %s :- %s Mensaje del día",
 		source, ServerName);
    if (f) {
 	while (fgets(buf, sizeof(buf), f)) {
@@ -115,8 +123,8 @@ static void m_motd(char *source, int ac, char **av)
 	}
 	fclose(f);
     } else {
-	send_cmd(ServerName, "372 %s :- MOTD file not found!  Please "
-			"contact your IRC administrator.", source);
+	send_cmd(ServerName, "372 %s :- MOTD no encontrado!  Por favor "
+			"contacta con tu administrador del IRC.", source);
     }
 
     /* Look, people.  I'm not asking for payment, praise, or anything like
@@ -126,8 +134,8 @@ static void m_motd(char *source, int ac, char **av)
      */
 
     send_cmd(ServerName, "372 %s :-", source);
-    send_cmd(ServerName, "372 %s :- Services is copyright (c) "
-		"1996-1999 Andy Church.", source);
+    send_cmd(ServerName, "372 %s :- Servicios de Terra es copyright (c) "
+                    "2000-2001 Terra Networks S.A..", source);		                  
     send_cmd(ServerName, "376 %s :End of /MOTD command.", source);
 }
 
@@ -135,20 +143,11 @@ static void m_motd(char *source, int ac, char **av)
 
 static void m_nick(char *source, int ac, char **av)
 {
-#if defined(IRC_DALNET) || defined(IRC_UNDERNET)
-# ifdef IRC_UNDERNET
     /* ircu sends the server as the source for a NICK message for a new
      * user. */
     if (strchr(source, '.'))
 	*source = 0;
-# endif
-# ifdef IRC_DAL4_4_15
-    if (ac == 8) {
-	/* Get rid of the useless extra parameter. */
-	av[6] = av[7];
-	ac--;
-    }
-# endif
+
     if ((!*source && ac != 7) || (*source && ac != 2)) {
 	if (debug) {
 	    log("debug: NICK message: expecting 2 or 7 parameters after "
@@ -157,9 +156,6 @@ static void m_nick(char *source, int ac, char **av)
 	return;
     }
     do_nick(source, ac, av);
-#else	/* !IRC_UNDERNET && !IRC_DALNET */
-    /* Nothing to do yet; information comes from USER command. */
-#endif
 }
 
 /*************************************************************************/
@@ -209,9 +205,8 @@ static void m_privmsg(char *source, int ac, char **av)
 	    if (u)
 		notice_lang(s_OperServ, u, ACCESS_DENIED);
 	    else
-		notice(s_OperServ, source, "Access denied.");
-	    if (WallBadOS)
-		wallops(s_OperServ, "Denied access to %s from %s (non-oper)",
+		privmsg(s_OperServ, source, "Access denied.");
+            canalopers(s_OperServ, "Denegando el acceso a %s desde %s (no es OPER)",
 			s_OperServ, source);
 	}
     } else if (stricmp(av[0], s_NickServ) == 0) {
@@ -243,6 +238,25 @@ static void m_quit(char *source, int ac, char **av)
     if (ac != 1)
 	return;
     do_quit(source, ac, av);
+}
+
+/*************************************************************************/
+
+static void m_server(char *source, int ac, char **av)
+{
+     do_server(source, ac, av);
+     
+}
+    
+/*************************************************************************/
+     
+static void m_squit(char *source, int ac, char **av)
+{
+     if (ac != 3)
+         return;
+              
+     do_squit(source, ac, av);
+                        
 }
 
 /*************************************************************************/
@@ -304,7 +318,7 @@ static void m_time(char *source, int ac, char **av)
 
 static void m_topic(char *source, int ac, char **av)
 {
-    if (ac != 4)
+    if (ac != 2)
 	return;
     do_topic(source, ac, av);
 }
@@ -313,31 +327,9 @@ static void m_topic(char *source, int ac, char **av)
 
 static void m_user(char *source, int ac, char **av)
 {
-#if defined(IRC_CLASSIC) || defined(IRC_TS8)
-    char *new_av[7];
 
-#ifdef IRC_TS8
-    if (ac != 5)
-#else
-    if (ac != 4)
-#endif
-	return;
-    new_av[0] = source;	/* Nickname */
-    new_av[1] = sstrdup("0");	/* # of hops (was in NICK command... we lose) */
-#ifdef IRC_TS8
-    new_av[2] = av[0];	/* Timestamp */
-    av++;
-#else
-    new_av[2] = sstrdup("0");
-#endif
-    new_av[3] = av[0];	/* Username */
-    new_av[4] = av[1];	/* Hostname */
-    new_av[5] = av[2];	/* Server */
-    new_av[6] = av[3];	/* Real name */
-    do_nick(source, 7, new_av);
-#else	/* !IRC_CLASSIC && !IRC_TS8 */
-    /* Do nothing - we get everything we need from the NICK command. */
-#endif
+      /* En Undernet no existe este comando server-server
+       * solo está para usuarios :)  */
 }
 
 /*************************************************************************/
@@ -345,7 +337,7 @@ static void m_user(char *source, int ac, char **av)
 void m_version(char *source, int ac, char **av)
 {
     if (source)
-	send_cmd(ServerName, "351 %s ircservices-%s %s :-- %s",
+	send_cmd(ServerName, "351 %s Servicios de Terra %s %s :-- %s",
 			source, version_number, ServerName, version_build);
 }
 
@@ -390,41 +382,62 @@ void m_whois(char *source, int ac, char **av)
 Message messages[] = {
 
     { "436",       m_nickcoll },
+    { "ADMIN",     NULL },
     { "AWAY",      m_away },
+    { "CLOSE",     NULL },
+    { "CNOTICE",   NULL },
+    { "CONNECT",   NULL },
+    { "CPRIVMSG",  NULL },        
+    { "DESTRUCT",  NULL },
+    { "DESYNCH",   NULL },
+    { "DIE",       NULL },
+    { "DNS",       NULL },
+    { "ERROR",     NULL },
+    { "GLINE",     NULL },
+    { "HASH",      NULL },    
+    { "HELP",      NULL },
+    { "INFO",      NULL },
+    { "INVITE",    NULL },
     { "JOIN",      m_join },
     { "KICK",      m_kick },
     { "KILL",      m_kill },
+    { "LINKS",     NULL },
+    { "LIST",      NULL },
+    { "LUSERS",    NULL },
+    { "MAP",       NULL },    
     { "MODE",      m_mode },
     { "MOTD",      m_motd },
+    { "NAMES",     NULL },
     { "NICK",      m_nick },
     { "NOTICE",    NULL },
+    { "OPER",      NULL },    
     { "PART",      m_part },
     { "PASS",      NULL },
     { "PING",      m_ping },
+    { "PONG",      NULL },    
     { "PRIVMSG",   m_privmsg },
     { "QUIT",      m_quit },
-    { "SERVER",    NULL },
-    { "SQUIT",     NULL },
+    { "REHASH",    NULL },
+    { "RESTART",   NULL },
+    { "RPING",     NULL },
+    { "RPONG",     NULL },        
+    { "SERVER",    m_server },
+    { "SERVLIST",  NULL },
+    { "SERVSET",   NULL },
+    { "SILENCE",   NULL },    
+    { "SQUIT",     m_squit },
     { "STATS",     m_stats },
+    { "SETTIME",   NULL },    
     { "TIME",      m_time },
     { "TOPIC",     m_topic },
+    { "TRACE",     NULL },
+    { "UPING",     NULL },    
     { "USER",      m_user },
     { "VERSION",   m_version },
     { "WALLOPS",   NULL },
+    { "WHO",       NULL },
     { "WHOIS",     m_whois },
-
-#ifdef IRC_DALNET
-    { "AKILL",     NULL },
-    { "GLOBOPS",   NULL },
-    { "GNOTICE",   NULL },
-    { "GOPER",     NULL },
-    { "RAKILL",    NULL },
-#endif
-
-#ifdef IRC_UNDERNET
-    { "GLINE",     NULL },
-#endif
-
+    { "WHOWAS",    NULL },    
     { NULL }
 
 };

@@ -1,0 +1,6 @@
+Para ver todos los ircops actualmente on-line 
+escriba 12/msg STaT OPERLIST
+
+Para ver los OPERadores y ADMINistradores
+de los servicios de red on-line y disponibles
+escriba 12/msg Nick OPERS

@@ -100,10 +100,10 @@ CHAN_X_FORBIDDEN
 	%s $B$H$$$&%%A%%c%%s%%M%%k$O;HMQ6X;_$G$9!#(B
 NICK_IDENTIFY_REQUIRED
 	$B$=$N%%3%%^%%s%%I$r;H$&$K$O%%Q%%9%%o!<%%I$rF~NO$9$kI,MW$,$"$j$^$9!#(B
-	$B!V(B/msg %s IDENTIFY password$B!W$rF~NO$7$F2<$5$$!#(B
+	$B!V(B/IDENTIFY password$B!W$rF~NO$7$F2<$5$$!#(B
 CHAN_IDENTIFY_REQUIRED
 	$B$=$N%%3%%^%%s%%I$r;H$&$K$O%%Q%%9%%o!<%%I$rF~NO$9$kI,MW$,$"$j$^$9!#(B
-	$B!V(B/msg %s IDENTIFY %s password$B!W$rF~NO$7$F2<$5$$!#(B
+	$B!V(B/IDENTIFY %s password$B!W$rF~NO$7$F2<$5$$!#(B
 
 ###########################################################################
 #
@@ -114,10 +114,10 @@ CHAN_IDENTIFY_REQUIRED
 # $B<+F0E*$J%%a%%C%%;!<%%8(B
 NICK_IS_REGISTERED
 	$B$3$N%%K%%C%%/$OEPO?$5$l$F$$$^$9!#B>$N%%K%%C%%/$KJQ$($F2<$5$$!#(B
-	$B!JJ]M-<T$J$i!"!V(B/msg %s IDENTIFY password$B!W$rF~NO$7$F2<$5$$!#!K(B
+	$B!JJ]M-<T$J$i!"!V(B/IDENTIFY password$B!W$rF~NO$7$F2<$5$$!#!K(B
 NICK_IS_SECURE
 	$B$3$N%%K%%C%%/$OEPO?$5$lH_$i$l$F$$$^$9!#J]M-<T$J$i!"(B
-	$B!V(B/msg %s IDENTIFY password$B!W$rF~NO$7$F2<$5$$!#(B
+	$B!V(B/IDENTIFY password$B!W$rF~NO$7$F2<$5$$!#(B
 	$BJ]M-<T$G$J$1$l$P!"B>$N%%K%%C%%/$KJQ$($F2<$5$$!#(B
 NICK_MAY_NOT_BE_USED
 	$B$3$N%%K%%C%%/$O$*;H$$$K$J$l$^$;$s!#(B

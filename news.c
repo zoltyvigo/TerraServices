@@ -146,7 +146,7 @@ void load_news()
     int16 n;
     int32 tmp32;
 
-    if (!(f = open_db(s_OperServ, NewsDBName, "r")))
+    if (!(f = open_db(s_OperServ, NewsDBName, "r", NEWS_VERSION)))
 	return;
     switch (i = get_file_version(f)) {
       case 7:
@@ -189,7 +189,7 @@ void load_news()
 	restore_db(f);						\
 	log_perror("Write error on %s", NewsDBName);		\
 	if (time(NULL) - lastwarn > WarningTimeout) {		\
-	    wallops(NULL, "Write error on %s: %s", NewsDBName,	\
+	    canalopers(NULL, "Write error on %s: %s", NewsDBName,	\
 			strerror(errno));			\
 	    lastwarn = time(NULL);				\
 	}							\
@@ -203,7 +203,7 @@ void save_news()
     int i;
     static time_t lastwarn = 0;
 
-    if (!(f = open_db(s_OperServ, NewsDBName, "w")))
+    if (!(f = open_db(s_OperServ, NewsDBName, "w", NEWS_VERSION)))
 	return;
     SAFE(write_int16(nnews, f));
     for (i = 0; i < nnews; i++) {

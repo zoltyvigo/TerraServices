@@ -192,10 +192,10 @@ CHAN_X_FORBIDDEN
 	Channel %s may not be registered or used.
 NICK_IDENTIFY_REQUIRED
 	Password authentication required for that command.
-	Retry after typing /msg %s IDENTIFY password.
+	Retry after typing /IDENTIFY password.
 CHAN_IDENTIFY_REQUIRED
 	Password authentication required for that command.
-	Retry after typing /msg %s IDENTIFY %s password.
+	Retry after typing /IDENTIFY %s password.
 
 ###########################################################################
 #
@@ -206,10 +206,10 @@ CHAN_IDENTIFY_REQUIRED
 # Automatic messages
 NICK_IS_REGISTERED
 	This nick is owned by someone else.  Please choose another.
-	(If this is your nick, type /msg %s IDENTIFY password.)
+	(If this is your nick, type /IDENTIFY password.)
 NICK_IS_SECURE
 	This nickname is registered and protected.  If it is your
-	nick, type /msg %s IDENTIFY password.  Otherwise,
+	nick, type /IDENTIFY password.  Otherwise,
 	please choose a different nick.
 NICK_MAY_NOT_BE_USED
 	This nickname may not be used.  Please choose another one.

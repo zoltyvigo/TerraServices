@@ -27,8 +27,8 @@ struct dbFILE_ {
 
 E void check_file_version(dbFILE *f);
 E int get_file_version(dbFILE *f);
-E int write_file_version(dbFILE *f);
-E dbFILE *open_db(const char *service, const char *filename, const char *mode);
+E int write_file_version(dbFILE *f, uint32 version);
+E dbFILE *open_db(const char *service, const char *filename, const char *mode, uint32 version);
 E void restore_db(dbFILE *f);	/* Restore to state before open_db() */
 E void close_db(dbFILE *f);
 #define read_db(f,buf,len)	(fread((buf),1,(len),(f)->fp))

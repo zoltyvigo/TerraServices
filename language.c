@@ -22,14 +22,16 @@ int langlist[NUM_LANGS];
 
 /* Order in which languages should be displayed: (alphabetical) */
 static int langorder[NUM_LANGS] = {
+    LANG_ES,            /* Castellano */
+    LANG_CA,            /* Catalán */
     LANG_EN_US,		/* English (US) */
     LANG_FR,		/* French */
+    LANG_GA,            /* Gallego */
     LANG_IT,		/* Italian */
     LANG_JA_JIS,	/* Japanese (JIS encoding) */
     LANG_JA_EUC,	/* Japanese (EUC encoding) */
     LANG_JA_SJIS,	/* Japanese (SJIS encoding) */
     LANG_PT,		/* Portugese */
-    LANG_ES,		/* Spanish */
     LANG_TR,		/* Turkish */
 };
 
@@ -56,12 +58,12 @@ static void load_lang(int index, const char *filename)
     int num, i;
 
     if (debug) {
-	log("debug: Loading language %d from file `languages/%s'",
+	log("debug: Cargando lenguaje %d del archivo `languages/%s'",
 		index, filename);
     }
     snprintf(buf, sizeof(buf), "languages/%s", filename);
     if (!(f = fopen(buf, "r"))) {
-	log_perror("Failed to load language %d (%s)", index, filename);
+	log_perror("Ha fallado la carga del lenguaje %d (%s)", index, filename);
 	return;
     } else if (read_int32(&num, f) < 0) {
 	log("Failed to read number of strings for language %d (%s)",
@@ -138,12 +140,14 @@ void lang_init()
 {
     int i, j, n = 0;
 
+    load_lang(LANG_ES, "es");
+    load_lang(LANG_CA, "ca");
     load_lang(LANG_EN_US, "en_us");
+    load_lang(LANG_GA, "ga");
     load_lang(LANG_IT, "it");
     load_lang(LANG_JA_JIS, "ja_jis");
     load_lang(LANG_JA_EUC, "ja_euc");
-    load_lang(LANG_JA_SJIS, "ja_sjis");
-    load_lang(LANG_ES, "es");
+    load_lang(LANG_JA_SJIS, "ja_sjis");    
     load_lang(LANG_PT, "pt");
     load_lang(LANG_TR, "tr");
 
@@ -230,6 +234,65 @@ int strftime_lang(char *buf, int size, User *u, int format, struct tm *tm)
 	buf[size-1] = 0;
     return ret;
 }
+/*************************************************************************/
+
+/* Generates a description for seconds in the form of days, hours minutes,
+ * seconds and/or a combination thereof. The resulting value is primarily used
+ * to describe the expiry time for things, like AKILLs.
+ *
+ * Currently we abuse the AKILL_EXPIRES reponses, merely becuase AKILLs were
+ * the first things to expire. Someday someone may like to rename these
+ * reponses more appropriately, seeing as this function is used to describe
+ * more that just AKILL expiry times.
+ */
+
+void expires_in_lang(char *buf, int size, User *u, time_t seconds)
+{
+
+    char expirebuf[BUFSIZE];
+    
+    if (seconds < 3600) {
+        seconds /= 60;
+        if (seconds == 1)
+            snprintf(expirebuf, sizeof(expirebuf),
+                getstring(u->ni, OPER_AKILL_EXPIRES_1M), seconds);
+        else
+            snprintf(expirebuf, sizeof(expirebuf),
+                getstring(u->ni, OPER_AKILL_EXPIRES_M), seconds);
+    } else if (seconds < 86400) {
+        seconds /= 60;
+        if (seconds/60 == 1) {
+            if (seconds%60 == 1)
+                snprintf(expirebuf, sizeof(expirebuf),
+                    getstring(u->ni, OPER_AKILL_EXPIRES_1H1M),
+                    seconds/60, seconds%60);
+            else
+                snprintf(expirebuf, sizeof(expirebuf),
+                    getstring(u->ni, OPER_AKILL_EXPIRES_1HM),
+                    seconds/60, seconds%60);
+                                                                    
+        } else {
+           if (seconds%60 == 1)
+                snprintf(expirebuf, sizeof(expirebuf),
+                    getstring(u->ni, OPER_AKILL_EXPIRES_H1M),
+                    seconds/60, seconds%60);
+           else
+                snprintf(expirebuf, sizeof(expirebuf),
+                    getstring(u->ni, OPER_AKILL_EXPIRES_HM),
+                    seconds/60, seconds%60);                                                                                                                                                                                
+        }
+    } else {
+        seconds /= 86400;
+        if (seconds == 1)
+            snprintf(expirebuf, sizeof(expirebuf),
+                getstring(u->ni, OPER_AKILL_EXPIRES_1D), seconds);    
+        else
+            snprintf(expirebuf, sizeof(expirebuf),
+                getstring(u->ni, OPER_AKILL_EXPIRES_D), seconds);
+    }
+                                        
+    strncpy(buf, expirebuf, size);
+}    
 
 /*************************************************************************/
 /*************************************************************************/

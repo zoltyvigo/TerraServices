@@ -23,10 +23,10 @@ void send_timeout_list(User *u)
 
     notice(s_OperServ, u->nick, "Now: %ld", time(NULL));
     for (to = timeouts, last = NULL; to; last = to, to = to->next) {
-	notice(s_OperServ, u->nick, "%p: %ld: %p (%p)",
+	privmsg(s_OperServ, u->nick, "%p: %ld: %p (%p)",
 			to, to->timeout, to->code, to->data);
 	if (to->prev != last)
-	    notice(s_OperServ, u->nick,
+	    privmsg(s_OperServ, u->nick,
 			"    to->prev incorrect!  expected=%p seen=%p",
 			last, to->prev);
     }

@@ -63,8 +63,11 @@ E void load_cs_dbase(void);
 E void save_cs_dbase(void);
 E void check_modes(const char *chan);
 E int check_valid_op(User *user, const char *chan, int newchan);
+E int check_valid_voice(User *user, const char *chan, int newchan);
 E int check_should_op(User *user, const char *chan);
 E int check_should_voice(User *user, const char *chan);
+E int check_leaveops(User *user, const char *chan, const char *source);
+E int check_leavevoices(User *user, const char *chan, const char *source);
 E int check_kick(User *user, const char *chan);
 E void record_topic(const char *chan);
 E void restore_topic(const char *chan);
@@ -74,7 +77,8 @@ E void cs_remove_nick(const NickInfo *ni);
 
 E ChannelInfo *cs_findchan(const char *chan);
 E int check_access(User *user, ChannelInfo *ci, int what);
-
+E void check_cs_access(User *u, NickInfo *ni);
+E void join_chanserv();
 
 /**** compat.c ****/
 
@@ -114,6 +118,7 @@ E int   LocalPort;
 
 E char *ServerName;
 E char *ServerDesc;
+E char *ServerHUB;
 E char *ServiceUser;
 E char *ServiceHost;
 
@@ -143,6 +148,10 @@ E char *OperDBName;
 E char *AutokillDBName;
 E char *NewsDBName;
 
+E char *SendMailPatch;
+E char *SendFrom;
+E char *WebNetwork;
+
 E int   NoBackupOkay;
 E int   NoSplitRecovery;
 E int   StrictPasswords;
@@ -154,6 +163,7 @@ E int   ReadTimeout;
 E int   WarningTimeout;
 E int   TimeoutCheck;
 
+E int   NSNicksMail;
 E int   NSForceNickChange; 
 E char *NSGuestNickPrefix;
 E int   NSDefKill;
@@ -175,8 +185,10 @@ E int   NSAllowKillImmed;
 E int   NSDisableLinkCommand;
 E int   NSListOpersOnly;
 E int   NSListMax;
-E int   NSSecureAdmins;
+E int   NSSuspendExpire;
+E int   NSSuspendGrace;
 
+E int   CSInChannel;
 E int   CSMaxReg;
 E int   CSExpire;
 E int   CSAccessMax;
@@ -186,24 +198,18 @@ E int   CSInhabit;
 E int   CSRestrictDelay;
 E int   CSListOpersOnly;
 E int   CSListMax;
+E int   CSSuspendExpire;
+E int   CSSuspendGrace;
 
 E int   MSMaxMemos;
 E int   MSSendDelay;
 E int   MSNotifyAll;
 
+E char *CanalOpers;
 E char *ServicesRoot;
 E int   LogMaxUsers;
+E int   LogMaxChans;
 E int   AutokillExpiry;
-E int   WallOper;
-E int   WallBadOS;
-E int   WallOSMode;
-E int   WallOSClearmodes;
-E int   WallOSKick;
-E int   WallOSAkill;
-E int   WallAkillExpire;
-E int   WallExceptionExpire;
-E int   WallGetpass;
-E int   WallSetpass;
 E int   CheckClones;
 E int   CloneMinUsers;
 E int   CloneMaxDelay;
@@ -221,6 +227,12 @@ E char *SessionLimitDetailsLoc;
 E char *SessionLimitExceeded;
 
 E int read_config(void);
+
+
+/**** correo.c ****/
+
+E int send_mail(const char * destino, const char *subject, const char *body);
+
 
 
 /**** helpserv.c ****/
@@ -244,6 +256,7 @@ E void lang_init(void);
 #define getstring(ni,index) \
 	(langtexts[((ni)?((NickInfo*)ni)->language:DEF_LANGUAGE)][(index)])
 E int strftime_lang(char *buf, int size, User *u, int format, struct tm *tm);
+E void expires_in_lang(char *buf, int size, User *u, time_t seconds);
 E void syntax_error(const char *service, User *u, const char *command,
 		int msgnum);
 
@@ -304,7 +317,7 @@ E void ms_init(void);
 E void memoserv(const char *source, char *buf);
 E void load_old_ms_dbase(void);
 E void check_memos(User *u);
-
+E void check_cs_memos(User *u, ChannelInfo *ci);
 
 /**** misc.c ****/
 
@@ -313,6 +326,9 @@ E char *stristr(char *s1, char *s2);
 E char *strupper(char *s);
 E char *strlower(char *s);
 E char *strnrepl(char *s, int32 size, const char *old, const char *new);
+E int strCasecmp(const char *a, const char *b);
+E const char NTL_tolower_tab[];
+E const char NTL_toupper_tab[];
 
 E char *merge_args(int argc, char **argv);
 
@@ -365,6 +381,7 @@ E int is_services_root(User *u);
 E int is_services_admin(User *u);
 E int is_services_oper(User *u);
 E int nick_is_services_admin(NickInfo *ni);
+E int nick_is_services_oper(NickInfo *ni);
 E void os_remove_nick(const NickInfo *ni);
 
 E void check_clones(User *user);
@@ -388,6 +405,7 @@ E void send_cmd(const char *source, const char *fmt, ...)
 	FORMAT(printf,2,3);
 E void vsend_cmd(const char *source, const char *fmt, va_list args)
 	FORMAT(printf,2,0);
+E void canalopers(const char *source, const char *fmt, ...);	
 E void wallops(const char *source, const char *fmt, ...)
 	FORMAT(printf,2,3);
 E void notice(const char *source, const char *dest, const char *fmt, ...)
@@ -397,6 +415,20 @@ E void notice_lang(const char *source, User *dest, int message, ...);
 E void notice_help(const char *source, User *dest, int message, ...);
 E void privmsg(const char *source, const char *dest, const char *fmt, ...)
 	FORMAT(printf,3,4);
+
+
+/**** servers.c ****/
+
+E void get_server_stats(long *nrec, long *memuse);
+E void do_server(const char *source, int ac, char **av);
+E void do_squit(const char *source, int ac, char **av);
+E Server *find_servername(const char *servername);
+E Server *add_server(const char *servername);
+E void del_server(Server *server);
+E void recursive_squit(Server *parent, const char *reason);
+E void del_users_server(Server *server);
+E void do_servers(User *u);
+
 
 /**** sessions.c ****/
 
@@ -427,11 +459,22 @@ E int sockprintf(int s, char *fmt,...);
 E int conn(const char *host, int port, const char *lhost, int lport);
 E void disconn(int s);
 
+/**** terra.c ****/
+
+E char convert2y[];
+E unsigned int base64toint(const char *s);
+E const char *inttobase64(unsigned int i);
+E void cifrado_tea(unsigned int v[], unsigned int k[], unsigned int x[]);
+E void make_virtualhost(const char *host);
+
 
 /**** users.c ****/
 
-E int32 usercnt, opcnt, maxusercnt;
+E User *userlist[1024];
+
+E int usercnt, chancnt, opcnt, maxusercnt, maxchancnt, servercnt;
 E time_t maxusertime;
+E time_t maxchantime;
 
 #ifdef DEBUG_COMMANDS
 E void send_user_list(User *user);
@@ -457,8 +500,8 @@ E int is_chanop(const char *nick, const char *chan);
 E int is_voiced(const char *nick, const char *chan);
 
 E int match_usermask(const char *mask, User *user);
+E int match_virtualmask(const char *mask, User *user);
 E void split_usermask(const char *mask, char **nick, char **user, char **host);
 E char *create_mask(User *u);
-
 
 #endif	/* EXTERN_H */

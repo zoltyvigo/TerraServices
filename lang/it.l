@@ -190,10 +190,10 @@ CHAN_X_FORBIDDEN
 	Il canale %s non puo' essere registrato o usato.
 NICK_IDENTIFY_REQUIRED
 	Identificazione richiesta per questo comando.
-	Riprova dopo aver scritto /msg %s IDENTIFY password.
+	Riprova dopo aver scritto /IDENTIFY password.
 CHAN_IDENTIFY_REQUIRED
 	Identificazione richiesta per questo comando.
-	Riprova dopo aver scritto /msg %s IDENTIFY %s password.
+	Riprova dopo aver scritto /IDENTIFY %s password.
 
 ###########################################################################
 #
@@ -204,9 +204,9 @@ CHAN_IDENTIFY_REQUIRED
 # Automatic messages
 NICK_IS_REGISTERED
 	Questo nick lo possiede gia' qualcun altro. Per favore usane un altro.
-	(Se questo e' il tuo nick scrivi /msg %s IDENTIFY password.)
+	(Se questo e' il tuo nick scrivi /IDENTIFY password.)
 NICK_IS_SECURE
-	Questo nick e' registrato e protetto. Se e' il tuo nick scrivi /msg %s IDENTIFY password.  
+	Questo nick e' registrato e protetto. Se e' il tuo nick scrivi /IDENTIFY password.  
 	Altrimenti scegline un altro.
 NICK_MAY_NOT_BE_USED
 	Questo nick non puo' essere usato.  Per favore scegline un altro.

@@ -63,7 +63,7 @@ void send_channel_list(User *user)
 
     for (c = firstchan(); c; c = nextchan()) {
 	snprintf(s, sizeof(s), " %d", c->limit);
-	notice(s_OperServ, source, "%s %lu +%s%s%s%s%s%s%s%s%s%s%s%s %s",
+	privmsg(s_OperServ, source, "%s %lu +%s%s%s%s%s%s%s%s%s%s%s%s %s",
 				c->name, c->creation_time,
 				(c->mode&CMODE_I) ? "i" : "",
 				(c->mode&CMODE_M) ? "m" : "",
@@ -71,11 +71,11 @@ void send_channel_list(User *user)
 				(c->mode&CMODE_P) ? "p" : "",
 				(c->mode&CMODE_S) ? "s" : "",
 				(c->mode&CMODE_T) ? "t" : "",
-#ifdef IRC_DAL4_4_15
+#ifdef GUARDAR /* Guardo codigo */
 				(c->mode&CMODE_R) ? "R" : "",
 #else
-				"",
-#endif
+                                 "",
+#endif				
 				(c->limit)        ? "l" : "",
 				(c->key)          ? "k" : "",
 				(c->limit)        ?  s  : "",
@@ -102,7 +102,7 @@ void send_channel_list(User *user)
 					" %s%s%s", isvoice ? "+" : "",
 					isop ? "@" : "", u->user->nick);
 	}
-	notice(s_OperServ, source, buf);
+	privmsg(s_OperServ, source, buf);
     }
 }
 
@@ -117,19 +117,19 @@ void send_channel_users(User *user)
     const char *source = user->nick;
 
     if (!c) {
-	notice(s_OperServ, source, "Channel %s not found!",
+	privmsg(s_OperServ, source, "Canal %s no encontrado!",
 		chan ? chan : "(null)");
 	return;
     }
-    notice(s_OperServ, source, "Channel %s users:", chan);
+    privmsg(s_OperServ, source, "Canal %s usuarios:", chan);
     for (u = c->users; u; u = u->next)
-	notice(s_OperServ, source, "%s", u->user->nick);
-    notice(s_OperServ, source, "Channel %s chanops:", chan);
+	privmsg(s_OperServ, source, "%s", u->user->nick);
+    privmsg(s_OperServ, source, "Canal %s operadores:", chan);
     for (u = c->chanops; u; u = u->next)
-	notice(s_OperServ, source, "%s", u->user->nick);
-    notice(s_OperServ, source, "Channel %s voices:", chan);
+	privmsg(s_OperServ, source, "%s", u->user->nick);
+    privmsg(s_OperServ, source, "Canal %s moderadores:", chan);
     for (u = c->voices; u; u = u->next)
-	notice(s_OperServ, source, "%s", u->user->nick);
+	privmsg(s_OperServ, source, "%s", u->user->nick);
 }
 
 #endif	/* DEBUG_COMMANDS */
@@ -207,7 +207,7 @@ void chan_adduser(User *user, const char *chan)
 
     if (newchan) {
 	if (debug)
-	    log("debug: Creating channel %s", chan);
+	    log("debug: Creando canal %s", chan);
 	/* Allocate pre-cleared memory */
 	c = scalloc(sizeof(Channel), 1);
 	strscpy(c->name, chan, sizeof(c->name));
@@ -221,8 +221,10 @@ void chan_adduser(User *user, const char *chan)
 	c->ci = cs_findchan(chan);
 	if (c->ci) {
 	    /* This is a registered channel, ensure it's mode locked +r */
+#ifdef GUARDAR /* Guardo codigo */
 	    c->ci->mlock_on |= CMODE_r;
 	    c->ci->mlock_off &= ~CMODE_r;	/* just to be safe */
+#endif
 
 	    /* Store return pointer in ChannelInfo record */
 	    c->ci->c = c;
@@ -230,6 +232,15 @@ void chan_adduser(User *user, const char *chan)
 	/* Restore locked modes and saved topic */
 	check_modes(chan);
 	restore_topic(chan);
+/* Máximos de canales */
+        chancnt++;
+        if (chancnt > maxchancnt) {
+            maxchancnt = chancnt;
+            maxchantime = time(NULL);
+            if (LogMaxChans)
+                log("user: New maximum Chan count: %d", maxchancnt);
+        }                                                	
+	
     }
     if (check_should_op(user, chan)) {
 	u = smalloc(sizeof(struct c_userlist));
@@ -255,6 +266,7 @@ void chan_adduser(User *user, const char *chan)
 	c->users->prev = u;
     c->users = u;
     u->user = user;
+    
 }
 
 
@@ -274,6 +286,8 @@ void chan_deluser(User *user, Channel *c)
     else
 	c->users = u->next;
     free(u);
+/* Canales */    
+    chancnt--;
     for (u = c->chanops; u && u->user != user; u = u->next)
 	;
     if (u) {
@@ -298,7 +312,7 @@ void chan_deluser(User *user, Channel *c)
     }
     if (!c->users) {
 	if (debug)
-	    log("debug: Deleting channel %s", c->name);
+	    log("debug: Borrando canal %s", c->name);
 	if (c->ci)
 	    c->ci->c = NULL;
 	if (c->topic)
@@ -415,7 +429,7 @@ void do_cmode(const char *source, int ac, char **av)
 		chan->mode &= ~CMODE_T;
 	    break;
 
-#ifdef IRC_DAL4_4_15
+#ifdef GUARDAR /* Guardo codigo */
 	case 'R':
 	    if (add)
 		chan->mode |= CMODE_R;
@@ -517,12 +531,25 @@ void do_cmode(const char *source, int ac, char **av)
 		    chan->chanops->prev = u;
 		chan->chanops = u;
 		u->user = user;
-	    } else {
+	    } else {           
 		for (u = chan->chanops; u && stricmp(u->user->nick, nick);
 								u = u->next)
 		    ;
 		if (!u)
 		    break;
+                user = finduser(nick);
+                if (!user) {
+                    log("channel: MODE %s -o for nonexistent user %s",
+                                               chan->name, nick);
+                    break;
+                }
+                if (debug)
+                    log("debug: Setting -o on %s for %s", chan->name, nick);
+                                                                                                                                                                                    
+              /* Leave Ops */		    
+                if (check_leaveops(user, chan->name, source))
+                    break;
+                            
 		if (u->next)
 		    u->next->prev = u->prev;
 		if (u->prev)
@@ -554,6 +581,8 @@ void do_cmode(const char *source, int ac, char **av)
 		}
 		if (debug)
 		    log("debug: Setting +v on %s for %s", chan->name, nick);
+                if (!check_valid_voice(user, chan->name, !!strchr(source, '.')))
+                    break;                                    
 		u = smalloc(sizeof(*u));
 		u->next = chan->voices;
 		u->prev = NULL;
@@ -561,12 +590,24 @@ void do_cmode(const char *source, int ac, char **av)
 		    chan->voices->prev = u;
 		chan->voices = u;
 		u->user = user;
-	    } else {
+	    } else {                                                                                                             	    
 		for (u = chan->voices; u && stricmp(u->user->nick, nick);
 								u = u->next)
 		    ;
 		if (!u)
 		    break;
+                user = finduser(nick);
+                if (!user) {
+                    log("channe: MODE %s -v for nonexistent user %s",
+                                                           chan->name, nick);
+                    break;
+                }                                                                                                            
+                if (debug)
+                    log("debug: Setting -v on %s for %s", chan->name, nick);
+                                    
+              /* Leave Voices */
+                if (check_leavevoices(user, chan->name, source))
+                    break;		    
 		if (u->next)
 		    u->next->prev = u->prev;
 		if (u->prev)
@@ -600,14 +641,14 @@ void do_topic(const char *source, int ac, char **av)
     }
     if (check_topiclock(av[0]))
 	return;
-    strscpy(c->topic_setter, av[1], sizeof(c->topic_setter));
-    c->topic_time = atol(av[2]);
+    strscpy(c->topic_setter, source, sizeof(c->topic_setter));
+    c->topic_time = time(NULL);
     if (c->topic) {
 	free(c->topic);
 	c->topic = NULL;
     }
-    if (ac > 3 && *av[3])
-	c->topic = sstrdup(av[3]);
+    if (ac > 1 && *av[1])
+	c->topic = sstrdup(av[1]);
     record_topic(av[0]);
 }
 

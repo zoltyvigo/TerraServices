@@ -1,0 +1,22 @@
+En esta red, los canales pueden tener los siguientes modos:
+
+    12r          Canal registrado
+    12p          Canal privado (no sale en la lista de canales /list)
+    12s          Canal secreto (no sale en la lista de canales /list)
+    12i          Canal de sólo invitados
+    12k          Canal protegido con clave, para entrar necesita la contraseña
+    12l          Con un número, numero máximo de usuarios que pueden entrar
+    12R          Canal restringido, solo pueden entrar los registrados
+    12m          Canal moderado sólo pueden hablar los operadores (+o) o los moderadores (+v)
+    12t          Solo los operadores (+o) pueden cambiar el topic
+    12n          Solo los usuarios que estan dentro pueden hablar
+
+
+Modos de usuario dentro del canal:
+
+    12o [nick]   Status de operador del canal
+    12v [nick]   Status de moderador del canal
+    12b [nick!user@host]  Prohibe la entrada (Ban) a la mascara <nick!user@host>
+
+Para cambiar los modos de canal en un canal, escriba 12/mode canal {+/-}modos.
+La 12+ es para agregar modos y la 12- para quitar modos

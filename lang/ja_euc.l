@@ -100,10 +100,10 @@ CHAN_X_FORBIDDEN
 	%s というチャンネルは使用禁止です。
 NICK_IDENTIFY_REQUIRED
 	そのコマンドを使うにはパスワードを入力する必要があります。
-	「/msg %s IDENTIFY password」を入力して下さい。
+	「/IDENTIFY password」を入力して下さい。
 CHAN_IDENTIFY_REQUIRED
 	そのコマンドを使うにはパスワードを入力する必要があります。
-	「/msg %s IDENTIFY %s password」を入力して下さい。
+	「/IDENTIFY %s password」を入力して下さい。
 
 ###########################################################################
 #
@@ -114,10 +114,10 @@ CHAN_IDENTIFY_REQUIRED
 # 自動的なメッセージ
 NICK_IS_REGISTERED
 	このニックは登録されています。他のニックに変えて下さい。
-	（保有者なら、「/msg %s IDENTIFY password」を入力して下さい。）
+	（保有者なら、「/IDENTIFY password」を入力して下さい。）
 NICK_IS_SECURE
 	このニックは登録され庇られています。保有者なら、
-	「/msg %s IDENTIFY password」を入力して下さい。
+	「/IDENTIFY password」を入力して下さい。
 	保有者でなければ、他のニックに変えて下さい。
 NICK_MAY_NOT_BE_USED
 	このニックはお使いになれません。
