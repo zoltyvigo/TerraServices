@@ -1,7 +1,9 @@
 /* Configuration file handling.
  *
- * Services is copyright (c) 1996-1999 Andy Church.
+ * Services is copyright (c) 1996-1999 Andrew Church.
  *     E-mail: <achurch@dragonfire.net>
+ * Services is copyright (c) 1999-2000 Andrew Kempe.
+ *     E-mail: <theshadow@shadowfire.org>
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  */
@@ -30,7 +32,6 @@ char *s_ChanServ;
 char *s_MemoServ;
 char *s_HelpServ;
 char *s_CyberServ;
-char *s_CregServ;
 char *s_OperServ;
 char *s_GlobalNoticer;
 char *s_IrcIIHelp;
@@ -40,7 +41,6 @@ char *desc_ChanServ;
 char *desc_MemoServ;
 char *desc_HelpServ;
 char *desc_CyberServ;
-char *desc_CregServ;
 char *desc_OperServ;
 char *desc_GlobalNoticer;
 char *desc_IrcIIHelp;
@@ -55,7 +55,6 @@ char *OperDBName;
 char *AutokillDBName;
 char *NewsDBName;
 char *IlineDBName;
-char *CregDBName;
 
 char *SendMailPatch;
 char *SendFrom;
@@ -71,6 +70,7 @@ int   ExpireTimeout;
 int   ReadTimeout;
 int   WarningTimeout;
 int   TimeoutCheck;
+int   SettimeTimeout;
 
 int   NSNicksMail;
 static int NSDefNone;
@@ -87,6 +87,7 @@ int   NSDefMemoSignon;
 int   NSDefMemoReceive;
 int   NSRegDelay;
 int   NSExpire;
+int   NSPassChanged;
 int   NSAccessMax;
 char *NSEnforcerUser;
 char *NSEnforcerHost;
@@ -113,23 +114,28 @@ int   CSSuspendExpire;
 int   CSSuspendGrace;
 
 int   MSMaxMemos;
+int   MSIgnoreMax;
 int   MSSendDelay;
 int   MSNotifyAll;
 
 char *ServicesRoot;
+char *CanalAdmins;
 char *CanalOpers;
 char *CanalHelp;
 int   LogMaxUsers;
 int   LogMaxChans;
+char *StaticAkillReason;
+int   ImmediatelySendAkill;
 int   AutokillExpiry;
 
 int   KillClonesAkillExpire;
 
-char *CanalCyber;
+char *CanalCybers;
 int   ControlClones;
 int   LimiteClones;
 int   ExpIlineDefault;
 int   MaximoClones;
+int   CyberListMax;
 char *MensajeClones;
 char *WebClones;
 
@@ -178,17 +184,15 @@ Directive directives[] = {
     { "AutokillExpiry",   { { PARAM_TIME, 0, &AutokillExpiry } } },
     { "BadPassLimit",     { { PARAM_POSINT, 0, &BadPassLimit } } },
     { "BadPassTimeout",   { { PARAM_TIME, 0, &BadPassTimeout } } },
-    { "CanalCyber",       { { PARAM_STRING, 0, &CanalCyber } } },
+    { "CanalAdmins",      { { PARAM_STRING, 0, &CanalAdmins } } },
+    { "CanalCybers",      { { PARAM_STRING, 0, &CanalCybers } } },
     { "CanalHelp",        { { PARAM_STRING, 0, &CanalHelp } } },    
     { "CanalOpers",       { { PARAM_STRING, 0, &CanalOpers } } },
     { "ChanServDB",       { { PARAM_STRING, 0, &ChanDBName } } },
     { "ChanServName",     { { PARAM_STRING, 0, &s_ChanServ },
                             { PARAM_STRING, 0, &desc_ChanServ } } },
-    { "CregServDB",       { { PARAM_STRING, 0, &CregDBName } } },
-    { "CregServName",     { { PARAM_STRING, 0, &s_CregServ },
-                            { PARAM_STRING, 0, &desc_CregServ } } },                                                           
-    { "CyberServDB",       { { PARAM_STRING, 0, &IlineDBName } } },
-    { "CyberServName",     { { PARAM_STRING, 0, &s_CyberServ },
+    { "CyberServDB",      { { PARAM_STRING, 0, &IlineDBName } } },
+    { "CyberServName",    { { PARAM_STRING, 0, &s_CyberServ },
                             { PARAM_STRING, 0, &desc_CyberServ } } },
     { "CSInChannel",      { { PARAM_SET, 0, &CSInChannel } } },
     { "CSAccessMax",      { { PARAM_POSINT, 0, &CSAccessMax } } },
@@ -203,6 +207,7 @@ Directive directives[] = {
     { "CSRestrictDelay",  { { PARAM_TIME, 0, &CSRestrictDelay } } },
     { "CSSuspendExpire",  { { PARAM_TIME, 0, &CSSuspendExpire } } },
     { "CSSuspendGrace",   { { PARAM_TIME, 0, &CSSuspendGrace } } },    
+    { "CyberListMax",     { { PARAM_POSINT, 0, &CyberListMax } } },
     { "DevNullName",      { { PARAM_STRING, 0, &s_DevNull },
                             { PARAM_STRING, 0, &desc_DevNull } } },
     { "ExpireTimeout",    { { PARAM_TIME, 0, &ExpireTimeout } } },
@@ -211,6 +216,7 @@ Directive directives[] = {
     { "HelpDir",          { { PARAM_STRING, 0, &HelpDir } } },
     { "HelpServName",     { { PARAM_STRING, 0, &s_HelpServ },
                             { PARAM_STRING, 0, &desc_HelpServ } } },
+    { "ImmediatelySendAkill",{{PARAM_SET, 0, &ImmediatelySendAkill } } },
     { "IrcIIHelpName",    { { PARAM_STRING, 0, &s_IrcIIHelp },
                             { PARAM_STRING, 0, &desc_IrcIIHelp } } },
     { "KillClonesAkillExpire",{{PARAM_TIME, 0, &KillClonesAkillExpire } } },
@@ -228,6 +234,7 @@ Directive directives[] = {
                             { PARAM_STRING, 0, &desc_MemoServ } } },
     { "MOTDFile",         { { PARAM_STRING, 0, &MOTDFilename } } },
     { "MSMaxMemos",       { { PARAM_POSINT, 0, &MSMaxMemos } } },
+    { "MSIgnoreMax",      { { PARAM_POSINT, 0, &MSIgnoreMax } } },
     { "MSNotifyAll",      { { PARAM_SET, 0, &MSNotifyAll } } },
     { "MSSendDelay",      { { PARAM_TIME, 0, &MSSendDelay } } },
     { "NewsDB",           { { PARAM_STRING, 0, &NewsDBName } } },
@@ -251,6 +258,7 @@ Directive directives[] = {
     { "NSDisableLinkCommand",{{PARAM_SET, 0, &NSDisableLinkCommand } } },
     { "NSEnforcerUser",   { { PARAM_STRING, 0, &temp_nsuserhost } } },
     { "NSExpire",         { { PARAM_TIME, 0, &NSExpire } } },
+    { "NSPassChanged",    { { PARAM_TIME, 0, &NSPassChanged } } },
     { "NSSuspendExpire",  { { PARAM_TIME, 0, &NSSuspendExpire } } },
     { "NSSuspendGrace",   { { PARAM_TIME, 0, &NSSuspendGrace } } },    
     { "NSForceNickChange",{ { PARAM_SET, 0, &NSForceNickChange } } },
@@ -272,13 +280,16 @@ Directive directives[] = {
     { "ServerHUB",        { { PARAM_STRING, 0, &ServerHUB } } },
     { "ServicesRoot",     { { PARAM_STRING, 0, &ServicesRoot } } },    
     { "ServiceUser",      { { PARAM_STRING, 0, &temp_userhost } } },
+    { "StaticAkillReason",{ { PARAM_STRING, 0, &StaticAkillReason } } },
     { "StrictPasswords",  { { PARAM_SET, 0, &StrictPasswords } } },
     { "TimeoutCheck",     { { PARAM_TIME, 0, &TimeoutCheck } } },
+    { "SettimeTimeout",   { { PARAM_TIME, 0, &SettimeTimeout } } },
     { "UpdateTimeout",    { { PARAM_TIME, 0, &UpdateTimeout } } },
     { "WarningTimeout",   { { PARAM_TIME, 0, &WarningTimeout } } },
     { "ControlClones",    { { PARAM_SET, PARAM_FULLONLY, &ControlClones } } },
+    { "ExpIlineDefault",  { { PARAM_TIME, 0, &ExpIlineDefault } } },
     { "MaximoClones",     { { PARAM_POSINT, 0, &MaximoClones } } },
-    { "LimiteClones",     { { PARAM_POSINT, 0, &LimiteClones } } },
+    { "LimiteClones",     { { PARAM_INT, 0, &LimiteClones } } },
     { "WebClones",        { { PARAM_STRING, 0, &WebClones } } },
     { "MensajeClones",    { { PARAM_STRING, 0, &MensajeClones } } },                    
 };
@@ -523,7 +534,6 @@ int read_config()
     CHEK2(s_ChanServ, ChanServName);
     CHEK2(s_MemoServ, MemoServName);
     CHEK2(s_HelpServ, HelpServName);
-    CHEK2(s_CregServ, CregServName); 
     CHEK2(s_CyberServ, CyberServName);          
     CHEK2(s_OperServ, OperServName);
     CHEK2(s_GlobalNoticer, GlobalName);
@@ -533,7 +543,6 @@ int read_config()
     CHEK2(NickDBName, NickServDB);
     CHEK2(ChanDBName, ChanServDB);
     CHEK2(OperDBName, OperServDB);
-    CHEK2(CregDBName, CregServDB);
     CHEK2(IlineDBName, CyberServDB);
     CHEK2(AutokillDBName, AutokillDB);
     CHEK2(NewsDBName, NewsDB);
@@ -545,6 +554,7 @@ int read_config()
     CHECK(ReadTimeout);
     CHECK(WarningTimeout);
     CHECK(TimeoutCheck);
+    CHECK(SettimeTimeout);
     CHECK(NSAccessMax);
     CHEK2(temp_nsuserhost, NSEnforcerUser);
     CHECK(NSNicksMail);
@@ -556,8 +566,11 @@ int read_config()
     CHECK(CSAutokickReason);
     CHECK(CSInhabit);
     CHECK(CSListMax);
-    CHECK(CSSuspendExpire);    
+    CHECK(CSSuspendExpire);
+    CHECK(MSIgnoreMax);
     CHECK(ServicesRoot);
+    CHECK(CanalAdmins);
+    CHECK(CanalHelp);
     CHECK(CanalOpers); 
     CHECK(AutokillExpiry);
 
@@ -584,7 +597,7 @@ int read_config()
     if (ControlClones) {
         CHECK(LimiteClones);
         CHECK(MaximoClones);
-//        CHECK(ExpIlineDefault);
+        CHECK(ExpIlineDefault);
     }
 
     if (!NSDefNone &&

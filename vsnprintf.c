@@ -208,7 +208,7 @@ static int _pfmt(const char *format, va_list args,
 		    valid = 1;
 		    break;
 		case 'c':
-		    intval = va_arg(args, unsigned char);
+		    intval = va_arg(args, int);
 		    valid = 1;
 		    break;
 		case 's':

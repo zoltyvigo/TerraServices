@@ -38,13 +38,36 @@ static void m_away(char *source, int ac, char **av)
 {
     User *u = finduser(source);
 
-    if (u && (ac == 0 || *av[0] == 0)) {
+    if (!u)
+        return;
+
+    if (ac == 0 || *av[0] == 0) {
        /* Quita el away */
-        u->mode &= ~UMODE_AWAY;
+        u->mode &= ~AWAY;
 	check_memos(u);
     } else 	
        /* Se pone away */
-        u->mode |= UMODE_AWAY;
+        u->mode |= AWAY;
+}
+
+/*************************************************************************/
+
+static void m_info(char *source, int ac, char **av)
+{
+    int i;
+    struct tm *tm;
+    char timebuf[64];
+
+    tm = localtime(&start_time);
+    strftime(timebuf, sizeof(timebuf), "%a %b %d %H:%M:%S %Y %Z", tm);
+
+    for (i = 0; info_text[i]; i++)
+       send_cmd(ServerName, "371 %s :%s", source, info_text[i]);
+    send_cmd(ServerName, "371 %s :Version %s+Terra %s, %s", source,
+               version_number, version_terra, version_build);
+    send_cmd(ServerName, "371 %s :On-line since %s", source, timebuf);
+    send_cmd(ServerName, "374 %s :End of /INFO list.", source);
+
 }
 
 /*************************************************************************/
@@ -83,9 +106,6 @@ static void m_kill(char *source, int ac, char **av)
 #ifdef CYBER
         stricmp(av[0], s_CyberServ) == 0 ||
 #endif        
-#ifdef CREG
-        stricmp(av[0], s_CregServ) == 0 ||
-#endif
         (s_IrcIIHelp && stricmp(av[0], s_IrcIIHelp) == 0) ||
         (s_DevNull && stricmp(av[0], s_DevNull) == 0) ||
         stricmp(av[0], s_GlobalNoticer) == 0
@@ -141,9 +161,9 @@ static void m_motd(char *source, int ac, char **av)
 
     send_cmd(ServerName, "372 %s :-", source);
     send_cmd(ServerName, "372 %s :- Servicies is copyright (c) "
-                    "1996-1999 Any Church.", source);                                        
-    send_cmd(ServerName, "372 %s :- Servicios de Terra es copyright (c) "        
-                    "2000-2001 Terra Networks S.A..", source);		                  
+                    "1996-1999 Andrew Church.", source);    
+    send_cmd(ServerName, "372 %s :- Servicios de Terra es copyright (c) "
+                    "2000-2001 Terra Networks S.A..", source);                 
     send_cmd(ServerName, "376 %s :End of /MOTD command.", source);
 }
 
@@ -210,12 +230,15 @@ static void m_privmsg(char *source, int ac, char **av)
 	    operserv(source, av[1]);
 	} else {
 	    User *u = finduser(source);
-	    if (u)
+	    if (u) {
 		notice_lang(s_OperServ, u, ACCESS_DENIED);
-	    else
+                if (!(u->mode & IGNORED)) {
+                    canalopers(s_OperServ, "Denegando el acceso a %s desde %s (no es OPER),"
+                         " ignorando....", s_OperServ, source);
+                }
+                u->mode |= IGNORED;
+	    } else
 		privmsg(s_OperServ, source, "Access denied.");
-            canalopers(s_OperServ, "Denegando el acceso a %s desde %s (no es OPER)",
-			s_OperServ, source);
 	}
     } else if (stricmp(av[0], s_NickServ) == 0) {
 	nickserv(source, av[1]);
@@ -229,10 +252,6 @@ static void m_privmsg(char *source, int ac, char **av)
     } else if (stricmp(av[0], s_CyberServ) == 0) {
         cyberserv(source, av[1]);
 #endif
-#ifdef CREG
-    } else if (stricmp(av[0], s_CregServ) == 0) {
-        cregserv(source, av[1]);	
-#endif        
     } else if (s_IrcIIHelp && stricmp(av[0], s_IrcIIHelp) == 0) {
 	char buf[BUFSIZE];
 	snprintf(buf, sizeof(buf), "ircII %s", av[1]);
@@ -284,23 +303,23 @@ static void m_stats(char *source, int ac, char **av)
     switch (*av[0]) {
       case 'u': {
 	int uptime = time(NULL) - start_time;
-	send_cmd(NULL, "242 %s :Services up %d day%s, %02d:%02d:%02d",
+	send_cmd(ServerName, "242 %s :Services up %d day%s, %02d:%02d:%02d",
 		source, uptime/86400, (uptime/86400 == 1) ? "" : "s",
 		(uptime/3600) % 24, (uptime/60) % 60, uptime % 60);
-	send_cmd(NULL, "250 %s :Current users: %d (%d ops); maximum %d",
+	send_cmd(ServerName, "250 %s :Current users: %d (%d ops); maximum %d",
 		source, usercnt, opcnt, maxusercnt);
-	send_cmd(NULL, "219 %s u :End of /STATS report.", source);
+	send_cmd(ServerName, "219 %s u :End of /STATS report.", source);
 	break;
       } /* case 'u' */
 
       case 'l':
-	send_cmd(NULL, "211 %s Server SendBuf SentBytes SentMsgs RecvBuf "
+	send_cmd(ServerName, "211 %s Server SendBuf SentBytes SentMsgs RecvBuf "
 		"RecvBytes RecvMsgs ConnTime", source);
-	send_cmd(NULL, "211 %s %s %d %d %d %d %d %d %ld", source, RemoteServer,
+	send_cmd(ServerName, "211 %s %s %d %d %d %d %d %d %ld", source, RemoteServer,
 		read_buffer_len(), total_read, -1,
 		write_buffer_len(), total_written, -1,
 		start_time);
-	send_cmd(NULL, "219 %s l :End of /STATS report.", source);
+	send_cmd(ServerName, "219 %s l :End of /STATS report.", source);
 	break;
 
       case 'c':
@@ -310,7 +329,7 @@ static void m_stats(char *source, int ac, char **av)
       case 'm':
       case 'o':
       case 'y':
-	send_cmd(NULL, "219 %s %c :/STATS %c not applicable or not supported.",
+	send_cmd(ServerName, "219 %s %c :/STATS %c not applicable or not supported.",
 		source, *av[0], *av[0]);
 	break;
     }
@@ -353,8 +372,9 @@ static void m_user(char *source, int ac, char **av)
 void m_version(char *source, int ac, char **av)
 {
     if (source)
-	send_cmd(ServerName, "351 %s ircservices-%s+Terra-1.0 %s :-- %s",
-			source, version_number, ServerName, version_build);
+        send_cmd(ServerName, "351 %s ircservices-%s+Terra-%s %s :[%s]",
+            source, version_number, version_terra, ServerName,
+            version_branchstatus);
 }
 
 /*************************************************************************/
@@ -364,39 +384,37 @@ void m_whois(char *source, int ac, char **av)
     const char *clientdesc;
 
     if (source && ac >= 1) {
-	if (stricmp(av[0], s_NickServ) == 0)
+	if (stricmp(av[1], s_NickServ) == 0)
 	    clientdesc = desc_NickServ;
-	else if (stricmp(av[0], s_ChanServ) == 0)
+	else if (stricmp(av[1], s_ChanServ) == 0)
 	    clientdesc = desc_ChanServ;
-	else if (stricmp(av[0], s_MemoServ) == 0)
+	else if (stricmp(av[1], s_MemoServ) == 0)
 	    clientdesc = desc_MemoServ;
-	else if (stricmp(av[0], s_HelpServ) == 0)
+	else if (stricmp(av[1], s_HelpServ) == 0)
 	    clientdesc = desc_HelpServ;
 #ifdef CYBER
-        else if (stricmp(av[0], s_CyberServ) == 0)
+        else if (stricmp(av[1], s_CyberServ) == 0)
             clientdesc = desc_CyberServ;
 #endif
-#ifdef CREG
-        else if (stricmp(av[0], s_CregServ) == 0)
-            clientdesc = desc_CregServ;
-#endif	    
-	else if (s_IrcIIHelp && stricmp(av[0], s_IrcIIHelp) == 0)
+	else if (s_IrcIIHelp && stricmp(av[1], s_IrcIIHelp) == 0)
 	    clientdesc = desc_IrcIIHelp;
-	else if (stricmp(av[0], s_OperServ) == 0)
+	else if (stricmp(av[1], s_OperServ) == 0)
 	    clientdesc = desc_OperServ;
-	else if (stricmp(av[0], s_GlobalNoticer) == 0)
+	else if (stricmp(av[1], s_GlobalNoticer) == 0)
 	    clientdesc = desc_GlobalNoticer;
-	else if (s_DevNull && stricmp(av[0], s_DevNull) == 0)
+	else if (s_DevNull && stricmp(av[1], s_DevNull) == 0)
 	    clientdesc = desc_DevNull;
 	else {
-	    send_cmd(ServerName, "401 %s %s :No such service.", source, av[0]);
+	    send_cmd(ServerName, "401 %s %s :No such service.", source, av[1]);
 	    return;
 	}
-	send_cmd(ServerName, "311 %s %s %s %s :%s", source, av[0],
+	send_cmd(ServerName, "311 %s %s %s %s :%s", source, av[1],
 		ServiceUser, ServiceHost, clientdesc);
-	send_cmd(ServerName, "312 %s %s %s :%s", source, av[0],
+	send_cmd(ServerName, "312 %s %s %s :%s", source, av[1],
 		ServerName, ServerDesc);
-	send_cmd(ServerName, "318 End of /WHOIS response.");
+       send_cmd(ServerName, "309 %s %s :Es un bot oficial de la red",
+                source, av[1]);
+	send_cmd(ServerName, "318 :End of /WHOIS response.");
     }
 }
 
@@ -420,7 +438,7 @@ Message messages[] = {
     { "GLINE",     NULL },
     { "HASH",      NULL },    
     { "HELP",      NULL },
-    { "INFO",      NULL },
+    { "INFO",      m_info },
     { "INVITE",    NULL },
     { "JOIN",      m_join },
     { "KICK",      m_kick },
@@ -451,7 +469,10 @@ Message messages[] = {
     { "SILENCE",   NULL },    
     { "SQUIT",     m_squit },
     { "STATS",     m_stats },
-    { "SETTIME",   NULL },    
+    { "SETTIME",   NULL },
+    { "SVSMODE",   NULL },
+    { "SVSNICK",   NULL },
+    { "SVSVHOST",  NULL },    
     { "TIME",      m_time },
     { "TOPIC",     m_topic },
     { "TRACE",     NULL },

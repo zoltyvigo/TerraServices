@@ -1,7 +1,9 @@
 /* Autokill list functions.
  *
- * Services is copyright (c) 1996-1999 Andy Church.
+ * Services is copyright (c) 1996-1999 Andrew Church.
  *     E-mail: <achurch@dragonfire.net>
+ * Services is copyright (c) 1999-2000 Andrew Kempe.
+ *     E-mail: <theshadow@shadowfire.org>
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  */
@@ -11,6 +13,7 @@
 
 /*************************************************************************/
 
+typedef struct akill Akill;
 struct akill {
     char *mask;
     char *reason;

@@ -3,7 +3,8 @@
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  *
- * Modulo de control de servidores hecho por zoltan <zolty@ctv.es>
+ * Modulo de control de servidores hecho por zoltan <zoltan@terra.es>
+ * A partir del codigo de CyBeRpUnK. Thanks a cyberpunk.
  * Julio 2000
  *
  */
@@ -119,12 +120,12 @@ Server *find_servernumeric(const char *numeric)
         return lastserver;
 
     for (server = serverlist; server; server = server->next) {
-        if (strncmp(numeric, server->numeric,1) == 0) {
+        if (strcmp(numeric, server->numeric) == 0) {
             lastserver = server;
             return server;
         }
     }
-                                                                                                     
+                  
     return NULL;
 }
 
@@ -199,7 +200,8 @@ void do_server(const char *source, int ac, char **av)
         tmpserver = tmpserver->rehijo;
         tmpserver->rehijo = server;
     }
-    canalopers(s_OperServ, "SERVER 12%s Numeric 12%s entra en la RED.", av[0], sstrdup(av[5]));
+    if ((time(NULL) - start_time) >= 60)
+        canalopers(s_OperServ, "SERVER 12%s Numeric 12%s entra en la RED.", av[0], sstrdup(av[5]));
     return;
 }    
 
@@ -225,7 +227,7 @@ void do_squit(const char *source, int ac, char **av)
 /* Para evitar problemas de memoria
  * en los squits a los bots se ignoran
  */
-    if (stricmp(av[0], ServerName) == 0)
+    if (stricmp(av[0], ServerHUB) == 0)
         return;
     
     server = find_servername(av[0]);

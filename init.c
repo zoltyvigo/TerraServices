@@ -1,7 +1,9 @@
 /* Initalization and related routines.
  *
- * Services is copyright (c) 1996-1999 Andy Church.
+ * Services is copyright (c) 1996-1999 Andrew Church.
  *     E-mail: <achurch@dragonfire.net>
+ * Services is copyright (c) 1999-2000 Andrew Kempe.
+ *     E-mail: <theshadow@shadowfire.org>
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  */
@@ -36,13 +38,13 @@ void introduce_user(const char *user)
 	NICK(s_NickServ, desc_NickServ);
 	send_cmd(s_NickServ, "MODE %s +dkobB", s_NickServ);
         send_cmd(s_NickServ, "JOIN #%s", CanalOpers);
-        send_cmd(ServerName, "MODE #%s +o %s", CanalOpers, s_NickServ);
+        send_cmd(s_NickServ, "MODE #%s +o %s", CanalOpers, s_NickServ);
     }
     if (!user || stricmp(user, s_ChanServ) == 0) {
 	NICK(s_ChanServ, desc_ChanServ);
 	send_cmd(s_ChanServ, "MODE %s +dkboB", s_ChanServ);
         send_cmd(s_ChanServ, "JOIN #%s", CanalOpers);	
-        send_cmd(ServerName, "MODE #%s +o %s", CanalOpers, s_ChanServ);        
+        send_cmd(s_ChanServ, "MODE #%s +o %s", CanalOpers, s_ChanServ);        
     }
     if (!user || stricmp(user, s_HelpServ) == 0) {
 	NICK(s_HelpServ, desc_HelpServ);
@@ -62,7 +64,9 @@ void introduce_user(const char *user)
 	NICK(s_OperServ, desc_OperServ);
 	send_cmd(s_OperServ, "MODE %s +oikbBd", s_OperServ);
         send_cmd(s_OperServ, "JOIN #%s", CanalOpers);	
-        send_cmd(ServerName, "MODE #%s +o %s", CanalOpers, s_OperServ);        
+        send_cmd(s_OperServ, "MODE #%s +o %s", CanalOpers, s_OperServ);        
+        send_cmd(s_OperServ, "JOIN #%s", CanalAdmins);
+        send_cmd(s_OperServ, "MODE #%s +o %s", CanalAdmins, s_OperServ);
     }
     if (s_DevNull && (!user || stricmp(user, s_DevNull) == 0)) {
 	NICK(s_DevNull, desc_DevNull);
@@ -72,20 +76,14 @@ void introduce_user(const char *user)
 	NICK(s_GlobalNoticer, desc_GlobalNoticer);
 	send_cmd(s_GlobalNoticer, "MODE %s +oibdk", s_GlobalNoticer);
     }
-#ifdef CREG
-    if (!user || stricmp(user, s_CregServ) == 0) {
-        NICK(s_CregServ, desc_CregServ);
-        send_cmd(s_CregServ, "MODE %s +dkboB", s_CregServ);
-        send_cmd(s_CregServ, "JOIN #%s", CanalOpers);
-        send_cmd(ServerName, "MODE #%s +o %s", CanalOpers, s_CregServ);
-    }    
-#endif    
 #ifdef CYBER
     if (!user || stricmp(user, s_CyberServ) == 0) {
         NICK(s_CyberServ, desc_CyberServ);
         send_cmd(s_CyberServ, "MODE %s +dkboB", s_CyberServ);
         send_cmd(s_CyberServ, "JOIN #%s", CanalOpers);
-        send_cmd(ServerName, "MODE #%s +o %s", CanalOpers, s_CyberServ);
+        send_cmd(s_CyberServ, "MODE #%s +o %s", CanalOpers, s_CyberServ);
+        send_cmd(s_CyberServ, "JOIN #%s", CanalCybers);
+        send_cmd(ServerName, "MODE #%s +o %s", CanalCybers, s_CyberServ);
     }
 #endif
 }
@@ -266,6 +264,8 @@ static int parse_options(int ac, char **av)
 		nofork = 1;
 	    } else if (strcmp(s, "forceload") == 0) {
 		forceload = 1;
+            } else if (strcmp(s, "noexpire") == 0) {
+                opt_noexpire = 1;
 	    } else {
 		fprintf(stderr, "Unknown option -%s\n", s);
 		return -1;
@@ -407,6 +407,9 @@ int init(int ac, char **av)
     signal(SIGSEGV, sighandler);
     signal(SIGBUS, sighandler);
     signal(SIGQUIT, sighandler);
+#ifndef DUMPCORE
+    signal(SIGSEGV, sighandler);
+#endif
     signal(SIGHUP, sighandler);
     signal(SIGILL, sighandler);
     signal(SIGTRAP, sighandler);
@@ -430,9 +433,6 @@ int init(int ac, char **av)
 #ifdef CYBER
     cyber_init();
 #endif
-#ifdef CREG
-    creg_init();
-#endif            
 
     /* Load up databases */
     if (!skeleton) {
@@ -457,11 +457,6 @@ int init(int ac, char **av)
     if (debug)
         log("debug: Loaded Cyber database (6/6)");
 #endif        
-#ifdef CREG
-    load_creg_dbase();
-    if (debug)
-        log("debug: Loaded Creg database (7/7)");
-#endif
     log("Databases loaded");
 
     /* Connect to the remote server */
@@ -492,6 +487,7 @@ int init(int ac, char **av)
     send_cmd(ServerName, "SETTIME :%lu", time(NULL));
     
     /* Manda global */
+#ifdef PROVISIONAL
 #if HAVE_ALLWILD_NOTICE
     notice(s_GlobalNoticer, "$*", "Restablecidos los servicios de la red");
 #else
@@ -508,7 +504,7 @@ int init(int ac, char **av)
     notice(s_GlobalNoticer, "$*.edu", "Restablecidos los servicios de la red");
 # endif
 #endif
-
+#endif
     /* Entra chan a los canales */
     if (CSInChannel)    
         join_chanserv();

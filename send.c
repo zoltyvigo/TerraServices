@@ -1,7 +1,9 @@
 /* Routines for sending stuff to the network.
  *
- * Services is copyright (c) 1996-1999 Andy Church.
+ * Services is copyright (c) 1996-1999 Andrew Church.
  *     E-mail: <achurch@dragonfire.net>
+ * Services is copyright (c) 1999-2000 Andrew Kempe.
+ *     E-mail: <theshadow@shadowfire.org>
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  */
@@ -63,6 +65,21 @@ void canalopers(const char *source, const char *fmt, ...)
         
     va_start(args, fmt);
     snprintf(buf, sizeof(buf), "PRIVMSG #%s :%s", CanalOpers, fmt);
+    vsend_cmd(source ? source : ServerName, buf, args);
+}
+
+/*************************************************************************/
+
+/* Envia mensaje al canal de los admins. */
+
+void canaladmins(const char *source, const char *fmt, ...)
+{
+    va_list args;
+    char buf[BUFSIZE];
+
+
+    va_start(args, fmt);
+    snprintf(buf, sizeof(buf), "PRIVMSG #%s :%s", CanalAdmins, fmt);
     vsend_cmd(source ? source : ServerName, buf, args);
 }
 
@@ -172,3 +189,11 @@ void privmsg(const char *source, const char *dest, const char *fmt, ...)
 }
 
 /*************************************************************************/
+
+void send_nick(const char *nick, const char *user, const char *host,
+               const char *server, const char *name)
+{
+
+    send_cmd(ServerName, "NICK %s 1 %ld %s %s %s :%s", nick, time(NULL),
+           user, host, server, name);
+}

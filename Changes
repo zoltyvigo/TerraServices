@@ -1,3 +1,122 @@
+Version 4.4
+-----------
+2000/12/12 .9	Fixed crashing bug using MemoServ with forbidden channels.
+		    Reported by Alex Segre <alex@ds9.bcps.iit.edu>
+2000/09/10 .8   Fixed some memory allocation and Bahamut related bugs.
+                Fixed a serious memory bug with the CS DEOP command.
+                    Above two reported by Uziel <uziel@ingsoc.com>
+                0 (zero) is now a valid DefSessionLimit config value.
+                    (backported by request of Uziel <uziel@ingsoc.com>)
+2000/08/27 .7   Fixed a bug in CS OP where users could be added to channel's
+                    op list without being in the channel. This should fix many
+                    of the bugs pertaining to channel user lists - notably the
+                    AKICK ENFORCE bug. Many thanks go to Toshi Morita
+                    <tm2@best.com> for finding and reporting this bug!	
+2000/08/23 .6   Use of the (UN)LINK command is now logged. Suggested by Ian R.
+                    Justman <ianj@esper.net>
+                Fixed a serious bug with the CS OP command causing Services to
+                    crash. Reported by... *drum roll* ... many people. :)
+2000/08/16      Having a DefSessionLimit of 0 (zero) now works. Reported by
+                    Mauritz Antunes <mauritz@americasnet.com.br>
+                Fixed a memory allocation bug in do_sjoin() in users.c.
+                    Reported by Uziel [uziel@ingsoc.com>
+2000/08/13	Fixed a minor memory initialisation bug to do with password 
+		    encryption.
+		Fixed a minor memory bug when loading an empty exception limit
+		    database. Patch supplied for the above two by Mircea Damian 
+		    <dmircea@kappa.ro>
+2000/07/16 .5   Fixed a cosmetic bug in OperServ's help.
+2000/06/17 .4	Fixed a cosmetic bug when viewing akicks.
+2000/05/01	Fixed a bug to do with enforcer nick introduction after a nick
+		    kill enforcement.
+2000/03/15 	Fixed problem with DAL4_4_15 servers not having the +r usermode
+		    removed from nicks that were not registered, after a user
+		    changed nicks.
+		Fixed a cosmetic bug in exception limit deletion replies.
+2000/03/11 .3	Bahamut no longer complains about nick enforcers' nicks.
+		    Reported by Paul R. Edelkamp, Jr. <pedelkamp@loveshack.org>
+		Re-organised how nicknames are introduced to the server.
+		Fixed the problem with Services crashing when it expired nick
+		    suspensions. Reported by VisualCorp <chile@visualcorp.com>
+		Added support for Bahamut v1.4(02)'s *working* SIDENTIFY.
+2000/02/07 .2	Fixed a bug in the snprintf/vsnprintf code used on OS'es
+		    lacking internal versions of these two funtions. Reported 
+		    by Lester Manry <bookworm@vnet.net> 
+2000/01/09	A channel's founder can no longer be set as it's successor.
+		    Reported by Nick Krassas <dreamer@darkness.gr>
+2000/01/05	Fixed a few cosmetic AKILL VIEW bugs.
+1999/12/26 .1	Added branch status info to the version info. Possible values
+		    include CURRENT, RELEASE, STABLE and BETA. 
+		Modfied the version reply; replacing the compile time with 
+		    the branchstatus. The compile info is in the INFO reply.
+1999/12/25	StatServ's use can now be limited to opers only.
+1999/12/22	Channel mode +c can be MLOCK'ed on Bahamut servers.
+1999/12/20	NS SUSPEND now accepts an expiry time and a reason.
+		StatServ now shows up in a /whois. Reported by Rafael Moraes
+		    <rcmoraes@rionet.com.br>
+1999/12/19 .0	StatServ's databases are now saved.
+1999/11/25 	Services now keeps track of the servers making up the network.
+1999/11/22	The ALL parameter for OS CLEARMODES is now case insensitive.
+		OperServ now confirms the execution of CLEARMODES. Last two
+		    reported by Norbert Schneider <bit@bitnet.ch>
+1999/11/21	OperServ can now be configured to send AKILLs onto the network
+		    the moment they're added.
+1999/11/13	Forbidden nicknames can no longer become channel successors,
+		    founders or be added to a channel's ACCESS or AKICK list.
+		Memos can no longer be sent to forbidden channels or nicknames.
+		    Reported by Nick Krassas <dreamer@darkness.gr>
+		Added support for the "/INFO services.network.com" command.
+		CS INFO no longer returns the channel's last/current topic if
+		    the channel is +p or +s or is MLOCK'ed that way. Reported 
+		    by Simons <simons@ns1.foruto.com>
+1999/11/01	Added NS [UN]SUSPEND commands. A suspended nick may not be
+		    used or identified for. NS LIST and NS INFO have been
+		    updated accordingly.
+		Extended the NS LISTLINKS ALL replies to include the nick to
+		    which each nick is directly linked.
+1999/10/31	Updated AKILL addition code to support Bahamut's additional 
+		    parameters.
+		The correct help for MS HELP SET LIMIT for sadmins is now 
+		    shown. Reported by Norbert Schneider <bit@bitnet.ch>
+		Fixed MS INFO reply with regard to hard memo limits.
+		A nick's MS NOTIFY setting is now displayed in an MS INFO reply.
+1999/10/30	Added help for CS HELP SET PRIVATE. Reported by Norbert 
+		    Schneider <bit@bitnet.ch>
+		The OPNOTICE flag is included in the "Options" line of a CS
+		    INFO reply. Reported by Norbert Schneider <bit@bitnet.ch>
+1999/10/23	Added COUNT command to CS AKICK and CS ACCESS commands.
+		Made "Guest-nick" code more robust, ensuring a unique "Guest"
+		    ID within a 24 hour period.
+1999/10/18	Nicknames are once again set -r, after a nick change, if they 
+		    are not registered or the user has not identified for it. 
+		    Reported by Norbert Schneider <bit@bitnet.ch>
+		Added FORBIDDEN and NOEXPIRE options back into CS LIST.
+		    Hopefully this is the last of the functionality that
+		    managed to get lost during Services' change of hands.
+		    Reported by Scott Drake <Services@sysopnet.org>
+1999/10/11	Completed initial Bahamut support. (NICK, SJOIN)
+1999/10/08	Changed default channel access level for ACC-CHANGE to 10.
+1999/10/02	SQLINE commands are now, and for the moment, silently ignored.
+		Completed initial support for the Bahamut TS3 protocol. (NICK)
+1999/09/27	Added -noexpire command line option to prevent all expirations.
+		    From TODO, suggested by Martin Butler <ibm@qualitynet.org>
+		ChanServ now records who AKICKs are added by. From TODO, 
+		    suggested by <andor@terrax.net>
+		Added the LISTLINKS command to the SADMIN command list returned
+		    by NS HELP.
+		AKILLs masks that contain a "!" are no longer accepted or
+		    added to the AKILL list.
+		AKILL masks are now converted to lowercase upon addition.
+		AKILL masks may not be "*@*".
+1999/09/25	Services can now send a wallops when an EXCEPTION is added.
+1999/09/24	Fixed cosmetic bug in the WallOSAkill message. Reported by
+		    Jozenobio de Melo Brasil <jozeph@globalmedia.com.br>
+1999/09/18	Added NOEXPIRE option to the AKILL and EXCEPTION LIST and VIEW
+		    commands. When supplied, only AKILLs/Exceptions that will 
+		    not expire are shown.
+1999/09/13      Added "Linked to:" reply to the NickServ INFO ALL reply.
+                Fixed NS "Will not expire" reply to only show in an INFO ALL.
+
 Version 4.3
 -----------
 1999/10/11 .3	Fixed AKICK ENFORCE bug for empty channels. Reported by

@@ -1,7 +1,9 @@
 # United States English language file.
 #
-# Services is copyright (c) 1996-1999 Andy Church.
+# Services is copyright (c) 1996-1999 Andrew Church.
 #     E-mail: <achurch@dragonfire.net>
+# Services is copyright (c) 1999-2000 Andrew Kempe.
+#     E-mail: <theshadow@shadowfire.org>
 # This program is free but copyrighted software; see the file COPYING for
 # details.
 
@@ -183,7 +185,9 @@ NICK_X_NOT_REGISTERED
 NICK_X_NOT_IN_USE
 	Nick %s isn't currently in use.
 NICK_X_FORBIDDEN
-	Nick %s may not be registered or used.
+	Nick %s may not be registered or used. This includes the use of it in any Services related commands or contexts.
+NICK_X_SUSPENDED
+	Nick ^B%s^B is suspended and may not be used or identified for.
 CHAN_X_NOT_REGISTERED
 	Channel %s isn't registered.
 CHAN_X_NOT_IN_USE
@@ -196,6 +200,10 @@ NICK_IDENTIFY_REQUIRED
 CHAN_IDENTIFY_REQUIRED
 	Password authentication required for that command.
 	Retry after typing /IDENTIFY %s password.
+
+
+SERV_X_NOT_FOUND
+	Server ^B%s^B not found. 
 
 ###########################################################################
 #
@@ -413,6 +421,10 @@ NICK_LISTLINKS_HEADER
 	List of nicknames linked to %s:
 NICK_LISTLINKS_FOOTER
 	%d linked nicknames.
+NICK_X_IS_LINKED
+	    %s
+NICK_X_IS_LINKED_VIA_X
+	    %-20s (via %s)
 
 # INFO responses
 NICK_INFO_SYNTAX
@@ -437,6 +449,8 @@ NICK_INFO_EMAIL
 	   E-mail address: %s
 NICK_INFO_OPTIONS
 	          Options: %s
+NICK_INFO_LINKED_TO
+	        Linked to: %s
 # These strings MUST NOT be empty
 NICK_INFO_OPT_KILL
 	Kill protection
@@ -448,12 +462,16 @@ NICK_INFO_OPT_NONE
 	None
 NICK_INFO_NO_EXPIRE
 	This nickname will not expire.
+NICK_INFO_SUSPEND_DETAILS
+	Suspended by %s on %s (%s).
+NICK_INFO_SUSPEND_REASON
+	Reason: %s
 
 # LIST responses
 NICK_LIST_SYNTAX
 	LIST pattern
 NICK_LIST_SERVADMIN_SYNTAX
-	LIST pattern [FORBID] [NOEXPIRE]
+	LIST pattern [FORBID] [NOEXPIRE] [SUSPEND]
 NICK_LIST_HEADER
 	List of entries matching %s:
 NICK_LIST_RESULTS
@@ -499,6 +517,22 @@ NICK_FORBID_SUCCEEDED
 	Nick %s is now forbidden.
 NICK_FORBID_FAILED
 	Couldn't forbid nick %s!
+
+# SUSPEND responses
+NICK_SUSPEND_SYNTAX
+	SUSPEND [+expiry] nickname reason
+NICK_SUSPEND_SUCCEEDED
+	Nick ^B%s^B, and all nicks with the same root nick, have been suspended.
+NICK_SUSPEND_ALREADY_SUSPENDED
+	Nick ^B%s^B is already suspended.
+
+# UNSUSPEND responses
+NICK_UNSUSPEND_SYNTAX
+	UNSUSPEND nickname
+NICK_UNSUSPEND_SUCCEEDED
+	Nick ^B%s^B has been unsuspended.
+NICK_SUSPEND_NOT_SUSPENDED
+	Nick ^B%s^B is not suspended. 
 
 ###########################################################################
 #
@@ -608,6 +642,8 @@ CHAN_SUCCESSOR_CHANGED
 	Successor for %s changed to %s.
 CHAN_SUCCESSOR_UNSET
 	Successor for %s unset.
+CHAN_SUCCESSOR_IS_FOUNDER
+	You can't make the founder %s of a channel %s the successor too.
 
 # SET PASSWORD responses
 CHAN_SET_PASSWORD_FAILED
@@ -731,7 +767,7 @@ CHAN_SET_NOEXPIRE_OFF
 
 # ACCESS messages
 CHAN_ACCESS_SYNTAX
-	ACCESS channel {ADD|DEL|LIST} [nick [level] | entry-list]
+	ACCESS channel {ADD | DEL | LIST | COUNT} [nick [level] | entry-list]
 CHAN_ACCESS_DISABLED
 	Sorry, channel access list modification is temporarily disabled.
 CHAN_ACCESS_LEVEL_NONZERO
@@ -767,6 +803,8 @@ CHAN_ACCESS_LIST_HEADER
 	  Num   Lev  Nick
 CHAN_ACCESS_LIST_FORMAT
 	  %3d  %4d  %s%s%s%s
+CHAN_ACCESS_COUNT
+	%s has %d entries on its access list.
 
 # AOP/SOP error response
 CHAN_NO_AOP_SOP
@@ -776,7 +814,7 @@ CHAN_NO_AOP_SOP
 
 # AKICK responses
 CHAN_AKICK_SYNTAX
-	AKICK channel {ADD | DEL | LIST | ENFORCE} [nick-or-usermask]
+	AKICK channel {ADD | DEL | LIST | VIEW | ENFORCE | COUNT} [mask^_ | ^_list]
 CHAN_AKICK_DISABLED
 	Sorry, channel autokick list modification is temporarily disabled.
 CHAN_AKICK_ALREADY_EXISTS
@@ -803,8 +841,13 @@ CHAN_AKICK_LIST_HEADER
 	Autokick list for %s:
 CHAN_AKICK_LIST_FORMAT
 	  %3d %s%s
+CHAN_AKICK_VIEW_FORMAT
+	  %3d %s (by %s on %s)
+	    %s
 CHAN_AKICK_ENFORCE_DONE
 	AKICK ENFORCE for %s complete; %d users were affected.
+CHAN_AKICK_COUNT
+	%s has %d entries on its AKICK list.
 
 # LEVELS responses
 CHAN_LEVELS_SYNTAX
@@ -873,6 +916,8 @@ CHAN_INFO_OPT_RESTRICTED
 	Restricted Access
 CHAN_INFO_OPT_SECURE
 	Secure
+CHAN_INFO_OPT_ISSUED
+	Issued
 CHAN_INFO_OPT_NONE
 	None
 CHAN_INFO_MODE_LOCK
@@ -883,6 +928,8 @@ CHAN_INFO_NO_EXPIRE
 # LIST responses
 CHAN_LIST_SYNTAX
 	LIST pattern
+CHAN_LIST_SERVADMIN_SYNTAX
+	LIST ^_pattern^_ [FORBIDDEN] [NOEXPIRE]
 CHAN_LIST_HEADER
 	List of entries matching %s:
 CHAN_LIST_FORMAT
@@ -1106,6 +1153,14 @@ MEMO_INFO_HARD_LIMIT_ZERO
 	Your memo limit is 0; you will not receive any new memos.  You cannot change this limit.
 MEMO_INFO_NO_LIMIT
 	You have no limit on the number of memos you may keep.
+MEMO_INFO_NOTIFY_OFF
+	You will not be notified of new memos.
+MEMO_INFO_NOTIFY_ON
+	You will be notified of new memos at logon and when they arrive.
+MEMO_INFO_NOTIFY_RECEIVE
+	You will be notified when new memos arrive.
+MEMO_INFO_NOTIFY_SIGNON
+	%s is notified of news memos at logon.
 MEMO_INFO_X_NO_MEMOS
 	%s currently has no memos.
 MEMO_INFO_X_MEMO
@@ -1123,9 +1178,77 @@ MEMO_INFO_X_MEMOS_ALL_UNREAD
 MEMO_INFO_X_LIMIT
 	%s's memo limit is %d.
 MEMO_INFO_X_HARD_LIMIT
-	%s's memo limit is %d.
+	%s's memo limit is %d, and may not be changed.
 MEMO_INFO_X_NO_LIMIT
 	%s has no memo limit.
+
+###########################################################################
+#
+# StatServ messages
+#
+############################################################################
+
+# General SERVERS responses
+STAT_SERVERS_REMOVE_SERV_FIRST
+	Server ^B%s^B is online. Remove it from the the network and try again.
+STAT_SERVERS_SERVER_EXISTS
+	Server ^B%s^B already exists.
+
+# SERVERS command syntax
+STAT_SERVERS_SYNTAX
+	SERVERS ^_option^_ ^_parameters^_ 
+
+# STATS responses
+STAT_SERVERS_STATS_TOTAL
+	Total Servers: %2d
+STAT_SERVERS_STATS_ON_OFFLINE
+	       Online: %2d (%d%%)  Offline: %2d (%d%%)
+STAT_SERVERS_LASTQUIT_WAS
+	    Last Quit: %-30s  %s
+
+# LIST responses
+STAT_SERVERS_LIST_HEADER
+	Server Name                    Users      Opers
+STAT_SERVERS_LIST_RESULTS
+	End of list -- %d/%d online servers shown.
+
+# VIEW responses
+STAT_SERVERS_VIEW_HEADER_ONLINE
+	%-30s  (^_online^_)
+STAT_SERVERS_VIEW_HEADER_OFFLINE
+	%-30s  (^_offline^_)
+STAT_SERVERS_VIEW_LASTJOIN
+	    Last join: %s
+STAT_SERVERS_VIEW_LASTQUIT
+	    Last quit: %s
+STAT_SERVERS_VIEW_QUITMSG
+	 Quit message: %s
+STAT_SERVERS_VIEW_USERS_OPERS
+	        Users: %3d (%2d%%)  Opers: %3d (%2d%%)
+STAT_SERVERS_VIEW_RESULTS
+	End of list -- %d/%d servers shown.
+
+# DELETE responses
+STAT_SERVERS_DELETE_SYNTAX
+	SERVERS DELETE ^_server^_
+STAT_SERVERS_DELETE_DONE
+	Statistics for server ^B%s^B have been deleted.
+
+# COPY responses
+STAT_SERVERS_COPY_SYNTAX
+	SERVERS COPY ^_server^_ ^_newname^_
+STAT_SERVERS_COPY_DONE
+	Statistics for server ^B%s^B copied to ^B%s^B
+
+# RENAME responses
+STAT_SERVERS_RENAME_SYNTAX
+	SERVERS RENAME ^_server^_ ^_newname^_
+STAT_SERVERS_RENAME_DONE
+	Statistics for server ^B%s^B renamed to ^B%s^B
+
+# USERS command syntax
+STAT_USERS_SYNTAX
+	USERS ^_option^_ ^_parameters^_
 
 ###########################################################################
 #
@@ -1190,10 +1313,18 @@ OPER_STATS_USER_MEM
 	User    : %6d records, %5d kB
 OPER_STATS_CHANNEL_MEM
 	Channel : %6d records, %5d kB
+OPER_STATS_SERVER_MEM
+	Server  : ^B%6d^B records, ^B%5d^B kB 
 OPER_STATS_NICKSERV_MEM
 	NickServ: %6d records, %5d kB
 OPER_STATS_CHANSERV_MEM
 	ChanServ: %6d records, %5d kB
+OPER_STATS_CYBERSERV_MEM
+	CyberServ: ^B%6d^B records, ^B%5d^B kB
+OPER_STATS_CREGSERV_MEM
+	CregServ: ^B%6d^B records, ^B%5d^B kB
+OPER_STATS_STATSERV_MEM
+	StatServ: ^B%6d^B records, ^B%5d^B kB 
 OPER_STATS_OPERSERV_MEM
 	OperServ: %6d records, %5d kB
 OPER_STATS_AKILL_COUNT
@@ -1278,7 +1409,7 @@ OPER_OPER_LIST_HEADER
 
 # AKILL responses
 OPER_AKILL_SYNTAX
-	AKILL {ADD | DEL | LIST | VIEW} [[+expiry] mask [reason]]
+	AKILL {ADD | DEL | LIST | VIEW | COUNT} [[+expiry] mask [reason]]
 OPER_AKILL_ADD_SYNTAX
 	AKILL ADD [+expiry] mask reason
 OPER_AKILL_DEL_SYNTAX
@@ -1287,6 +1418,8 @@ OPER_TOO_MANY_AKILLS
 	AKILL list is full!
 OPER_AKILL_NO_NICK
 	Reminder: AKILL masks cannot contain nicknames; make sure you have not included a nick portion in your mask.
+OPER_AKILL_MASK_TOO_GENERAL
+	The AKILL mask is too general.
 OPER_AKILL_ADDED
 	%s added to AKILL list.
 OPER_AKILL_REMOVED
@@ -1302,6 +1435,8 @@ OPER_AKILL_LIST_FORMAT
 OPER_AKILL_VIEW_FORMAT
 	%s (by %s on %s; %s)
 	    %s
+OPER_AKILL_COUNT
+	There are %d host masks on the AKILL list.
 OPER_AKILL_NO_EXPIRE
 	does not expire
 OPER_AKILL_EXPIRES_SOON
@@ -1990,11 +2125,20 @@ NICK_SERVADMIN_HELP
 	
 	    GETPASS    Retrieve the password for a nickname
 	                   (only if encryption is disabled)
-	    FORBID     Prevent a nickname from being used
+	    ^BSENDPASS^B   
+	    ^BDROP^B
+	    ^BSUSPEND^B    Prevent a nick from being identified for
+	    ^BUNSUSPEND^B
+	    ^BFORBID^B     Prevent a nick from being used/registered
+	    ^BUNFORBID^B
+	    ^BLISTLINKS^B  Lists nicknames linked to a nickname
 	
-	Services admins can also drop any nickname without needing
-	to identify for the nick, and may view the access list for
-	any nickname (/msg %S ACCESS LIST nick).
+	Services admins can also use the following commands on any
+	nickname without needing to identify for it:
+	    
+	    DROP, SET, ACCESS LIST, INFO ALL
+
+	See the help for each command for specific details.
 
 NICK_SERVADMIN_HELP_DROP
 	Syntax: DROP [nickname]
@@ -2042,7 +2186,7 @@ NICK_SERVADMIN_HELP_INFO
 	Services admins may use the ALL parameter with any nick.
 
 NICK_SERVADMIN_HELP_LIST
-	Syntax: LIST pattern [FORBIDDEN] [NOEXPIRE]
+	Syntax: LIST pattern [FORBIDDEN] [NOEXPIRE] [SUSPENDED]
 	
 	Lists all registered nicknames which match the given
 	pattern, in nick!user@host format.  Nicks with the PRIVATE
@@ -2080,6 +2224,26 @@ NICK_SERVADMIN_HELP_GETPASS
 	Limited to Services admins.
 	
 	This command is unavailable when encryption is enabled.
+
+NICK_SERVADMIN_HELP_SUSPEND
+	Syntax:SUSPEND [+expiry] nickname reaso
+	
+	Prevents a nickname, and all those nicknames with the
+	same root nickname, from being used or identified for;
+	by anyone. A nickname can be unsuspended with the  UNSUSPEND command. 
+	
+	Unlike a forbidden nickname, a suspended one does not 
+	loose it's information and will expire!
+	
+	Limited toServices admins.
+
+NICK_SERVADMIN_HELP_UNSUSPEND
+	Syntax:UNSUSPEND nickname
+	
+	Allows people to use and identify for a previously
+	SUSPENDed nickname.
+	
+	Limited toServices admins.
 
 NICK_SERVADMIN_HELP_FORBID
 	Syntax: FORBID nickname
@@ -2351,6 +2515,7 @@ CHAN_HELP_ACCESS
 	Syntax: ACCESS channel ADD nick level
 	        ACCESS channel DEL {nick | entry-num | list}
 	        ACCESS channel LIST [mask | list]
+	        ^BACCESS ^_channel^_ COUNT
 	
 	Maintains the access list for a channel.  The access
 	list specifies which users are allowed chanop status or
@@ -2382,6 +2547,9 @@ CHAN_HELP_ACCESS
 	      Lists access entries numbered 2 through 5 and
 	      7 through 9.
 
+	The ^BACCESS COUNT^B command returns the number of entries
+	there are on the access list.
+
 CHAN_HELP_ACCESS_LEVELS
 	User access levels
 	
@@ -2407,7 +2575,9 @@ CHAN_HELP_AKICK
 	Syntax: AKICK channel ADD mask [reason]
 	        AKICK channel DEL mask
 	        AKICK channel LIST [mask]
+	        ^BAKICK ^_channel^_ VIEW [^_mask^_]^B
 	        AKICK channel ENFORCE
+	        ^BAKICK ^_channel^_ COUNT^B
 	
 	Maintains the AutoKick list for a channel.  If a user
 	on the AutoKick list attempts to join the channel,
@@ -2427,7 +2597,7 @@ CHAN_HELP_AKICK
 	
 	The AKICK LIST command displays the AutoKick list, or
 	optionally only those AutoKick entries which match the
-	given mask.
+	given mask. ^BAKICK VIEW^B simply shows more details.
 	
 	The AKICK ENFORCE command causes ChanServ to enforce the
 	current AKICK list by removing those users who match an

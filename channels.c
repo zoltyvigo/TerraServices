@@ -1,7 +1,9 @@
 /* Channel-handling routines.
  *
- * Services is copyright (c) 1996-1999 Andy Church.
+ * Services is copyright (c) 1996-1999 Andrew Church.
  *     E-mail: <achurch@dragonfire.net>
+ * Services is copyright (c) 1999-2000 Andrew Kempe.
+ *     E-mail: <theshadow@shadowfire.org>
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  */
@@ -269,6 +271,9 @@ void chan_deluser(User *user, Channel *c)
     struct c_userlist *u;
     int i;
 
+    if (debug >= 2)
+        log("channel: chan_deluser() called...");
+
     for (u = c->users; u && u->user != user; u = u->next)
 	;
     if (!u)
@@ -305,7 +310,7 @@ void chan_deluser(User *user, Channel *c)
     if (!c->users) {
 	if (debug)
 	    log("debug: Borrando canal %s", c->name);
-/* Canales */
+        /* Contador Canales */
         chancnt--;	    
 	if (c->ci)
 	    c->ci->c = NULL;

@@ -1,7 +1,9 @@
 /* Prototypes and external variable declarations.
  *
- * Services is copyright (c) 1996-1999 Andy Church.
+ * Services is copyright (c) 1996-1999 Andrew Church.
  *     E-mail: <achurch@dragonfire.net>
+ * Services is copyright (c) 1999-2000 Andrew Kempe.
+ *     E-mail: <theshadow@shadowfire.org>
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  */
@@ -55,7 +57,7 @@ E int only_one_user(const char *chan);
 /**** chanserv.c ****/
 
 E void listchans(int count_only, const char *chan);
-E void get_chanserv_stats(long *nrec, long *memuse);
+E void get_chanserv_stats(long *nrec, long *memuse, long *nforbid, long *suspend, long *naccess, long *nakick, long *nmemos, long *nmemosnr);
 
 E void cs_init(void);
 E void chanserv(const char *source, char *buf);
@@ -128,7 +130,6 @@ E char *s_ChanServ;
 E char *s_MemoServ;
 E char *s_HelpServ;
 E char *s_CyberServ;
-E char *s_CregServ;
 E char *s_OperServ;
 E char *s_GlobalNoticer;
 E char *s_IrcIIHelp;
@@ -138,7 +139,6 @@ E char *desc_ChanServ;
 E char *desc_MemoServ;
 E char *desc_HelpServ;
 E char *desc_CyberServ;
-E char *desc_CregServ;
 E char *desc_OperServ;
 E char *desc_GlobalNoticer;
 E char *desc_IrcIIHelp;
@@ -153,7 +153,6 @@ E char *OperDBName;
 E char *AutokillDBName;
 E char *NewsDBName;
 E char *IlineDBName;
-E char *CregDBName;
 
 E char *SendMailPatch;
 E char *SendFrom;
@@ -169,6 +168,7 @@ E int   ExpireTimeout;
 E int   ReadTimeout;
 E int   WarningTimeout;
 E int   TimeoutCheck;
+E int   SettimeTimeout;
 
 E int   NSNicksMail;
 E int   NSForceNickChange; 
@@ -183,6 +183,7 @@ E int   NSDefHideQuit;
 E int   NSDefMemoSignon;
 E int   NSDefMemoReceive;
 E int   NSRegDelay;
+E int   NSPassChanged;
 E int   NSExpire;
 E int   NSAccessMax;
 E char *NSEnforcerUser;
@@ -209,19 +210,23 @@ E int   CSSuspendExpire;
 E int   CSSuspendGrace;
 
 E int   MSMaxMemos;
+E int   MSIgnoreMax;
 E int   MSSendDelay;
 E int   MSNotifyAll;
 
+E char *CanalAdmins;
 E char *CanalOpers;
 E char *CanalHelp;
 E char *ServicesRoot;
 E int   LogMaxUsers;
 E int   LogMaxChans;
 E int   AutokillExpiry;
+E char *StaticAkillReason;
+E int   ImmediatelySendAkill;
 
 E int   KillClonesAkillExpire;
 
-E char *CanalCyber;
+E char *CanalCybers;
 E int   ControlClones;
 E int   LimiteClones;
 E int   ExpIlineDefault;
@@ -237,25 +242,13 @@ E int read_config(void);
 
 E int send_mail(const char * destino, const char *subject, const char *body);
 
-/**** cregserv.c ****/
-
-#ifdef CREG
-E void get_cregserv_stats(long *nrec, long *memuse);
-
-E void creg_init(void);
-E void cregserv(const char *source, char *buf);
-E void load_creg_dbase(void);
-E void save_creg_dbase(void);
-E void expire_creg(void);
-#endif
-
 
 /**** cyberserv.c ****/
 
 #ifdef CYBER
 E void listilines(int count_only, const char *host);
 E void get_clones_stats(long *nrec, long *memuse);
-E void get_iline_stats(long *nrec, long *memuse);
+E void get_iline_stats(long *nrec, long *memuse, long *nsuspend, long *nipnofija, long *nvhost);
 
 E void cyber_init(void);
 E void cyberserv(const char *source, char *buf);
@@ -265,6 +258,7 @@ E void expire_ilines(void);
 
 E int add_clones(const char *nick, const char *host);
 E void del_clones(const char *host);
+E Clones *findclones(const char *host);
 
 E IlineInfo *find_iline_host(const char *host);
 E IlineInfo *find_iline_admin(const char *nick);
@@ -322,9 +316,12 @@ E void rotate_log(User *u);
 
 /**** main.c ****/
 
+E const char version_branchstatus[];
 E const char version_number[];
+E const char version_terra[];
 E const char version_build[];
 E const char version_protocol[];
+E const char *info_text[];
 
 E char *services_dir;
 E char *log_filename;
@@ -333,6 +330,7 @@ E int   readonly;
 E int   skeleton;
 E int   nofork;
 E int   forceload;
+E int   opt_noexpire;
 
 E int   quitting;
 E int   delayed_quit;
@@ -358,6 +356,7 @@ E void ms_init(void);
 E void memoserv(const char *source, char *buf);
 E void load_old_ms_dbase(void);
 E void check_memos(User *u);
+E void check_all_cs_memos(User *u);
 E void check_cs_memos(User *u, ChannelInfo *ci);
 
 /**** misc.c ****/
@@ -369,8 +368,10 @@ E char *strlower(char *s);
 E char *strLower(char *s);
 E char *strnrepl(char *s, int32 size, const char *old, const char *new);
 E int strCasecmp(const char *a, const char *b);
-E const int NTL_tolower_tab[];
-E const int NTL_toupper_tab[];
+E int NTL_tolower_tab[];
+E int NTL_toupper_tab[];
+E char *strToken(char **save, char *str, char *fs);
+E char *strTok(char *str, char *fs);
 
 E char *merge_args(int argc, char **argv);
 
@@ -382,10 +383,6 @@ E int process_numlist(const char *numstr, int *count_ret,
 		range_callback_t callback, User *u, ...);
 E int dotime(const char *s);
 
-E char *strToken(char **save, char *str, char *fs);
-E char *strTok(char *str, char *fs);
-#define strtok strTok
-#define strtoken strToken
 
 /**** news.c ****/
 
@@ -400,7 +397,7 @@ E void do_opernews(User *u);
 /**** nickserv.c ****/
 
 E void listnicks(int count_only, const char *nick);
-E void get_nickserv_stats(long *nrec, long *memuse);
+E void get_nickserv_stats(long *nrec, long *memuse, long *nforbid, long *nsuspend, long *naccess, long *nignore, long *nmemos, long *nmemosnr);
 
 E void ns_init(void);
 E void nickserv(const char *source, char *buf);
@@ -426,6 +423,7 @@ E void save_os_dbase(void);
 E int is_services_root(User *u);
 E int is_services_admin(User *u);
 E int is_services_oper(User *u);
+E int is_services_devel(User *u); /* Una paranoia x"D */
 E int nick_is_services_admin(NickInfo *ni);
 E int nick_is_services_oper(NickInfo *ni);
 E void os_remove_nick(const NickInfo *ni);
@@ -452,6 +450,7 @@ E void send_cmd(const char *source, const char *fmt, ...)
 E void vsend_cmd(const char *source, const char *fmt, va_list args)
 	FORMAT(printf,2,0);
 E void canalopers(const char *source, const char *fmt, ...);	
+E void canaladmins(const char *source, const char *fmt, ...);
 E void wallops(const char *source, const char *fmt, ...)
 	FORMAT(printf,2,3);
 E void notice(const char *source, const char *dest, const char *fmt, ...)
@@ -461,7 +460,8 @@ E void notice_lang(const char *source, User *dest, int message, ...);
 E void notice_help(const char *source, User *dest, int message, ...);
 E void privmsg(const char *source, const char *dest, const char *fmt, ...)
 	FORMAT(printf,3,4);
-
+E void send_nick(const char *nick, const char *user, const char *host,
+                const char *server, const char *name);
 
 /**** servers.c ****/
 
@@ -529,12 +529,16 @@ E void do_quit(const char *source, int ac, char **av);
 E void do_kill(const char *source, int ac, char **av);
 
 E int is_oper(const char *nick);
-E int is_on_chan(const char *nick, const char *chan);
-E int is_chanop(const char *nick, const char *chan);
-E int is_voiced(const char *nick, const char *chan);
+E int is_ChannelService(User *u);
+E int is_hidden(User *u);
+E int is_hiddenview(User *u);
+E int is_on_chan(User *u, const char *chan);
+E int is_chanop(const char *nick, Channel *c);
+E int is_voiced(const char *nick, Channel *c);
 
 E int match_usermask(const char *mask, User *user);
 E int match_virtualmask(const char *mask, User *user);
+E int match_cybermask(const char *mask, User *user);
 E void split_usermask(const char *mask, char **nick, char **user, char **host);
 E char *create_mask(User *u);
 

@@ -41,6 +41,13 @@ network in 1996. It was originally based on DALnet's IRC services but has
 evolved over time to become more than just a replica - sporting many original
 features and enhancements.
 
+     IMPORTANT: Neither the EsperNet IRC Network nor the ShadowFire IRC Network
+are affiliated with IRC Services; they are simply the networks frequented by
+the authors of IRC Services and two of its many satisfied users. Please do not
+request support from them or their support channels. If you do require help,
+please request it through one of the methods mentioned at the end of this
+README.
+
      While Services is primarily the work of Andy Church, there have been 
 numerous contributions from others. These contributions are noted in the 
 Changes file. Particularly noteworthy contributors during Andy's time were,
@@ -50,7 +57,7 @@ and some still are:
 	Jose R. Holzmann, Raul S. Villarreal -- Spanish translation
 	Andrew Kempe <theshadow@shadowfire.org> -- news system
 	<d.duca@eurcom.net> -- Italian translation
-	<mikado@holyfire.com> -- Turkish translation
+	Erdem Sener <mikado@holyfire.com> -- Turkish translation
 	Andrew Kempe <theshadow@shadowfire.org> -- session limiting
 
      I'd like thank Michael Raff <raff@electrocity.com> and Jonathan George 
@@ -216,6 +223,8 @@ the behavior of Services:
 				    the log file if not in read-only mode)
 	-forceload		Try to load as much of the databases as
 				    possible, even if errors are encountered
+	-noexpire		Prevents all expirations (Nicknames, Channels,
+				    Akills, Session Limit Exceptions etc).
 
      Upon starting, Services will parse its command-line parameters, open
 its logfile, then (assuming the -nofork option is not given) detach itself
@@ -372,6 +381,21 @@ AKILL
     Example:  :services.esper.net AKILL *.lame.com lamer :Flooding
         Disallows any client matching "lamer@*.lame.com" from connecting
         to the network.
+
+    Bahamut Syntax: AKILL <hostmask> <usermask> <expiry> <who> <time> :<reason>
+
+    This AutoKill works in the same way as the original one except that it
+    has a few more parameters. They are, in the above order: hostmask,
+    usermask, seconds until expiry, nick of person who added the akill,
+    time of addition and finally the reason for the AutoKill.
+
+    Example:  :services.esper.net AKILL *.lame.com lamer 3600 IRCop 945085429
+			:Flooding
+	Works in the same way as the first example, but has the following:
+		- will expire in 1 hour
+		- was added by IRCop
+		- was added on Mon Dec 13 13:43:49 1999
+
 
 RAKILL
 

@@ -31,7 +31,7 @@ int   readonly     = 0;			/* -readonly */
 int   skeleton     = 0;			/* -skeleton */
 int   nofork       = 0;			/* -nofork */
 int   forceload    = 0;			/* -forceload */
-
+int   opt_noexpire = 0;               /* -noexpire */
 /* Set to 1 if we are to quit */
 int quitting = 0;
 
@@ -53,6 +53,7 @@ int save_data = 0;
 /* At what time were we started? */
 time_t start_time;
 
+int logtochan = 0;
 
 /******** Local variables! ********/
 
@@ -114,6 +115,8 @@ void sighandler(int signum)
 		          break;
 		case -16: snprintf(buf, sizeof(buf), "saving %s", NewsDBName);
 		          break;
+                case -17: snprintf(buf, sizeof(buf), "saving %s", IlineDBName);
+                          break;
 		case -21: snprintf(buf, sizeof(buf), "expiring nicknames");
 		          break;
 		case -22: snprintf(buf, sizeof(buf), "expiring channels");
@@ -156,6 +159,7 @@ int main(int ac, char **av, char **envp)
     volatile time_t last_update; /* When did we last update the databases? */
     volatile time_t last_expire; /* When did we last expire nicks/channels? */
     volatile time_t last_check;  /* When did we last check timeouts? */
+    volatile time_t last_settime; /* When did we last SETTIME */
     int i;
     char *progname;
 
@@ -189,6 +193,7 @@ int main(int ac, char **av, char **envp)
     last_update = time(NULL);
     last_expire = time(NULL);
     last_check  = time(NULL);
+    last_settime = time(NULL);
 
     /* The signal handler routine will drop back here with quitting != 0
      * if it gets called. */
@@ -217,13 +222,17 @@ int main(int ac, char **av, char **envp)
 	    waiting = -25;
 	    expire_akills();
 #ifdef CYBER
-	    expire_ilines();
-#endif
-#ifdef CREG
-            expire_creg();
+//	    expire_ilines();
 #endif
 	    last_expire = t;
 	}
+      /* Hace un SETTIME a la red cada x tiempo */
+        if (t-last_settime >= SettimeTimeout) {
+            send_cmd(NULL, "SETTIME %lu", time(NULL));
+            send_cmd(ServerName, "WALLOPS :Sincronizacion automatica de la RED...");
+            last_settime = t;
+        }
+
 	if (!readonly && (save_data || t-last_update >= UpdateTimeout)) {
 	    waiting = -2;
 	    if (debug)
@@ -242,13 +251,9 @@ int main(int ac, char **av, char **envp)
 	    save_news();
             waiting = -17;
 #ifdef CYBER
+            waiting = -17;
             save_cyber_dbase();
-            waiting = -18;      
 #endif            
-#ifdef CREG
-            save_creg_dbase();
-            waiting = -19;
-#endif
 	    if (save_data < 0)
 		break;	/* out of main loop */
 

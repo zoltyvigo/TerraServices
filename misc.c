@@ -1,7 +1,9 @@
 /* Miscellaneous routines.
  *
- * Services is copyright (c) 1996-1999 Andy Church.
+ * Services is copyright (c) 1996-1999 Andrew Church.
  *     E-mail: <achurch@dragonfire.net>
+ * Services is copyright (c) 1999-2000 Andrew Kempe.
+ *     E-mail: <theshadow@shadowfire.org>
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  */
@@ -26,7 +28,7 @@ int toupper(char c)
  * zoltan  1/11/2000
  */
  
-const int NTL_toupper_tab[] = {
+int NTL_toupper_tab[] = {
 #if (CHAR_MIN<0)
 /* x80-x87 */ '\x80', '\x81', '\x82', '\x83', '\x84', '\x85', '\x86', '\x87',
 /* x88-x8f */ '\x88', '\x89', '\x8a', '\x8b', '\x8c', '\x8d', '\x8e', '\x8f',
@@ -95,7 +97,7 @@ int tolower(char c)
  * zoltan  1/11/2000
  */
  
-const int NTL_tolower_tab[] = {
+int NTL_tolower_tab[] = {
 #if (CHAR_MIN<0)
 /* x80-x87 */ '\x80', '\x81', '\x82', '\x83', '\x84', '\x85', '\x86', '\x87',
 /* x88-x8f */ '\x88', '\x89', '\x8a', '\x8b', '\x8c', '\x8d', '\x8e', '\x8f',
@@ -242,6 +244,59 @@ int strCasecmp(const char *a, const char *b)
 }                
 /*************************************************************************/
 
+/*
+ * strToken.c
+ *
+ * Walk through a string of tokens, using a set of separators.
+ *
+ * Para compatiblidad Undernet P10
+ * zoltan 1/11/2000
+ */
+
+char *strToken(char **save, char *str, char *fs)
+{
+  char *pos = *save;            /* keep last position across calls */
+  register char *tmp;
+
+  if (str)
+      pos = str;                  /* new string scan */
+
+  while (pos && *pos && strchr(fs, *pos) != NULL)
+      pos++;                      /* skip leading separators */
+
+  if (!pos || !*pos)
+      return (pos = *save = NULL);        /* string contains only sep's */
+
+  tmp = pos;                    /* now, keep position of the token */
+
+  while (*pos && strchr(fs, *pos) == NULL)
+      pos++;                      /* skip content of the token */
+
+  if (*pos)
+      *pos++ = '\0';              /* remove first sep after the token */
+  else
+      pos = NULL;                 /* end of string */
+
+  *save = pos;
+  return (tmp);
+}
+
+
+/*
+ * * NOT encouraged to use!
+ */
+
+char *strTok(char *str, char *fs)
+{
+   
+   static char *pos;
+
+   return strtoken(&pos, str, fs);
+
+}
+
+
+/*************************************************************************/
 /* strnrepl:  Replace occurrences of `old' with `new' in string `s'.  Stop
  *            replacing if a replacement would cause the string to exceed
  *            `size' bytes (including the null terminator).  Return the
@@ -361,6 +416,13 @@ int match_wild_nocase(const char *pattern, const char *str)
  * If `count' is non-NULL, it will be set to the total number of times the
  * callback was called.
  *
+ * The number list will never contain duplicates and will always be sorted
+ * ascendingly. This means the callback routines don't have to worry about
+ * being called twice for the same index. -TheShadow
+ * Also, the only values accepted are 0-65536 (inclusive), to avoid someone
+ * giving us 0-2^31 and causing freezes or out-of-memory.  Numbers outside
+ * this range will be ignored.
+ *
  * The callback should be of type range_callback_t, which is defined as:
  *	int (*range_callback_t)(User *u, int num, va_list args)
  */
@@ -368,10 +430,15 @@ int match_wild_nocase(const char *pattern, const char *str)
 int process_numlist(const char *numstr, int *count_ret,
 		range_callback_t callback, User *u, ...)
 {
-    int n1, n2, i;
-    int res = 0, retval = 0, count = 0;
+    int n1, n2, min, max, i;
+    int retval = 0;
+    int numcount = 0;
     va_list args;
+    static char numflag[65537];
 
+    memset(numflag, 0, sizeof(numflag));
+    min = 65536;
+    max = 0;
     va_start(args, u);
 
     /*
@@ -379,34 +446,52 @@ int process_numlist(const char *numstr, int *count_ret,
      * when it precedes a comma, and ignores everything from the
      * end of a valid number or range to the next comma or null.
      */
-    for (;;) {
-	n1 = n2 = strtol(numstr, (char **)&numstr, 10);
-	numstr += strcspn(numstr, "0123456789,-");
-	if (*numstr == '-') {
-	    numstr++;
-	    numstr += strcspn(numstr, "0123456789,");
-	    if (isdigit(*numstr)) {
-		n2 = strtol(numstr, (char **)&numstr, 10);
-		numstr += strcspn(numstr, "0123456789,-");
-	    }
+    while (*numstr) {
+        n1 = n2 = strtol(numstr, (char **)&numstr, 10);
+        numstr += strcspn(numstr, "0123456789,-");
+        if (*numstr == '-') {
+            numstr++;
+            numstr += strcspn(numstr, "0123456789,");
+            if (isdigit(*numstr)) {
+                n2 = strtol(numstr, (char **)&numstr, 10);
+                numstr += strcspn(numstr, "0123456789,-");
+            }
+        }
+	if (n1 < 0)
+	    n1 = 0;
+	if (n2 > 65536)
+	    n2 = 65536;
+	if (n1 < min)
+	    min = n1;
+	if (n2 > max)
+	    max = n2;
+        while (n1 <= n2) {
+	    numflag[n1] = 1;
+	    n1++;
 	}
-	for (i = n1; i <= n2 && i >= 0; i++) {
-	    int res = callback(u, i, args);
-	    count++;
-	    if (res < 0)
-		break;
-	    retval += res;
-	}
-	if (res < -1)
-	    break;
-	numstr += strcspn(numstr, ",");
-	if (*numstr)
-	    numstr++;
-	else
-	    break;
+        numstr += strcspn(numstr, ",");
+        if (*numstr)
+            numstr++;
     }
+
+    /* Now call the callback routine for each index. */
+    numcount = 0;
+    for (i = min; i <= max; i++) {
+	int res;
+	if (!numflag[i])
+	    continue;
+	numcount++;
+	res = callback(u, i, args);
+	if (debug)
+	    log("debug: process_numlist: tried to do %d; result = %d", i, res);
+	if (res < 0)
+	    break;
+	retval += res;
+    }
+
+    va_end(args);
     if (count_ret)
-	*count_ret = count;
+        *count_ret = numcount;
     return retval;
 }
 
@@ -440,64 +525,3 @@ int dotime(const char *s)
 }
 
 /*************************************************************************/
-
-char       *
-strToken(save, str, fs)
-     char      **save;
-     char       *str, *fs;
-{
-char       *pos = *save;        /*
-
-                                 * keep last position across calls
-                                 */
-char   *tmp;
-
-   if (str)
-      pos = str;                /*
-                                 * new string scan
-                                 */
-
-   while (pos && *pos && strchr(fs, *pos) != NULL)
-      pos++;                    /*
-                                 * skip leading separators
-                                 */
-
-   if (!pos || !*pos)
-      return (pos = *save = NULL);      /*
-                                         * string contains only sep's
-                                         */
-
-   tmp = pos;                   /*
-                                 * now, keep position of the token
-                                 */
-
-   while (*pos && strchr(fs, *pos) == NULL)
-      pos++;                    /*
-                                 * skip content of the token
-                                 */
-
-   if (*pos)
-      *pos++ = '\0';            /*
-                                 * remove first sep after the token
-                                 */
-   else
-      pos = NULL;               /*
-                                 * end of string
-                                 */
-
-   *save = pos;
-   return (tmp);
-}
-
-/*
- * * NOT encouraged to use!
- */
-
-char       *
-strTok(str, fs)
-     char       *str, *fs;
-{
-static char *pos;
-
-   return strtoken(&pos, str, fs);
-}

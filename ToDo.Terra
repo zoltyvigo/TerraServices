@@ -1,0 +1,17 @@
+Cosas Pendientes....
+
+ A CORTO PLAZO
+- Adaptar Akill por el de ircservices 4.5.0
+- Ordenado en memoria en cyber.
+- Posiblidad de NEWSLOGON para cybers (peticion de heyhey)
+- Comando en cyber, para ver los nicks de los clones
+- Sincronizar el codigo de cifrado de ips con la del ircu
+
+ A MEDIO PLAZO
+- IGNORE {ADD|DEL|LIST} En memo para ignorar a la gente que manda
+  memos, sería al estilo de ACCESS de nick.
+
+- Generacion del KEY para los vhosts  y que se guarde
+  para los unbans de chan y de cyber. Se implementara
+  una vez que esté implementado en el ircd
+

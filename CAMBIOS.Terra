@@ -1,0 +1,183 @@
+CAMBIOS de TERRA
+
+Version 1.a.b Fecha de Release dia/mes/año   <email-autor>
+----------------------------------------------------------------------
+
+Version 1.0-R7     16-Febrero-2001     zoltan     <zoltan@terra.es>
+----------------------------------------------------------------------
+
+  * Se añade strtok() y strtoken() propios y se cambia el process_numlist()
+    por el de los services 4.5.0pre6
+  * Optimizacion del codigo de busquedas de ilines de cyberServ, añadidos
+    los comandos SUSPEND, UNSUSPEND y VERIFY (para verificar si un nick
+    tiene iline o no.
+  * Nuevo campo en la DB de NickServ, la hora de ultimo cambio de la pass.
+  * Nuevo campo en la DB de NickServ, para el SET FULLMEMO de MemoServ,
+    si el buzon destino tiene los memos llenos, se muestra el mensaje
+    de fullmemo si lo tiene.
+  * Ahora al hacer forbid de un canal, el canal tiene que empezar por # o +
+    y no tener más de 64 caracteres.
+  * Numerosos FIXES, en canales con estado FORBID, se chequeaba los modos,
+    el topic cuando no debe hacerlo. Problemas detectados por NiKoLaS.
+  * Ahora manda SETTIME cada un tiempo, configurable en services.conf
+    en SettimeTimeout.
+  * Ahora el STATS ALL de OperServ es más completo, ahora sale los
+    registros, memos, suspends, forbids, etc.. Sugerencia de |savage|.
+  * A Los opers con modo +k ya no se pueden deopearlos ni kickearlos con
+    los comandos de ChanServ, aunque s¡ con OperServ.
+  * ChanServ te dice que no está el usuario en el canal cuando se
+    intenta hacer una accion sobre el (OP, DEOP, etc..) y no está en el
+    canal.
+  * ChanServ ahora te dice que ya estas en el canal, cuando intentas
+    hacer un invite y estas dentro del canal.
+  * Si intentas hacer un OP a un usuario que ya tiene OP, ChanServ te
+    dirá que ya tienes OP.. Lo mismo con DEOP, VOICE, DEVOICE.
+  * Ahora en AKICK VIEW de ChanServ, te dice la fecha de cuando ha sido
+    puesto un akick.
+  * Sincronizacion de los ircservices hasta la version 4.4.9.
+  * Se ha quitado el StatServ, por innecesario.
+
+
+Version 1.0-R6        20-Enero-2001     zoltan   <zolty@terra.es>
+----------------------------------------------------------------------
+Version con parches BUGFIX.
+
+  * Bug en proccess_numlist() en misc.c que al ejecutar un comando
+    con recursividad, con valores muy altos, por ejemplo intentando
+    borrar millones de memos, /msg MemoServ DEL 1-9999999999999999,
+    causando un congelacion de los services, al estar ejecutando... y
+    posterior caida por ping timeout.
+
+  * Habilitado el ACCESS DEL y AKICK DEL recursivos de chan al conse-
+    guir el fix del bug.
+
+
+Version 1.0-R5        17-Enero-2001     zoltan   <zolty@terra.es>
+----------------------------------------------------------------------
+Version con MUCHISIMOS CAMBIOS para la instalacion por 1º vez en Terra.
+
+/** OJO!!!!, ACABAR DE ESCRIBIR ESTO.... **/
+
+  * Modulo NickServ
+     - 
+
+
+  * Modulo ChanServ
+     - CLEAR TOPIC, para resetear el topic y poner el topic guardado
+       por Chanserv, muy util para en casos de splits.
+     - Posiblidad de hacer OP/DEOP por chan en canales no registra-
+       dos por parte de Opers.
+     - He puesto el OPNOTICE (Issued o el debug) en INVITE, en los
+       cambios de ACCESS, en KICK. si el que hace el SET ISSUED no
+       es un founder, se avisa con un notice en el canal.
+     - Comando LIST más completo, utilizando el codigo de LIST de
+       NickServ.
+     - Añadido en el INFO, si un canal esta suspendido, asi como 
+       el motivo y tiempo/expiracion del suspend. Tb he añadido
+       las nuevas flags en las opciones.
+     - Solo los Operadores/Admins pueden ver las ips, en el INFO,
+       ACCESS LIST y en AKICK LIST.
+     - Capamiento del ACCESS DEL y AKICK DEL recursivo, mientras no
+       solucione el bug que hay. Ahora solo borra de 1 en 1.
+     - Flag MEMOALERT, para activar el aviso de memos de canales. Se
+       ajusta con SET MEMOALERT.
+     - Flag UNBANCYBER, para permitir unbans a ips de cybers desde el
+       bot cyber. Se ajusta con SET UNBANCYBER ON/OFF
+     - Flag OFICIAL_CHAN, para indicar que el canal es oficial de Terra.
+       Solo puede poner un admin el SET OFICIAL ON/OFF.
+     - Implementacion de SECUREVOICES y LEAVEVOICES
+     - FIX en el Topiclock y en el keeptopic, debido a diferencias entre
+       Undernet y Dalnet, no rulaba en Undernet.
+     - Campo en la DB, forbidby y forbidreason para el FORBID.
+     - Comando KICK, para kickear a un usuario con el level KICK.
+     - Comandos VOICE/DEVOICE, para dar/quitar voz con el level VOICEDEVOICE.
+     - Campo who en el array de los akicks, para el nick de quien puso el
+       akick, y nuevo comando AKICK VIEW sacado de los ircservices-4.4.8.
+     - Implementacion de SUSPEND y UNSUSPEND con la posiblidad de poner
+       expiracion de suspend, para que se reactive el canal automaticamente.
+       nuevos campos en la DB, suspendby, suspendreason, time_suspend y
+       time_expiresuspend. 
+     - Fix en OP y DEOP, que si se daba op a %s%s%s%s, petaban los bots.
+     - Nuevo campo en la DB, el entrymsg_setter, para guardar el nick
+       de quien cambio el mensaje de ENTRYMSG.
+     - El antiguo level MEMO, se ha dividido en 2, MEMO-READ y MEMO-DEL.
+     - Añadido de nuevos levels, AUTODEVOICE, VOICEDEVOICE, KICK y
+       GETKEY.   
+
+  * Modulo MemoServ
+     
+     - Fix de un bug muy grande que afectaba en canales en estado
+       forbid al usar cualquier comando de MemoServ.
+     - Añadido aviso de memos de Canales.
+     - Añadido SET FULLMEMO, para especificar un mensaje que mostrara
+       si el buzón está lleno
+
+
+  * Modulo OperServ
+    - Cambios en el GLINE, si se mete/quita un gline, lo mete inmediatamente,
+      no cuando entra el siguiente usuario con la mask afectado que asi
+      estaba en los services originales.
+    - Oper no deja meter un GLINE GLOBAL *@* :))
+    - Comando GETKEY, Te dice el key (modo +k) de un canal si lo tiene.
+    - Comando LIMPIA, Kickear a todos los usuarios y cerrar el canal con
+      +i. No afectan a Opers.
+    - Comando APODERA, Silenciar un canal, es decir, quitando op y voices
+      y poner el canal en modo +ism. No afectan a opers
+    - Comando OP/DEOP, dar op o quitar a traves del servidor.
+    - Comando UNBLOCK, quita un gline.
+    - Comando BLOCK, glinea a un tio por 5 minutos, si el tio esta en 
+      una ip con iline, no se le puede glinear un oper, tendra que hacerlo
+      un admin.
+    - Comando KILL, killea a un usuario. 
+    - Nuevos flags para Oper, en flags del NickDB, el NI_OPER_SERV y el
+      NI_ADMIN_SERV con el fin de optimizar el is_services_oper/admin.
+    - En la funcion is_oper(), he puesto que acepte tb a los usuarios con
+      +h, para que los Helper o Cservices puedan tener acceso a oper sin
+      tener o-line.
+    - Añadido en la DB de oper, el maximo de canales y su hora de igual
+      forma que hace con los usuarios. Se ha hecho cambios en channels.c
+      para que se pueda contar los canales abiertos.
+    - Borrado del codigo de Check-clones por innecesario.
+
+  * Modulo CyberServ
+
+    - Se suprime el codigo original de SESSIONS de A. Kempee (TheShadow) y
+      se hace un bot pseudocliente para, ademas de controlar los clones,
+      uso de los admins de cybers.
+    - Se mantiene el control de clones de los sessions.c, y lo demas es 
+      codigo nuevo.
+    - Nuevos comandos... :)
+
+
+  * Modulo HelpServ
+     
+    - Añadido de nuevos helps hechos por Zoltan, AkOnD y DesMan.
+
+
+  * Modulo de lenguajes
+     - A medida que se iban implementando nuevas features, añado en
+       el lenguaje es.l. Hay que actualizar los demas lenguajes.
+     - Añadido del lenguaje Gallego, traducido por Tito García - Anonimus
+       <anonimus@ctv.es>
+     - Añadido del lenguaje Catalan, traducido por Roberto García -
+       RoBeRT <robert@upworld.org>
+
+
+  * Otros...
+     - Añadido del cifrado de ips del ircu para el unban de chan y de
+       cyber.
+     - Control de comando SERVER/SQUIT, guarda la info de los servers
+       asi como su nombre, numeric y los users para el control de los
+       servidores. En un SQUIT, borra los servidores spliteados, así 
+       como los usuarios que cuelgan de los servidores spliteados.
+     - Añadido soporte toLower, toUpper, strLower y strCasemp sacados
+       del codigo de Undernet para la adaptacion de los Services al
+       ircu de terra basado en Undernet.
+     - Modulo correo, para el envio de correos. Hay 3 posiblidades para
+       elegir, SENDMAIL1, SENDMAIL2 y SMTP.
+     - Versiones de las DB independientes.
+     - Cambios esteticos en VERSION y STATS a los bots.  
+
+
+
+Comienzo del fichero de cambios :)

@@ -5,8 +5,8 @@
  * Toni García       zoltan    zolty@terra.es
  * Daniel Fernández  FreeMind  animedes@terra.es
  * Marcos Rey        TeX       marcos.rey@terra.es
+ * Jordi Murgó       |savage|  savage@apostols.org
  *
- * Este programa es de licencia privada.
  */
  
 /*************************************************************************/
@@ -20,17 +20,17 @@
 
 static Clones *cloneslist[1024];
 static int32 nclones = 0;
-static Clones *findclones(const char *host);
-
 
 static IlineInfo *ilinelists[256];
 
 static void alpha_insert_iline(IlineInfo *il);
+static void change_host_iline(IlineInfo *il, const char *host);
+static IlineInfo *find_iline_host2(const char *host);
 static IlineInfo *makeiline(const char *host);
 static int deliline(IlineInfo *il);
 
-
 static void do_help(User *u);
+static void do_credits(User *u);
 static void do_contrata(User *u);
 static void do_info(User *u);
 static void do_actualiza(User *u);
@@ -55,11 +55,20 @@ static void do_set_centro(User *u, IlineInfo *il, char *param);
 static void do_set_vhost(User *u, IlineInfo *il, char *param);
 static void do_set_ipnofija(User *u, IlineInfo *il, char *param);
 static void do_set_expire(User *u, IlineInfo *il, char *param);
+static void do_suspend(User *u);
+static void do_unsuspend(User *u);
+static void do_killclones(User *u);
+
 
 /*************************************************************************/
 
 static Command cmds[] = {
+    { "AYUDA",     do_help,        NULL, -1,                    -1,-1,-1,-1 },
     { "HELP",      do_help,        NULL, -1,                    -1,-1,-1,-1 },
+    { "?",         do_help,        NULL, -1,                    -1,-1,-1,-1 },
+    { ":?",        do_help,        NULL, -1,                    -1,-1,-1,-1 },
+    { "CREDITS",   do_credits,     NULL, SERVICES_CREDITS_TERRA, -1,-1,-1,-1 },
+    { "CREDITOS",  do_credits,     NULL, SERVICES_CREDITS_TERRA, -1,-1,-1,-1 },
     { "INFO",      do_info,        NULL, CYBER_HELP_INFO,       -1,-1,-1,-1 },
     { "CONTRATA",  do_contrata,    NULL, CYBER_HELP_CONTRATA,   -1,-1,-1,-1 },
     { "ACTUALIZA", do_actualiza,   NULL, CYBER_HELP_ACTUALIZA,  -1,-1,-1,-1 },
@@ -76,13 +85,12 @@ static Command cmds[] = {
     { "LIST",      do_list,        is_services_oper, -1, -1, 
              CYBER_SERVADMIN_HELP_LIST,
              CYBER_SERVADMIN_HELP_LIST, CYBER_SERVADMIN_HELP_LIST },
-    { "ILINE",     do_iline,       is_services_oper, -1, -1,
+    { "ILINE",     do_iline,       is_services_admin, -1, -1,
              CYBER_SERVADMIN_HELP_ILINE,
              CYBER_SERVADMIN_HELP_ILINE, CYBER_SERVADMIN_HELP_ILINE },
-    { "SET",       do_set_cyber,   is_services_oper, -1, -1,
+    { "SET",       do_set_cyber,   is_services_admin, -1, -1,
              CYBER_SERVADMIN_HELP_SET,
-             CYBER_SERVADMIN_HELP_SET, CYBER_SERVADMIN_HELP_SET },
-                          
+             CYBER_SERVADMIN_HELP_SET, CYBER_SERVADMIN_HELP_SET },                          
     { "SET HOST",     NULL,     NULL, -1, -1, CYBER_SERVADMIN_HELP_SET_HOST,
                CYBER_SERVADMIN_HELP_SET_HOST, CYBER_SERVADMIN_HELP_SET_HOST },
     { "SET HOST2",    NULL,     NULL, -1, -1, CYBER_SERVADMIN_HELP_SET_HOST2,
@@ -92,18 +100,28 @@ static Command cmds[] = {
     { "SET DNI",      NULL,     NULL, -1, -1, CYBER_SERVADMIN_HELP_SET_DNI,
                 CYBER_SERVADMIN_HELP_SET_DNI, CYBER_SERVADMIN_HELP_SET_DNI },
     { "SET EMAIL",    NULL,     NULL, -1, -1, CYBER_SERVADMIN_HELP_SET_EMAIL,
-              CYBER_SERVADMIN_HELP_SET_EMAIL, CYBER_SERVADMIN_HELP_SET_EMAIL },    
-#ifdef LALA         
-    CYBER_HELP_GLOBAL,-1,-1,-1,-1},    
-    { "SET TELEFONO", NULL,   NULL,  CYBER_HELP_GLOBAL,-1,-1,-1,-1},    
-    { "SET LIMITE",  NULL,    NULL,  CYBER_HELP_GLOBAL,-1,-1,-1,-1},    
-    { "SET NOMBRE",  NULL,     NULL, CYBER_HELP_GLOBAL,-1,-1,-1,-1},    
-    { "SET CENTRO",  NULL,     NULL,  CYBER_HELP_GLOBAL,-1,-1,-1,-1},    
-    { "SET VHOST",  NULL,     NULL,   CYBER_HELP_GLOBAL,-1,-1,-1,-1},
-    { "SET IPNOFIJA",  NULL,     NULL, CYBER_HELP_GLOBAL,-1,-1,-1,-1},
-#endif            
-            
-    { NULL }
+              CYBER_SERVADMIN_HELP_SET_EMAIL, CYBER_SERVADMIN_HELP_SET_EMAIL },
+    { "SET TELEFONO", NULL,     NULL, -1, -1, CYBER_SERVADMIN_HELP_SET_TELEFONO,
+           CYBER_SERVADMIN_HELP_SET_TELEFONO, CYBER_SERVADMIN_HELP_SET_TELEFONO },                
+    { "SET LIMITE",   NULL,     NULL, -1, -1, CYBER_SERVADMIN_HELP_SET_LIMITE,
+             CYBER_SERVADMIN_HELP_SET_LIMITE, CYBER_SERVADMIN_HELP_SET_LIMITE },
+    { "SET NOMBRE",   NULL,     NULL, -1, -1, CYBER_SERVADMIN_HELP_SET_NOMBRE,
+             CYBER_SERVADMIN_HELP_SET_NOMBRE, CYBER_SERVADMIN_HELP_SET_NOMBRE },
+    { "SET CENTRO",   NULL,     NULL, -1, -1, CYBER_SERVADMIN_HELP_SET_CENTRO,
+             CYBER_SERVADMIN_HELP_SET_CENTRO, CYBER_SERVADMIN_HELP_SET_CENTRO },
+    { "SET VHOST",    NULL,     NULL, -1, -1, CYBER_SERVADMIN_HELP_SET_VHOST,
+              CYBER_SERVADMIN_HELP_SET_VHOST, CYBER_SERVADMIN_HELP_SET_VHOST }, 
+    { "SET IPNOFIJA", NULL,     NULL, -1, -1, CYBER_SERVADMIN_HELP_SET_IPNOFIJA,
+           CYBER_SERVADMIN_HELP_SET_IPNOFIJA, CYBER_SERVADMIN_HELP_SET_IPNOFIJA },
+    { "SUSPEND",      do_suspend,  is_services_admin, -1, -1,
+             CYBER_SERVADMIN_HELP_SUSPEND,
+             CYBER_SERVADMIN_HELP_SUSPEND, CYBER_SERVADMIN_HELP_SUSPEND },
+    { "UNSUSPEND",    do_unsuspend, is_services_admin, -1, -1,
+             CYBER_SERVADMIN_HELP_UNSUSPEND,
+             CYBER_SERVADMIN_HELP_UNSUSPEND, CYBER_SERVADMIN_HELP_UNSUSPEND },
+    { "KILLCLONES",   do_killclones, is_services_oper, -1, -1,
+             OPER_HELP_KILLCLONES,
+             OPER_HELP_KILLCLONES, OPER_HELP_KILLCLONES },
 };    
 
 
@@ -140,10 +158,11 @@ void get_clones_stats(long *nrec, long *memuse)
 }
 
         
-void get_iline_stats(long *nrec, long *memuse)
+void get_iline_stats(long *nrec, long *memuse, long *nsuspend,
+      long *nipnofija, long *nvhost)
 {
 
-    long count = 0, mem = 0;
+    long count = 0, mem = 0, csuspend = 0, cipnofija = 0, cvhost = 0;
     int i;
     IlineInfo *il;
     
@@ -151,6 +170,10 @@ void get_iline_stats(long *nrec, long *memuse)
         for (il = ilinelists[i]; il; il = il->next) {
             count++;
             mem += sizeof(*il);
+            if (il->estado & IL_SUSPENDED)
+                csuspend++;
+            if (il->estado & IL_IPNOFIJA)
+                cipnofija++;
             if (il->host)
                 mem += strlen(il->host)+1;
             if (il->host2)
@@ -165,12 +188,19 @@ void get_iline_stats(long *nrec, long *memuse)
                 mem += strlen(il->telefono)+1;
             if (il->comentario)
                 mem += strlen(il->comentario)+1;
+            if (il->vhost) {
+                mem += strlen(il->vhost)+1;
+                cvhost++;
+            }
             if (il->operwho)
                 mem += strlen(il->operwho)+1;
         }
     }
     *nrec = count;
     *memuse = mem;
+    *nsuspend = csuspend;
+    *nipnofija = cipnofija;
+    *nvhost = cvhost;
 }                                                              
                                                                                                                                                                                                                                                                                         
 
@@ -178,7 +208,7 @@ void get_iline_stats(long *nrec, long *memuse)
 /********************* Clones, Funciones Internas ************************/
 /*************************************************************************/
 
-static Clones *findclones(const char *host)
+Clones *findclones(const char *host)
 {
     Clones *clones;
     int i;
@@ -219,7 +249,7 @@ int add_clones(const char *nick, const char *host)
             if (WebClones)
                 notice(s_CyberServ, nick, WebClones);
            
-                                                                                           
+                                               
             send_cmd(s_CyberServ, "KILL %s :En está red sólo se permiten "
                     "%d clones para tu ip (%s)", nick, limiteclones, host);
 
@@ -227,12 +257,26 @@ int add_clones(const char *nick, const char *host)
            
         } else {
             clones->numeroclones++;
-            if (iline)
+            if (iline) {
             /* Tiene Iline y miramos si hay record */
                 if (clones->numeroclones >= iline->record_clones) {
                     iline->record_clones = clones->numeroclones;
                     iline->time_record = time(NULL);
                 }   
+                /* Pone el Vhost al usuario */
+                if (iline->vhost)
+                    send_cmd(ServerName, "SVSVHOST %s :%s", nick, iline->vhost);
+//            }    
+            } else {
+/* MIGRACION */
+/* Si Tiene 3 o 4 o 5 clones MOSTRAR MENSAJE DE AVISO */
+            if ((clones->numeroclones >= 3) && (clones->numeroclones <= 5))
+   privmsg(s_CyberServ, nick, "4ATENCION!!!, MIGRACION DEL LIMITE DE CLONES");
+   privmsg(s_CyberServ, nick, "Tu actual limite de 5 clones sera reducido proximamente a 2 clones"
+   " no obstante, puedes contratar gratuitamente más clones, escribe"
+   " 12/msg Cyber CONTRATA  para más informacion.");
+            }
+/* Fin migracion */
             return 1;
         }
     }
@@ -323,8 +367,8 @@ void cyberserv(const char *source, char *buf)
             s = "\1";
         notice(s_CyberServ, u->nick, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION\1") == 0) {
-        notice(s_CyberServ, u->nick, "\1VERSION irc-services-%s+Terra-1.0 %s -- %s",
-                       version_number, s_CyberServ, version_build);    
+        notice(s_CyberServ, u->nick, "\1VERSION irc-services-%s+Terra-%s %s -- %s",
+                  version_number, version_terra, s_CyberServ, version_build);    
     } else if (skeleton) {
         notice_lang(s_CyberServ, u, SERVICE_OFFLINE, s_CyberServ);
     } else {
@@ -387,11 +431,11 @@ void load_cyber_dbase(void)
                 SAFE(read_string(&il->nombreadmin, f));
                 SAFE(read_string(&il->dniadmin, f));                
                 SAFE(read_string(&il->email, f));
-                SAFE(read_string(&il->telefono, f));                                                
+                SAFE(read_string(&il->telefono, f));
                 SAFE(read_string(&il->comentario, f));
-                SAFE(read_string(&il->vhost, f));                                
+                SAFE(read_string(&il->vhost, f));   
                 SAFE(read_buffer(il->operwho, f));                
-                SAFE(read_int16(&il->limite, f));                                              
+                SAFE(read_int16(&il->limite, f)); 
                 SAFE(read_int32(&tmp32, f));
                 il->time_concesion = tmp32;
                 SAFE(read_int32(&tmp32, f));
@@ -436,12 +480,12 @@ void save_cyber_dbase(void)
     int i;
     IlineInfo *il;
     static time_t lastwarn = 0;
-                                                                                              
+                
     if (!(f = open_db(s_CyberServ, IlineDBName, "w", ILINE_VERSION)))
         return;
           
     for (i = 0; i < 256; i++) {
-        for (il = ilinelists[i]; il; il = il->next) {                                                                                                                                                                                                    
+        for (il = ilinelists[i]; il; il = il->next) {              
             SAFE(write_int8(1, f));
             SAFE(write_string(il->host, f));
             SAFE(write_string(il->host2, f));
@@ -461,7 +505,7 @@ void save_cyber_dbase(void)
             SAFE(write_int32(il->time_expiracion, f));
             SAFE(write_int16(il->record_clones, f));
             SAFE(write_int32(il->time_record, f));
-            SAFE(write_int16(il->estado, f));                                                                                                                                                                                                                                                                                        
+            SAFE(write_int16(il->estado, f));                       
 
         } /* for (ilinelists[i]) */
         
@@ -477,10 +521,54 @@ void save_cyber_dbase(void)
 
 /*************************************************************************/
 
-void expire_ilines()
+void expire_ilines(void)
 {
 
+    int i;
+    IlineInfo *il = NULL, *next;
+    time_t now = time(NULL);
+    
+    for (i = 0; i < 256; i++) {
+        for (il = ilinelists[i]; il; il = next) {
+            next = il->next;
+            if (now >= il->time_expiracion) {
+                log("Expirando iline %s [%s]", il->host, il->comentario);
+                canalopers(s_CyberServ, "Expirando iline %s [%s]", il->host, il->comentario);
+                deliline(il);
+            }
+        }
+    }    
+
 }
+
+/*************************************************************************/
+
+void cyber_remove_nick(const NickInfo *ni)
+{
+
+    int i;
+    IlineInfo *il, *next;
+  
+    for (i = 0; i < 256; i++) {
+        for (il = ilinelists[i]; il; il = next) { 
+            next = il->next;                                                    
+            if (il->admin == ni) {
+                il->admin = findnick("Terra");
+                
+                
+                canalopers(s_CyberServ, "Cambiando admin iline %s [%s] propiedad del"
+                         "  nick borrado %s a Terra", il->host, il->comentario, ni->nick);
+/*                
+                canalopers(s_CyberServ, "Borrando iline %s [%s] propiedad del nick"
+                                   " borrado %s", il->host, il->comentario, ni->nick);
+                deliline(il);
+*/                
+            }
+        }
+    }      
+
+}
+
 
 /*************************************************************************/
 
@@ -491,22 +579,33 @@ IlineInfo *find_iline_host(const char *host)
 {
  
      IlineInfo *il;
-     int i;
+//     int i;
     
-//     for (il = ilinelists[tolower(*host)]; il; il = il->next) {
-     for (i = 0; i < 256; i++) {
-              for (il = ilinelists[i]; il; il = il->next) {
+     for (il = ilinelists[tolower(*host)]; il; il = il->next) {
+//     for (i = 0; i < 256; i++) {
+//         for (il = ilinelists[i]; il; il = il->next) {
               
          if (stricmp(il->host, host) == 0)
              return il;
-/* Para ver la IP num y inversa */
-/*             
-         if (il->host2)
-             if (stricmp(il->host2, host) == 0)
-                 return il;    
-*/            
-}     
-     }          
+     }     
+//     }          
+//     return NULL;
+      return find_iline_host2(host); 
+}
+
+IlineInfo *find_iline_host2(const char *host)
+{
+
+     IlineInfo *il;
+     int i;
+
+     for (i = 0; i < 256; i++) {
+         for (il = ilinelists[i]; il; il = il->next) {
+
+             if (il->host2 && (stricmp(il->host, host) == 0))
+                return il;
+         }
+     }
      return NULL;
 }
 
@@ -575,6 +674,8 @@ void check_ip_iline(User *u)
     NickInfo *ni = findnick(u->nick);
     IlineInfo *il;
 
+/* Chequear ahora las suspens y ilines suspend */
+
     if (!ni)
         return;        
     
@@ -593,7 +694,7 @@ void check_ip_iline(User *u)
 
 /*************************************************************************/
 
-void check_cyber_ilines(User *u, NickInfo *ni)
+void check_cyber_iline(User *u, NickInfo *ni)
 {
     IlineInfo *il;
     
@@ -628,7 +729,7 @@ static int deliline(IlineInfo *il)
     if (il->prev)
         il->prev->next = il->next;
     else
-        ilinelists[tolower(*il->host)] = il->next;                                    
+        ilinelists[tolower(*il->host)] = il->next; 
  
     if (il->host)
         free(il->host);
@@ -676,6 +777,30 @@ static void alpha_insert_iline(IlineInfo *il)
         ptr->prev = il;                             
 }                    
 
+
+/*************************************************************************/
+
+static void change_host_iline(IlineInfo *il, const char *host)
+{
+
+    IlineInfo **list;
+  
+    if (il->prev)
+        il->prev->next = il->next;
+    else
+        ilinelists[tolower(*il->host)] = il->next;
+    if (il->next)
+        il->next->prev = il->prev;
+    strcpy(il->host, host);
+    list = &ilinelists[tolower(*il->host)];
+    il->next = *list;
+    il->prev = NULL;
+    if (*list)
+        (*list)->prev = il;
+    *list = il;
+
+
+}
 /*************************************************************************/
 /*********************** CyberServ command routines **********************/
 /*************************************************************************/
@@ -696,6 +821,15 @@ static void do_help(User *u)
         help_cmd(s_CyberServ, u, cmds, cmd);
     }
 }                  
+
+/*************************************************************************/
+
+static void do_credits(User *u)
+{
+ 
+    notice_lang(s_CyberServ, u, SERVICES_CREDITS_TERRA);
+ 
+}
 
 /*************************************************************************/
 
@@ -721,13 +855,14 @@ static void do_actualiza(User *u)
 
     if (!(iline = find_iline_admin(u->nick))) {
         notice_lang(s_CyberServ, u, CYBER_NO_ADMIN_CYBER);
-    } else if (stricmp(iline->host, u->host) == 0) {
-        notice_lang(s_CyberServ, u, CYBER_ACTUALIZA_HOST, iline->host);
     } else if (!(iline->estado & IL_IPNOFIJA)) {
         notice_lang(s_CyberServ, u, CYBER_ACTUALIZA_IPFIJA, iline->host);
-    } else {    
-        iline->host = sstrdup(u->host);
-//        alpha_insert_iline(iline);        
+    } else if (find_iline_host(u->host)) {
+        notice_lang(s_CyberServ, u, CYBER_ACTUALIZA_HOST, u->host);
+    } else { 
+ privmsg(s_CyberServ, u->nick, "COMANDO DESACTIVADO TEMPORALMENTE");
+ return;
+        change_host_iline(iline, u->host);   
         notice_lang(s_CyberServ, u, CYBER_ACTUALIZA_SUCCEEDED, 
                                           iline->host, iline->limite);
     }
@@ -749,15 +884,15 @@ static void do_info(User *u)
         clones = findclones(host);    
         il = find_iline_host(host);
         if (il) {
-            notice_lang(s_CyberServ, u, CYBER_INFO_HEADER, il->comentario);          
+            notice_lang(s_CyberServ, u, CYBER_INFO_HEADER, il->comentario);    
             if (il->estado & IL_IPNOFIJA) {
                 notice_lang(s_CyberServ, u, CYBER_INFO_IPFIJA_ON);
-                notice_lang(s_CyberServ, u, CYBER_INFO_IPFIJA_HOST, il->host);                
+                notice_lang(s_CyberServ, u, CYBER_INFO_IPFIJA_HOST, il->host); 
             } else {
                 notice_lang(s_CyberServ, u, CYBER_INFO_IPFIJA_OFF);            
                 if (il->host2) {
                     notice_lang(s_CyberServ, u, CYBER_INFO_HOST2, il->host);
-                    notice_lang(s_CyberServ, u, CYBER_INFO_HOST, il->host2);                
+                    notice_lang(s_CyberServ, u, CYBER_INFO_HOST, il->host2);  
                 } else
                     notice_lang(s_CyberServ, u, CYBER_INFO_HOST, il->host);
             } 
@@ -795,7 +930,7 @@ static void do_info(User *u)
                 if (il->record_clones) {
                     tm = localtime(&il->time_record);
                     strftime_lang(timebuf, sizeof(timebuf), u,
-                                         STRFTIME_DATE_TIME_FORMAT, tm);                    
+                                         STRFTIME_DATE_TIME_FORMAT, tm);  
                     notice_lang(s_CyberServ, u, CYBER_INFO_RECORD,
                               il->record_clones, timebuf);
                 }
@@ -819,7 +954,7 @@ static void do_info(User *u)
                 } else
                     notice_lang(s_CyberServ, u, CYBER_INFO_HOST, il->host);
             }
-                                                                                                                                                                                                    
+                                      
         }
         
     }    
@@ -914,7 +1049,6 @@ static void do_cybergline(User *u)
            snprintf(buf, sizeof(buf), "%s -> G-Lined", u->nick);
            motivo = sstrdup(buf);
        }   
-/* BUG: mirar esto, mirar el username que mete los glines mal   */
 //       kill_user(s_CyberServ, u2->nick, motivo);   
        notice_lang(s_CyberServ, u, CYBER_GLINE_SUCCEEDED, u2->nick);
        send_cmd(ServerName, "GLINE * +%s@%s 300 :%s",
@@ -930,6 +1064,7 @@ static void do_cyberunban(User *u)
 
    char *chan = strtok(NULL, " ");
    Channel *c;
+   ChannelInfo *ci;
    int i;
    char *av[3];
    
@@ -945,6 +1080,13 @@ static void do_cyberunban(User *u)
       
    if (!(c = findchan(chan))) {
        notice_lang(s_CyberServ, u, CHAN_X_NOT_IN_USE, chan);
+   } else if (!(ci = c->ci)) {
+       notice_lang(s_CyberServ, u, CHAN_X_NOT_REGISTERED, chan);
+   } else if (!(ci->flags & CI_UNBANCYBER)) {    
+       notice_lang(s_CyberServ, u, CYBER_UNBAN_NOT_UNBAN, chan);
+   } else if (!c->bancount) {
+       notice_lang(s_ChanServ, u, CHAN_UNBAN_NOT_FOUND, chan);
+       return;
    } else {
             
        int count = c->bancount;
@@ -964,18 +1106,6 @@ static void do_cyberunban(User *u)
                desban = 1;
            }
        }
-            /* Desbanea la ip virtual */
-       if (!desban)
-           for (i = 0; i < count; i++) {
-               if (match_virtualmask(bans[i], u)) {
-                   send_cmd(s_CyberServ, "MODE %s -b %s",
-                           chan, bans[i]);
-                   av[2] = sstrdup(bans[i]);
-                   do_cmode(s_ChanServ, 3, av);
-                   free(av[2]);
-                   desban = 1;
-               }
-           }       
        free(av[1]);
        free(bans);
        if (desban)
@@ -984,7 +1114,7 @@ static void do_cyberunban(User *u)
            notice_lang(s_CyberServ, u, CYBER_UNBAN_FAILED, chan);       
    }       
 
-}                                                                                                    
+}                                                       
  
 /*************************************************************************/
 
@@ -992,8 +1122,9 @@ static void do_cyberglobal(User *u)
 { 
 
    char *mensaje = strtok(NULL, "");
+   IlineInfo *il = find_iline_host(u->host);
 
-   if (!is_cyber_admin(u)) {
+   if (!is_cyber_admin(u) && !il) {
        notice_lang(s_CyberServ, u, CYBER_NO_ADMIN_CYBER);
        return;
    }
@@ -1002,9 +1133,11 @@ static void do_cyberglobal(User *u)
        syntax_error(s_CyberServ, u, "GLOBAL", CYBER_GLOBAL_SYNTAX);
        return;
    }
-   
-   privmsg(s_CyberServ, "#%s", u->host, "Mensaje Global de %s", u->nick);
-   privmsg(s_CyberServ, "#%s", u->host, "%s", mensaje);   
+    
+     send_cmd(s_GlobalNoticer, "PRIVMSG #%s :Mensaje Global de %s y dirigido para"
+                    " los clientes de %s", u->host, u->nick, il->comentario);
+     send_cmd(s_GlobalNoticer, "PRIVMSG #%s :%s", u->host, u->nick);
+
 }
                                        
 /*************************************************************************/
@@ -1086,7 +1219,7 @@ static void do_clones(User *u)
          }
       }
    }
-}                                                                                                                                                                                                                                                                                                                                                                                                      
+}                                           
                      
 /*************************************************************************/
 
@@ -1127,7 +1260,7 @@ static void do_list(User *u)
                                       il->comentario ? il->comentario : "");
                 if (stricmp(pattern, il->host) == 0 ||
                                         match_wild_nocase(pattern, buf)) {
-                    if (++nilines <= CSListMax) {
+                    if (++nilines <= CyberListMax) {
                         char noexpire_char = ' ';
                         if (is_servadmin && (il->estado & IL_NO_EXPIRE))
                             noexpire_char = '!';
@@ -1149,7 +1282,7 @@ static void do_list(User *u)
             }
         }
         notice_lang(s_CyberServ, u, CYBER_LIST_RESULTS,
-                      nilines>CSListMax ? CSListMax : nilines, nilines);
+                      nilines>CyberListMax ? CyberListMax : nilines, nilines);
     }              
 }                         
 /*************************************************************************/
@@ -1177,7 +1310,7 @@ static void do_iline(User *u)
         host = strtok(NULL, " ");
        
         if (!host) {
-            syntax_error(s_CyberServ, u, "ILINE", CYBER_ILINE_SYNTAX);
+            syntax_error(s_CyberServ, u, "ILINE", CYBER_ILINE_SYNTAX_ADD);
             return;
         }
 
@@ -1191,6 +1324,12 @@ static void do_iline(User *u)
             return;
         }
         admin  = strtok(NULL, " ");
+
+        if (!admin) {
+            syntax_error(s_CyberServ, u, "ILINE", CYBER_ILINE_SYNTAX_ADD);
+            return;
+        }
+
         ni = findnick(admin);
         if (!ni) {
             notice_lang(s_CyberServ, u, NICK_X_NOT_REGISTERED, admin);
@@ -1208,7 +1347,7 @@ static void do_iline(User *u)
         limite = strtok(NULL, " ");
         
         if (!limite) {
-            syntax_error(s_CyberServ, u, "ILINE", CYBER_ILINE_SYNTAX);
+            syntax_error(s_CyberServ, u, "ILINE", CYBER_ILINE_SYNTAX_ADD);
             return;
         }        
 
@@ -1237,7 +1376,7 @@ static void do_iline(User *u)
         
         motivo = strtok(NULL, "");
         if (!motivo) {
-            syntax_error(s_CyberServ, u, "ILINE", CYBER_ILINE_SYNTAX);
+            syntax_error(s_CyberServ, u, "ILINE", CYBER_ILINE_SYNTAX_ADD);
             return;
         }                
       
@@ -1269,7 +1408,7 @@ static void do_iline(User *u)
         host = strtok(NULL, " ");
         
         if (!host) {
-            syntax_error(s_CyberServ, u, "ILINE", CYBER_ILINE_DEL_SYNTAX);
+            syntax_error(s_CyberServ, u, "ILINE", CYBER_ILINE_SYNTAX_DEL);
             return;
         }
 
@@ -1351,16 +1490,19 @@ static void do_set_cyber(User *u)
 
 static void do_set_host(User *u, IlineInfo *il, char *param)
 {
-    char *antiguo = NULL;
+    char *antiguo = il->host;
+
+ privmsg(s_CyberServ, u->nick, "COMANDO DESACTIVADO TEMPORALMENTE");
+ return;
     
-    if (il->host) {
-        free(il->host);
-        antiguo = sstrdup(param);
-    }    
-    il->host = sstrdup(param);
-//    alpha_insert_iline(il);    
-    notice_lang(s_CyberServ, u, CYBER_SET_HOST_CHANGED, antiguo, param);
-                
+    if (find_iline_host(param)) {
+        notice_lang(s_CyberServ, u, CYBER_ACTUALIZA_HOST, param);
+    } else {
+        if (il->host)
+            free(il->host);
+        change_host_iline(il, param);
+        notice_lang(s_CyberServ, u, CYBER_SET_HOST_CHANGED, antiguo, param);
+    }                
 }
 
 /*************************************************************************/
@@ -1529,7 +1671,141 @@ static void do_set_ipnofija(User *u, IlineInfo *il, char *param)
 
 static void do_set_expire(User *u, IlineInfo *il, char *param)
 {
-privmsg(s_CyberServ, u->nick, "Comando en construccion");
 
+    int expires;
+    char timebuf[256];
+    time_t now = time(NULL);
+
+    expires = param ? dotime(param) : ExpIlineDefault;
+    if (expires < 0) {
+        notice_lang(s_CyberServ, u, BAD_EXPIRY_TIME);
+        return;
+    } else if (expires > 0) {
+        expires += time(NULL);
+    }
+    il->time_expiracion = expires;
+
+    expires_in_lang(timebuf, sizeof(timebuf), u,
+                         il->time_expiracion - now + 59);
+    notice_lang(s_CyberServ, u, CYBER_SET_EXPIRE_SUCCEEDED, il->host, timebuf);
 }
+
+
+/************************************************************************/
+
+static void do_suspend(User *u)
+{
+
+    IlineInfo *il;
+    char *host = strtok(NULL, " ");
+    char *motivo = strtok(NULL, "");
+
+    if (!motivo) {
+        syntax_error(s_CyberServ, u, "SUSPEND", CYBER_SUSPEND_SYNTAX);
+        return;
+    }
+
+    if (readonly)
+        notice_lang(s_CyberServ, u, READ_ONLY_MODE);
+
+    if (!(il = find_iline_host(host))) {
+        notice_lang(s_CyberServ, u, CYBER_ILINE_NOT_FOUND, host);
+    } else if (il->estado & IL_SUSPENDED) {
+        notice_lang(s_CyberServ, u, CYBER_SUSPEND_SUSPENDED, il->host);
+    } else {
+        log("%s: %s!%s@%s SUSPENDió la iline %s, Motivo: %s",
+                   s_CyberServ, u->nick, u->username, u->host, host, motivo);
+        il->suspendby = sstrdup(u->nick);
+        il->suspendreason = sstrdup(motivo);
+        il->estado |= CI_SUSPENDED;
+        notice_lang(s_CyberServ, u, CYBER_SUSPEND_SUCCEEDED, il->host);
+        canaladmins(s_CyberServ, "%s ha SUSPENDido la iline %s, motivo %s",
+                          u->nick, host, motivo);
+    }    
+}
+
+/***********************************************************************/
+
+static void do_unsuspend(User *u)
+{
+
+    IlineInfo *il;
+    char *host = strtok(NULL, " ");
+
+    if (!host) {
+        syntax_error(s_CyberServ, u, "UNSUSPEND", CYBER_UNSUSPEND_SYNTAX);
+        return;
+    }
+
+    if (readonly)
+        notice_lang(s_ChanServ, u, READ_ONLY_MODE);
+
+    if (!(il = find_iline_host(host))) {
+        notice_lang(s_CyberServ, u, CYBER_ILINE_NOT_FOUND, host);
+    } else if (!(il->estado & IL_SUSPENDED)) {
+        notice_lang(s_CyberServ, u, CYBER_UNSUSPEND_NOT_SUSPEND, il->host);
+    } else {
+        log("%s: %s!%s@%s ha usado UNSUSPEND en %s",
+                 s_CyberServ, u->nick, u->username, u->host, host);
+        free(il->suspendby);
+        free(il->suspendreason);
+        il->estado &= ~CI_SUSPENDED;
+        notice_lang(s_CyberServ, u, CYBER_UNSUSPEND_SUCCEEDED, il->host);
+        canaladmins(s_CyberServ, "%s ha UNSUSPENDido la iline %s",
+                          u->nick, host);
+    }
+}
+
+/***********************************************************************/
+
+static void do_killclones(User *u)
+{
+    char *clonenick = strtok(NULL, " ");
+    int count=0;
+    User *cloneuser, *user, *tempuser;
+    char *clonemask, *akillmask;
+    char killreason[NICKMAX+32];
+    char akillreason[] = "GLine temporal de KILLCLONES de Cyber.";
+
+    if (!clonenick) {
+        notice_lang(s_CyberServ, u, OPER_KILLCLONES_SYNTAX);
+            
+    } else if (!(cloneuser = finduser(clonenick))) {
+        notice_lang(s_CyberServ, u, OPER_KILLCLONES_UNKNOWN_NICK, clonenick);
+                        
+    } else {
+        clonemask = smalloc(strlen(cloneuser->host) + 5);
+        sprintf(clonemask, "*!*@%s", cloneuser->host);
+                    
+        akillmask = smalloc(strlen(cloneuser->host) + 3);
+        sprintf(akillmask, "*@%s", strlower(cloneuser->host));
+
+        user = firstuser();
+        while (user) {
+            if (match_usermask(clonemask, user) != 0) {
+                tempuser = nextuser();
+                count++;
+                snprintf(killreason, sizeof(killreason),
+                                          "Kill de clones [%d]", count);
+                kill_user(NULL, user->nick, killreason);
+                user = tempuser;
+            } else {
+                user = nextuser();
+            }
+        }
+
+        add_akill(akillmask, akillreason, u->nick,
+                        time(NULL) + KillClonesAkillExpire);
+                                
+        canalopers(s_OperServ, "%s ha usado KILLCLONES para %s killear "
+                  "%d clones. Un GLINE temporal ha sido a¤adido "
+                  "para %s.", u->nick, clonemask, count, akillmask);
+        log("%s: KILLCLONES: %d clone(s) matching %s killed.",
+                               s_OperServ, count, clonemask);
+                                
+        free(akillmask);
+        free(clonemask);
+    }
+}
+
 #endif

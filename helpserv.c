@@ -1,7 +1,9 @@
 /* HelpServ functions.
  *
- * Services is copyright (c) 1996-1999 Andy Church.
+ * Services is copyright (c) 1996-1999 Andrew Church.
  *     E-mail: <achurch@dragonfire.net>
+ * Services is copyright (c) 1999-2000 Andrew Kempe.
+ *     E-mail: <theshadow@shadowfire.org>
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  */
@@ -29,8 +31,8 @@ void helpserv(const char *whoami, const char *source, char *buf)
 	    s = "\1";
 	notice(s_HelpServ, source, "\1PING %s", s);
     } else if (cmd && stricmp(cmd, "\1VERSION\1") == 0) {
-        notice(s_HelpServ, source, "\1VERSION ircservices-%s+Terra-1.0 %s :-- %s\1",
-                                     version_number, s_HelpServ, version_build);
+        notice(s_HelpServ, source, "\1VERSION ircservices-%s+Terra-%s %s -- %s\1",
+                      version_number, version_terra, s_HelpServ, version_build);
     } else {
 	do_help(whoami, source, topic);
     }

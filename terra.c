@@ -58,6 +58,7 @@ const char *inttobase64(char *buf, unsigned int v, unsigned int count)
  * Cifra 64 bits de datos, usando clave de 64 bits (los 64 bits superiores son cero)
  * Se cifra v[0]^x[0], v[1]^x[1], para poder hacer CBC facilmente.
  *
+ * Codigo sacado del ircu de Terra. Thz a Freemind <animedes@terra.es>
  */
 
 void cifrado_tea(unsigned int v[], unsigned int k[], unsigned int x[])
@@ -123,6 +124,8 @@ const char *make_special_ircop_host(const char *host)
   return host;
 } 
                                               
+
+/* Codigo sacado del ircu de Terra. Thz a FreeMind <animedes@terra.es> */
                
 const char *make_virtualhost(const char *host)
 {
@@ -175,4 +178,4 @@ const char *make_virtualhost(const char *host)
   host = sstrdup(virtualhost);      
   return host;
   
-}
+}  

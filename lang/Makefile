@@ -39,9 +39,9 @@ spotless: clean
 
 
 en_us:    en_us.l    langcomp index
-	./langcomp $@.l
+	$(LANGCOMP) $@.l
 es:       es.l       langcomp index
-	./langcomp $@.l
+	$(LANGCOMP) $@.l
 it:       it.l       langcomp index
 	./langcomp $@.l
 ja_euc:   ja_euc.l   langcomp index

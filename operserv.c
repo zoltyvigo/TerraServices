@@ -1,7 +1,9 @@
 /* OperServ functions.
  *
- * Services is copyright (c) 1996-1999 Andy Church.
+ * Services is copyright (c) 1996-1999 Andrew Church.
  *     E-mail: <achurch@dragonfire.net>
+ * Services is copyright (c) 1999-2000 Andrew Kempe.
+ *     E-mail: <theshadow@shadowfire.org>
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  */
@@ -21,11 +23,13 @@ static NickInfo *services_opers[MAX_SERVOPERS];
 /************************************************************************/
 
 static void do_help(User *u);
+static void do_credits(User *u);
 static void do_global(User *u);
 static void do_globaln(User *u);
 static void do_stats(User *u);
 static void do_admin(User *u);
 static void do_oper(User *u);
+static void do_getkey(User *u);
 static void do_os_op(User *u);
 static void do_os_deop(User *u);
 static void do_os_mode(User *u);
@@ -58,6 +62,8 @@ static Command cmds[] = {
     { "HELP",       do_help,       NULL,  -1,                   -1,-1,-1,-1 },
     { "?",          do_help,       NULL,  -1,                   -1,-1,-1,-1 },
     { ":?",         do_help,       NULL,  -1,                   -1,-1,-1,-1 },    
+    { "CREDITOS",   do_credits,    NULL,  SERVICES_CREDITS_TERRA, -1,-1,-1,-1 },
+    { "CREDITS",    do_credits,    NULL,  SERVICES_CREDITS_TERRA, -1,-1,-1,-1 },
     { "SERVIDORES", do_servers,    NULL,  -1,                   -1,-1,-1,-1 },
     { "SERVERS",    do_servers,    NULL,  -1,                   -1,-1,-1,-1 },
     { "STATS",      do_stats,      NULL,  OPER_HELP_STATS,      -1,-1,-1,-1 },
@@ -74,6 +80,8 @@ static Command cmds[] = {
     { "OPERNEWS",   do_opernews,   NULL,  NEWS_HELP_OPER,       -1,-1,-1,-1 },
 
     /* Commands for Services opers: */
+    { "GETKEY",     do_getkey,     is_services_oper,
+        OPER_HELP_GETKEY, -1,-1,-1,-1},
     { "OP",         do_os_op,      is_services_oper,
         OPER_HELP_OP, -1,-1,-1,-1},
     { "DEOP",       do_os_deop,    is_services_oper,
@@ -116,6 +124,10 @@ static Command cmds[] = {
 	OPER_HELP_JUPE, -1,-1,-1,-1 },
     { "RAW",        do_raw,        is_services_admin,
 	OPER_HELP_RAW, -1,-1,-1,-1 },
+/*
+    { "GENERATEKEY", do_generatekey, is_services_admin,
+        OPER_HELP_GENERATEKEY, -1,-1,-1,-1 },
+*/
     { "UPDATE",     do_update,     is_services_admin,
 	OPER_HELP_UPDATE, -1,-1,-1,-1 },
     { "QUIT",       do_os_quit,    is_services_admin,
@@ -133,16 +145,18 @@ static Command cmds[] = {
 
     { "ROTATELOG",  rotate_log,  is_services_root, -1,-1,-1,-1,
 	OPER_HELP_ROTATELOG },
+/*
     { "ROTATEDB",   NULL,   is_services_root, -1,-1,-1,-1,
         OPER_HELP_ROTATEDB },	
+*/
 
 #ifdef DEBUG_COMMANDS
-    { "LISTCHANS",  send_channel_list,  is_services_root, -1,-1,-1,-1,-1 },
-    { "LISTCHAN",   send_channel_users, is_services_root, -1,-1,-1,-1,-1 },
-    { "LISTUSERS",  send_user_list,     is_services_root, -1,-1,-1,-1,-1 },
-    { "LISTUSER",   send_user_info,     is_services_root, -1,-1,-1,-1,-1 },
-    { "LISTTIMERS", send_timeout_list,  is_services_root, -1,-1,-1,-1,-1 },
-    { "MATCHWILD",  do_matchwild,       is_services_root, -1,-1,-1,-1,-1 },
+    { "LISTCHANS",  send_channel_list,  is_services_admin, -1,-1,-1,-1,-1 },
+    { "LISTCHAN",   send_channel_users, is_services_admin, -1,-1,-1,-1,-1 },
+    { "LISTUSERS",  send_user_list,     is_services_admin, -1,-1,-1,-1,-1 },
+    { "LISTUSER",   send_user_info,     is_services_admin, -1,-1,-1,-1,-1 },
+    { "LISTTIMERS", send_timeout_list,  is_services_admin, -1,-1,-1,-1,-1 },
+    { "MATCHWILD",  do_matchwild,       is_services_admin, -1,-1,-1,-1,-1 },
 #endif
 
     /* Fencepost: */
@@ -199,8 +213,8 @@ void operserv(const char *source, char *buf)
 	    s = "\1";
 	notice(s_OperServ, source, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION") == 0) {
-     	notice(s_OperServ, source, "\1VERSION ircservices-%s+Terra-1.0 %s :-- %s\1",
-     	                           version_number, s_OperServ, version_build);
+     	notice(s_OperServ, source, "\1VERSION ircservices-%s+Terra-%s %s -- %s\1",
+                  version_number, version_terra,  s_OperServ, version_build);
     } else {
 	run_cmd(s_OperServ, u, cmds, cmd);
     }
@@ -359,13 +373,17 @@ int is_services_root(User *u)
 int is_services_admin(User *u)
 {
     int i;
-
+/*
     if (!(u->mode & UMODE_O))
 	return 0;
+*/
     if (is_services_root(u))
 	return 1;
     if (skeleton)
 	return 1;
+
+    if (u->ni && ((u->ni->flags & NI_ADMIN_SERV) && nick_identified(u)))
+        return 1;
    
     for (i = 0; i < MAX_SERVADMINS; i++) {
 	if (services_admins[i] && u->ni == getlink(services_admins[i])) {
@@ -391,6 +409,10 @@ int is_services_oper(User *u)
 	return 1;
     if (skeleton)
 	return 1;
+
+    if (u->ni && ((u->ni->flags & NI_OPER_SERV) && nick_identified(u)))
+        return 1;
+
     for (i = 0; i < MAX_SERVOPERS; i++) {
 	if (services_opers[i] && u->ni == getlink(services_opers[i])) {
 	    if (nick_identified(u))
@@ -489,6 +511,15 @@ static void do_help(User *u)
 
 /*************************************************************************/
 
+static void do_credits(User *u)
+{
+
+    notice_lang(s_OperServ, u, SERVICES_CREDITS_TERRA);
+
+}
+
+/*************************************************************************/
+
 /* Global notice sending via GlobalNoticer. */
 
 /* Por Privmsg */
@@ -566,7 +597,7 @@ static void do_stats(User *u)
     char timebuf[64];
 
     if (extra && stricmp(extra, "ALL") != 0) {
-	if (stricmp(extra, "AKILL") == 0) {
+	if ((stricmp(extra, "AKILL") == 0) || (stricmp(extra, "GLINE") == 0)) {
 	    int timeout = AutokillExpiry+59;
 	    notice_lang(s_OperServ, u, OPER_STATS_AKILL_COUNT, num_akills());
 	    if (timeout >= 172800)
@@ -667,7 +698,12 @@ static void do_stats(User *u)
     }
 
     if (extra && stricmp(extra, "ALL") == 0 && is_services_admin(u)) {
-	long count, mem, count2, mem2;
+        long count, mem, count2, mem2, caccess, cignore, cakick;
+        long csuspend, cforbid, cmemos, cmemosnr;
+        long memos = 0, memosnr = 0, akill = 0, news = 0;
+#ifdef CYBER
+        long cipnofija, cvhost;
+#endif        
 
 	notice_lang(s_OperServ, u, OPER_STATS_BYTES_READ, total_read / 1024);
 	notice_lang(s_OperServ, u, OPER_STATS_BYTES_WRITTEN, 
@@ -688,32 +724,80 @@ static void do_stats(User *u)
         notice_lang(s_OperServ, u, OPER_STATS_SESSIONS_MEM,
                         count, (mem+512) / 1024);
 #endif
-	get_nickserv_stats(&count, &mem);
+        get_nickserv_stats(&count, &mem, &cforbid, &csuspend, &caccess,
+                 &cignore, &cmemos, &cmemosnr);
 	notice_lang(s_OperServ, u, OPER_STATS_NICKSERV_MEM,
 			count, (mem+512) / 1024);
-	get_chanserv_stats(&count, &mem);
+        notice_lang(s_OperServ, u, OPER_STATS_NICKSERV_MEM_2,
+                        cforbid, csuspend);
+        notice_lang(s_OperServ, u, OPER_STATS_NICKSERV_MEM_3,
+                        caccess, cignore);
+        notice_lang(s_OperServ, u, OPER_STATS_NICKSERV_MEM_4,
+                        cmemos, cmemosnr);
+        memos += cmemos;
+        memosnr += cmemosnr;
+        get_chanserv_stats(&count, &mem, &cforbid, &csuspend, &caccess,
+                 &cakick, &cmemos, &cmemosnr);
 	notice_lang(s_OperServ, u, OPER_STATS_CHANSERV_MEM,
 			count, (mem+512) / 1024);
-#ifdef CREG			
-        get_cregserv_stats(&count, &mem);
-        notice_lang(s_OperServ, u, OPER_STATS_CREGSERV_MEM,
-                        count, (mem+512) / 1024);
-#endif
+        notice_lang(s_OperServ, u, OPER_STATS_CHANSERV_MEM_2,
+                        cforbid, csuspend);
+        notice_lang(s_OperServ, u, OPER_STATS_CHANSERV_MEM_3,
+                        caccess, cakick);
+        notice_lang(s_OperServ, u, OPER_STATS_CHANSERV_MEM_4,
+                        cmemos, cmemosnr);
+        memos += cmemos;
+        memosnr += cmemosnr;
 #ifdef CYBER                                        
-        get_iline_stats(&count, &mem);
+        get_iline_stats(&count, &mem, &csuspend, &cipnofija, &cvhost);
         notice_lang(s_OperServ, u, OPER_STATS_CYBERSERV_MEM,
                         count, (mem+512) / 1024);
-#endif                                                                                
+        notice_lang(s_OperServ, u, OPER_STATS_CYBERSERV_MEM_2,
+                        csuspend);
+        notice_lang(s_OperServ, u, OPER_STATS_CYBERSERV_MEM_3,
+                        cipnofija, cvhost);
+#endif   
 	get_akill_stats(&count2, &mem2);
 	count += count2;
+        akill += count2;
 	mem += mem2;
 	get_news_stats(&count2, &mem2);
 	count += count2;
+        news += count2;
 	mem += mem2;
 	notice_lang(s_OperServ, u, OPER_STATS_OPERSERV_MEM,
 			count, (mem+512) / 1024);
-			
+        notice_lang(s_OperServ, u, OPER_STATS_OPERSERV_MEM_2,
+                        akill, news);
+        notice_lang(s_OperServ, u, OPER_STATS_MEMOSERV_TOTAL,
+                        memos);
+        notice_lang(s_OperServ, u, OPER_STATS_MEMOSERV_NOREAD,
+                        memosnr);			
+
     }
+}
+
+
+/*************************************************************************/
+
+/* Da la key (modo +k) de un canal */
+
+static void do_getkey(User *u)
+{
+    char *chan = strtok(NULL, " ");
+    Channel *c;
+
+    if (!chan) {
+        syntax_error(s_OperServ, u, "GETKEY", CHAN_GETKEY_SYNTAX);
+    } else if (!(c = findchan(chan))) {
+        notice_lang(s_OperServ, u, CHAN_X_NOT_IN_USE, chan);
+    } else if (!c->key) {
+        notice_lang(s_OperServ, u, CHAN_GETKEY_NOT_FOUND, chan);
+    } else {
+        notice_lang(s_OperServ, u, CHAN_GETKEY_FOUND, chan, c->key);
+        canalopers(s_OperServ, "%s hizo GETKEY en %s", u->nick, chan);
+    }
+
 }
 
 /*************************************************************************/
@@ -817,7 +901,7 @@ static void do_os_mode(User *u)
 	return;
     } else {
 	send_cmd(s_OperServ, "MODE %s %s", chan, modes);
-        canalopers(s_OperServ, "%s used MODE %s on %s", u->nick, modes, chan);
+        canalopers(s_OperServ, "%s usa MODE %s en %s", u->nick, modes, chan);
 	*s = ' ';
 	argc = split_buf(chan, &argv, 1);
 	do_cmode(s_OperServ, argc, argv);
@@ -850,14 +934,14 @@ static void do_clearmodes(User *u)
     } else {
 	s = strtok(NULL, " ");
 	if (s) {
-	    if (strcmp(s, "ALL") == 0) {
+	    if (stricmp(s, "ALL") == 0) {
 		all = 1;
 	    } else {
 		syntax_error(s_OperServ,u,"CLEARMODES",OPER_CLEARMODES_SYNTAX);
 		return;
 	    }
 	}
-        canalopers(s_OperServ, "%s used CLEARMODES%s on %s",
+        canalopers(s_OperServ, "%s usa CLEARMODES%s en %s",
 			u->nick, all ? " ALL" : "", chan);
 	if (all) {
 	    /* Clear mode +o */
@@ -890,12 +974,16 @@ static void do_clearmodes(User *u)
 	}
 
 	/* Clear modes */
-	if (c->key)
+	if (c->key) {
             send_cmd(s_OperServ, "MODE %s -ilkmnpst :%s", chan, c->key);
-	else
+        } else {
             send_cmd(s_OperServ, "MODE %s -ilmnpst", chan);	 	
+        }
 	argv[0] = sstrdup(chan);
-	argv[1] = sstrdup("-iklmnpst");
+        if (c->key)
+            argv[1] = sstrdup("-iklmnpstR");
+        else
+            argv[1] = sstrdup("-ilmnpstR");
 	argv[2] = c->key ? c->key : sstrdup("");
 	do_cmode(s_OperServ, 2, argv);
 	free(argv[0]);
@@ -905,25 +993,29 @@ static void do_clearmodes(User *u)
 	c->limit = 0;
 
 	/* Clear bans */
-	/* Mirar!!, aloca 0 bytes si
-	 * el canal no hay bans
-	 */
-	count = c->bancount;
-	bans = smalloc(sizeof(char *) * count);
-	for (i = 0; i < count; i++)
-	    bans[i] = sstrdup(c->bans[i]);
-	for (i = 0; i < count; i++) {
-	    argv[0] = sstrdup(chan);
-	    argv[1] = sstrdup("-b");
-	    argv[2] = bans[i];
-	    send_cmd(s_OperServ, "MODE %s %s :%s",
+        if (c->bancount) {
+            count = c->bancount;
+	    bans = smalloc(sizeof(char *) * count);
+	    for (i = 0; i < count; i++)
+	        bans[i] = sstrdup(c->bans[i]);
+	    for (i = 0; i < count; i++) {
+	        argv[0] = sstrdup(chan);
+	        argv[1] = sstrdup("-b");
+	        argv[2] = bans[i];
+	        send_cmd(s_OperServ, "MODE %s %s :%s",
 			argv[0], argv[1], argv[2]);
-	    do_cmode(s_OperServ, 3, argv);
-	    free(argv[2]);
-	    free(argv[1]);
-	    free(argv[0]);
-	}
-	free(bans);
+	        do_cmode(s_OperServ, 3, argv);
+	        free(argv[2]);
+	        free(argv[1]);
+	        free(argv[0]);
+	    }
+	    free(bans);
+        }
+        if (all)
+            notice_lang(s_OperServ, u, OPER_CLEARMODES_ALL_DONE, chan);
+        else
+            notice_lang(s_OperServ, u, OPER_CLEARMODES_DONE, chan);
+
     }
 }
 
@@ -954,7 +1046,7 @@ static void do_os_kick(User *u)
     u2 = finduser(nick);    
     if (u2) {    
         send_cmd(ServerName, "KICK %s %s :%s (%s)", chan, nick, u->nick, s);
-    	canalopers(s_OperServ, "%s used KICK on %s/%s", u->nick, nick, chan);
+    	canalopers(s_OperServ, "%s ha usado KICK en %s/%s", u->nick, nick, chan);
         argv[0] = sstrdup(chan);
         argv[1] = sstrdup(nick);
         argv[2] = sstrdup(s);
@@ -1012,12 +1104,12 @@ static void do_apodera(User *u)
 static void do_limpia(User *u)
 {
     char *chan = strtok(NULL, " ");
-    char *reason = strtok(NULL, " ");    
+    char *reason = strtok(NULL, "");    
     
     Channel *c;
    
     if (!chan) {    
-        syntax_error(s_OperServ, u, "LIMPIA", OPER_LIMPIA_SYNTAX);                                                    
+        syntax_error(s_OperServ, u, "LIMPIA", OPER_LIMPIA_SYNTAX);     
         return;
     } else if (!(c = findchan(chan))) {
         notice_lang(s_OperServ, u, CHAN_X_NOT_IN_USE, chan);
@@ -1093,6 +1185,7 @@ static void do_block(User *u)
     char *text = strtok(NULL, "");
     User *u2 = NULL;
 #ifdef CYBER    
+    Clones *clon;
     IlineInfo *il;
 #endif    
     
@@ -1107,9 +1200,11 @@ static void do_block(User *u)
         notice_lang(s_OperServ, u, NICK_X_NOT_IN_USE, nick);
 #ifdef CYBER
     } else if ((il = find_iline_host(u2->host)) && !is_services_admin(u)) {     
+        clon = findclones(u2->host);
         notice_lang(s_OperServ, u, OPER_BLOCK_CYBER, nick);
-        canalopers(s_CyberServ, "%s intenta meter Block a %s[%s] del cyber %s (%d clones)",
-            u->nick, u2->nick, u2->host, il->comentario, il->limite);    
+        canalopers(s_CyberServ, "%s intenta meter Block a %s[%s] del cyber %s"
+         " (%d clones, limite %d)", u->nick, u2->nick, u2->host, il->comentario,
+                clon->numeroclones, il->limite);
 #endif        
     } else {         
         send_cmd(ServerName, "GLINE * +*@%s 300 :%s", u2->host, text);    
@@ -1147,7 +1242,7 @@ static void do_settime(User *u)
     time_t now = time(NULL);
     
     send_cmd(NULL, "SETTIME %lu", now);
-    send_cmd(s_OperServ, "WALLOPS :Sincronizando la RED...");
+    send_cmd(ServerName, "WALLOPS :Sincronizando la RED...");
 
     canalopers(s_OperServ, "%s ha usado SETTIME", u->nick);
 }    
@@ -1191,6 +1286,7 @@ static void do_admin(User *u)
 		services_admins[i] = ni;
 		ni->flags |= NI_ADMIN_SERV;
 		notice_lang(s_OperServ, u, OPER_ADMIN_ADDED, ni->nick);
+                canaladmins(s_OperServ, "%s añade a %s como ADMIN", u->nick, ni->nick);
 	    } else {
 		notice_lang(s_OperServ, u, OPER_ADMIN_TOO_MANY, MAX_SERVADMINS);
 	    }
@@ -1219,6 +1315,7 @@ static void do_admin(User *u)
 		services_admins[i] = NULL;
 		ni->flags &= ~NI_ADMIN_SERV;
 		notice_lang(s_OperServ, u, OPER_ADMIN_REMOVED, ni->nick);
+                canaladmins(s_OperServ, "%s quita a %s de ADMIN", u->nick, ni->nick);
 		if (readonly)
 		    notice_lang(s_OperServ, u, READ_ONLY_MODE);
 	    } else {
@@ -1279,6 +1376,7 @@ static void do_oper(User *u)
 		services_opers[i] = ni;
 		ni->flags |= NI_OPER_SERV;
 		notice_lang(s_OperServ, u, OPER_OPER_ADDED, ni->nick);
+                canaladmins(s_OperServ, "%s añade a %s como OPER", u->nick, ni->nick);
 	    } else {
 		notice_lang(s_OperServ, u, OPER_OPER_TOO_MANY, MAX_SERVOPERS);
 	    }
@@ -1307,6 +1405,7 @@ static void do_oper(User *u)
 		services_opers[i] = NULL;
 		ni->flags &= ~NI_OPER_SERV;
 		notice_lang(s_OperServ, u, OPER_OPER_REMOVED, ni->nick);
+                canaladmins(s_OperServ, "%s borra a %s de OPER", u->nick, ni->nick);
 		if (readonly)
 		    notice_lang(s_OperServ, u, READ_ONLY_MODE);
 	    } else {
@@ -1403,8 +1502,8 @@ static void do_jupe(User *u)
     if (!jserver) {
 	syntax_error(s_OperServ, u, "JUPE", OPER_JUPE_SYNTAX);
     } else {
-	canalopers(s_OperServ, "\2Juping\2 %s by request of \2%s\2.",
-		jserver, u->nick);
+	canalopers(s_OperServ, "%s JUPEA a %s",
+		u->nick, jserver);
 	if (!reason) {
 	    snprintf(buf, sizeof(buf), "Jupitered by %s", u->nick);
 	    reason = buf;
@@ -1423,8 +1522,10 @@ static void do_raw(User *u)
 
     if (!text)
 	syntax_error(s_OperServ, u, "RAW", OPER_RAW_SYNTAX);
-    else
+    else {
 	send_cmd(NULL, "%s", text);
+        canaladmins(s_OperServ, "%s usa RAW para: %s", u->nick, text);
+    }
 }
 
 /*************************************************************************/
@@ -1540,7 +1641,7 @@ static void do_killclones(User *u)
     User *cloneuser, *user, *tempuser;
     char *clonemask, *akillmask;
     char killreason[NICKMAX+32];
-    char akillreason[] = "Temporary KILLCLONES akill.";
+    char akillreason[] = "Gline Temporal de KILLCLONES.";
 
     if (!clonenick) {
 	notice_lang(s_OperServ, u, OPER_KILLCLONES_SYNTAX);
@@ -1572,9 +1673,9 @@ static void do_killclones(User *u)
 	add_akill(akillmask, akillreason, u->nick, 
 			time(NULL) + KillClonesAkillExpire);
 
-	canalopers(s_OperServ, "\2%s\2 used KILLCLONES for \2%s\2 killing "
-			"\2%d\2 clones. A temporary AKILL has been added "
-			"for \2%s\2.", u->nick, clonemask, count, akillmask);
+        canalopers(s_OperServ, "%s usa KILLCLONES para %s killeando "
+                       "%d clones. Un Gline Temporal ha sido añadido "
+                       "para %s.", u->nick, clonemask, count, akillmask);
 
 	log("%s: KILLCLONES: %d clone(s) matching %s killed.",
 			s_OperServ, count, clonemask);

@@ -1,7 +1,9 @@
 /* MemoServ functions.
  *
- * Services is copyright (c) 1996-1999 Andy Church.
+ * Services is copyright (c) 1996-1999 Andrew Church.
  *     E-mail: <achurch@dragonfire.net>
+ * Services is copyright (c) 1999-2000 Andrew Kempe.
+ *     E-mail: <theshadow@shadowfire.org>
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  */
@@ -14,6 +16,7 @@
 static int delmemo(MemoInfo *mi, int num);
 
 static void do_help(User *u);
+static void do_credits(User *u);
 static void do_send(User *u);
 static void do_cancel(User *u);
 static void do_list(User *u);
@@ -22,6 +25,7 @@ static void do_del(User *u);
 static void do_set(User *u);
 static void do_set_notify(User *u, MemoInfo *mi, char *param);
 static void do_set_limit(User *u, MemoInfo *mi, char *param);
+static void do_set_fullmemo(User *u, MemoInfo *mi, char *param);
 static void do_info(User *u);
 
 /*************************************************************************/
@@ -31,6 +35,8 @@ static Command cmds[] = {
     { "HELP",       do_help, NULL,  -1,                      -1,-1,-1,-1 },
     { "?",          do_help, NULL,  -1,                      -1,-1,-1,-1 },
     { ":?",         do_help, NULL,  -1,                      -1,-1,-1,-1 },    
+    { "CREDITS",    do_credits, NULL, SERVICES_CREDITS_TERRA, -1,-1,-1,-1 },
+    { "CREDITOS",   do_credits, NULL, SERVICES_CREDITS_TERRA, -1,-1,-1,-1 },
     { "ENVIA",      do_send, NULL,  MEMO_HELP_SEND,          -1,-1,-1,-1 },
     { "SEND",       do_send, NULL,  MEMO_HELP_SEND,          -1,-1,-1,-1 },
     { "CANCELA",    do_cancel, NULL, MEMO_HELP_CANCEL,       -1,-1,-1,-1 },
@@ -43,7 +49,10 @@ static Command cmds[] = {
     { "DEL",        do_del,  NULL,  MEMO_HELP_DEL,           -1,-1,-1,-1 },
     { "SET",        do_set,  NULL,  MEMO_HELP_SET,           -1,-1,-1,-1 },
     { "SET NOTIFY", NULL,    NULL,  MEMO_HELP_SET_NOTIFY,    -1,-1,-1,-1 },
-    { "SET LIMIT",  NULL,    NULL,  MEMO_HELP_SET_LIMIT,     -1,-1,-1,-1 },
+    { "SET FULLMEMO", NULL,  NULL,  MEMO_HELP_SET_FULLMEMO,  -1,-1,-1,-1 },
+    { "SET LIMIT",  NULL,    NULL,  -1,
+               MEMO_HELP_SET_LIMIT, MEMO_SERVADMIN_HELP_SET_LIMIT,
+               MEMO_SERVADMIN_HELP_SET_LIMIT, MEMO_SERVADMIN_HELP_SET_LIMIT },
     { "INFO",       do_info, NULL,  -1,
 		MEMO_HELP_INFO, MEMO_SERVADMIN_HELP_INFO,
 		MEMO_SERVADMIN_HELP_INFO, MEMO_SERVADMIN_HELP_INFO },
@@ -92,8 +101,8 @@ void memoserv(const char *source, char *buf)
 	    s = "\1";
 	notice(s_MemoServ, source, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION\1") == 0) {
-        notice(s_MemoServ, source, "\1VERSION ircservices-%s+Terra-1.0 %s :-- %s\1",
-                                  version_number, s_MemoServ, version_build);
+        notice(s_MemoServ, source, "\1VERSION ircservices-%s+Terra-%s %s -- %s\1",
+                  version_number, version_terra, s_MemoServ, version_build);
     } else if (skeleton) {
 	notice_lang(s_MemoServ, u, SERVICE_OFFLINE, s_MemoServ);
     } else {
@@ -196,9 +205,6 @@ void check_memos(User *u)
 {
     NickInfo *ni;
     int i, newcnt = 0;
-    struct u_chanlist *ul; 
-    ChannelInfo *ci;
-            
 
     if (!(ni = u->ni) || !nick_recognized(u) ||
 			 !(ni->flags & NI_MEMO_SIGNON))
@@ -230,12 +236,20 @@ void check_memos(User *u)
 	else
 	    notice_lang(s_MemoServ, u, MEMO_AT_LIMIT, ni->memos.memomax);
     }
+}
+
     /* Notificacion de Memos de canales
-     * Al hacer un check_memos(), hay ke
-     * mirar los memos de los canales que
-     * está en ese momento
+     * Al hacer un check_all_cs_memos(),
+     * hay ke mirar los memos de los canales
+     * que está en ese momento
      * - zoltan 8/12/2000
      */    
+
+void check_all_cs_memos(User *u)
+{
+
+    struct u_chanlist *ul;
+    ChannelInfo *ci;
 
     for (ul = u->chans ; ul; ul = ul->next)
         if ((ci = cs_findchan(ul->chan->name))) {
@@ -275,9 +289,13 @@ void check_cs_memos(User *u, ChannelInfo *ci)
 
 /* Return the MemoInfo corresponding to the given nick or channel name.
  * Return in `ischan' 1 if the name was a channel name, else 0.
+ *
+ * Return in `isverboten' 1 if the nick/chan is forbidden, else 0. This is
+ * a bit of a hack, but I can't think of any better way to indicate that a
+ * NULL memoinfo was returned because the nick/chan is forbidden. -TheShadow
  */
 
-static MemoInfo *getmemoinfo(const char *name, int *ischan)
+static MemoInfo *getmemoinfo(const char *name, int *ischan, int *isverboten)
 {
     if (*name == '#') {
 	ChannelInfo *ci;
@@ -285,7 +303,12 @@ static MemoInfo *getmemoinfo(const char *name, int *ischan)
 	    *ischan = 1;
 	ci = cs_findchan(name);
 	if (ci)
-	    return &ci->memos;
+            if (ci->flags & CI_VERBOTEN) {
+                *isverboten = 1;
+                return NULL;
+            } else {
+                return &ci->memos;
+            }
 	else
 	    return NULL;
     } else {
@@ -294,7 +317,12 @@ static MemoInfo *getmemoinfo(const char *name, int *ischan)
 	    *ischan = 0;
 	ni = findnick(name);
 	if (ni)
-	    return &getlink(ni)->memos;
+            if (ni->status & NS_VERBOTEN) {
+                *isverboten = 1;
+                return NULL;
+            } else {
+               return &getlink(ni)->memos;
+            }
 	else
 	    return NULL;
     }
@@ -347,14 +375,22 @@ static void do_help(User *u)
 
 /*************************************************************************/
 
+static void do_credits(User *u)
+{
+
+   notice_lang(s_MemoServ, u, SERVICES_CREDITS_TERRA);
+
+}
+
+/*************************************************************************/
+
 /* Send a memo to a nick/channel. */
 
 static void do_send(User *u)
 {
     char *source = u->nick;
-    int ischan;
+    int ischan, isverboten;
     MemoInfo *mi;
-    ChannelInfo *ci;
     Memo *m;
     char *name = strtok(NULL, " ");
     char *text = strtok(NULL, "");
@@ -367,13 +403,16 @@ static void do_send(User *u)
     } else if (!nick_recognized(u)) {
 	notice_lang(s_MemoServ, u, NICK_IDENTIFY_REQUIRED, s_NickServ);
 
-    } else if (!(mi = getmemoinfo(name, &ischan))) {
-	notice_lang(s_MemoServ, u,
+    } else if (!(mi = getmemoinfo(name, &ischan, &isverboten))) {
+        if (isverboten)
+            notice_lang(s_MemoServ, u,
+                ischan ? CHAN_X_FORBIDDEN : NICK_X_FORBIDDEN,
+                name);
+        else
+           notice_lang(s_MemoServ, u,
 		ischan ? CHAN_X_NOT_REGISTERED : NICK_X_NOT_REGISTERED, name);
-    } else if (ischan && (ci = cs_findchan(name)) && (ci->flags & CI_VERBOTEN)) {
-            notice_lang(s_MemoServ, u, CHAN_X_FORBIDDEN, name);
     } else if (MSSendDelay > 0 &&
-		u && u->lastmemosend+MSSendDelay > now && !is_servadmin) {
+               u && u->lastmemosend+MSSendDelay > now && !is_services_oper(u)) {
 	u->lastmemosend = now;
 	notice_lang(s_MemoServ, u, MEMO_SEND_PLEASE_WAIT, MSSendDelay);
 
@@ -382,8 +421,13 @@ static void do_send(User *u)
 
     } else if (mi->memomax > 0 && mi->memocount >= mi->memomax
 		&& !is_servadmin) {
-	notice_lang(s_MemoServ, u, MEMO_X_HAS_TOO_MANY_MEMOS, name);
+        NickInfo *ni;
 
+	notice_lang(s_MemoServ, u, MEMO_X_HAS_TOO_MANY_MEMOS, name);
+        if (!ischan) {
+           if ((ni = findnick(name)) && ni->msg_fullmemo)
+               notice_lang(s_MemoServ, u, MEMO_X_FULLMEMO, ni->msg_fullmemo);
+        }
     } else {
 	u->lastmemosend = now;
 	mi->memocount++;
@@ -416,7 +460,8 @@ static void do_send(User *u)
 		    }
 		} else {
 		    u = finduser(name);
-		    if (u && (nick_identified(u))) {
+                   /* Solo avisar si está identificado */
+                    if (u && (u->real_ni->status & NS_RECOGNIZED)) {
 			notice_lang(s_MemoServ, u, MEMO_NEW_MEMO_ARRIVED,
 					source, s_MemoServ, m->number);
 		    }
@@ -439,19 +484,21 @@ static void do_cancel(User *u)
 {
 
     char *nick = strtok(NULL, " ");
-    ChannelInfo *ci;
     MemoInfo *mi;
-    int ischan;
+    int ischan, isverboten;
     
     if (!nick) {
         syntax_error(s_MemoServ, u, "CANCEL", MEMO_CANCEL_SYNTAX);
     } else if (!nick_recognized(u)) {
         notice_lang(s_MemoServ, u, NICK_IDENTIFY_REQUIRED, s_NickServ);
-    } else if (!(mi = getmemoinfo(nick, &ischan))) {
-        notice_lang(s_MemoServ, u,
-               ischan ? CHAN_X_NOT_REGISTERED : NICK_X_NOT_REGISTERED, nick);
-    } else if (ischan && (ci = cs_findchan(nick)) && (ci->flags & CI_VERBOTEN)) {
-            notice_lang(s_MemoServ, u, CHAN_X_FORBIDDEN, nick);      
+    } else if (!(mi = getmemoinfo(nick, &ischan, &isverboten))) {
+        if (isverboten)
+            notice_lang(s_MemoServ, u,
+                ischan ? CHAN_X_FORBIDDEN : NICK_X_FORBIDDEN,
+                nick);
+        else
+            notice_lang(s_MemoServ, u,
+                ischan ? CHAN_X_NOT_REGISTERED : NICK_X_NOT_REGISTERED, nick);
     } else {    
         int i;
         /* Empiezo desde el final, ya que solo quiero
@@ -545,7 +592,7 @@ static void do_list(User *u)
         } else if (ci->flags & CI_SUSPENDED) {
             notice_lang(s_MemoServ, u, CHAN_X_SUSPENDED, chan);
             return;	    
-	} else if (!check_access(u, ci, CA_MEMO_READ)) {
+	} else if ((!check_access(u, ci, CA_MEMO_READ)) && !is_services_admin(u)) {
 	    notice_lang(s_MemoServ, u, ACCESS_DENIED);
 	    return;
 	}
@@ -657,7 +704,7 @@ static void do_read(User *u)
         } else if (ci->flags & CI_SUSPENDED) {
             notice_lang(s_MemoServ, u, CHAN_X_SUSPENDED, chan);
             return;
-	} else if (!check_access(u, ci, CA_MEMO_READ)) {
+	} else if ((!check_access(u, ci, CA_MEMO_READ)) && !is_services_admin(u)) {
 	    notice_lang(s_MemoServ, u, ACCESS_DENIED);
 	    return;
 	}
@@ -770,7 +817,7 @@ static void do_del(User *u)
         } else if (ci->flags & CI_SUSPENDED) {
             notice_lang(s_MemoServ, u, CHAN_X_SUSPENDED, chan);
             return;
-	} else if (!check_access(u, ci, CA_MEMO_DEL)) {
+	} else if ((!check_access(u, ci, CA_MEMO_DEL)) && !is_services_admin(u)) {
 	    notice_lang(s_MemoServ, u, ACCESS_DENIED);
 	    return;
 	}
@@ -853,6 +900,8 @@ static void do_set(User *u)
 	do_set_notify(u, mi, param);
     } else if (stricmp(cmd, "LIMIT") == 0) {
 	do_set_limit(u, mi, param);
+    } else if (stricmp(cmd, "FULLMEMO") == 0) {
+        do_set_fullmemo(u, mi, param);
     } else {
 	notice_lang(s_MemoServ, u, MEMO_SET_UNKNOWN_OPTION, strupper(cmd));
 	notice_lang(s_MemoServ, u, MORE_INFO, s_MemoServ, "SET");
@@ -1006,6 +1055,25 @@ static void do_set_limit(User *u, MemoInfo *mi, char *param)
 
 /*************************************************************************/
 
+static void do_set_fullmemo(User *u, MemoInfo *mi, char *param)
+{
+
+    NickInfo *ni = u->ni;
+
+    if (ni->msg_fullmemo)
+        free(ni->msg_fullmemo);
+    if (param) {
+        ni->msg_fullmemo = sstrdup(param);
+        notice_lang(s_MemoServ, u, MEMO_SET_FULLMEMO_CHANGED , param);
+    } else {
+        ni->msg_fullmemo = NULL;
+        notice_lang(s_MemoServ, u, MEMO_SET_FULLMEMO_UNSET);
+    }
+
+}
+
+/*************************************************************************/
+
 static void do_info(User *u)
 {
     MemoInfo *mi;
@@ -1050,7 +1118,9 @@ static void do_info(User *u)
     }
 
     if (name && ni != u->ni) {
+        char buf[BUFSIZE], *end;
 
+        notice_lang(s_MemoServ, u, MEMO_INFO_HEAD, s_MemoServ, name);
 	if (!mi->memocount) {
 	    notice_lang(s_MemoServ, u, MEMO_INFO_X_NO_MEMOS, name);
 	} else if (mi->memocount == 1) {
@@ -1087,9 +1157,35 @@ static void do_info(User *u)
 	} else {
 	    notice_lang(s_MemoServ, u, MEMO_INFO_X_NO_LIMIT, name);
 	}
+        if (ni) {
+            if (ni->msg_fullmemo)
+                notice_lang(s_MemoServ, u, MEMO_INFO_MSG_FULLMEMO, ni->msg_fullmemo);
+            else
+                notice_lang(s_MemoServ, u, MEMO_INFO_NOT_MSG_FULLMEMO);
+            *buf = 0;
+            end = buf;
+            if ((u->ni->flags & NI_MEMO_SIGNON)
+                          && (u->ni->flags & NI_MEMO_RECEIVE)) {
+                end += snprintf(end, sizeof(buf)-(end-buf), "%s",
+                       getstring(u->ni, MEMO_INFO_NOTIFY_ON));
+            } else if (u->ni->flags & NI_MEMO_SIGNON) {
+                end += snprintf(end, sizeof(buf)-(end-buf), "%s",
+                      getstring(u->ni, MEMO_INFO_NOTIFY_LOGON));
+            } else if (u->ni->flags & NI_MEMO_RECEIVE) {
+                end += snprintf(end, sizeof(buf)-(end-buf), "%s",
+                      getstring(u->ni, MEMO_INFO_NOTIFY_NEW));
+            } else {
+                end += snprintf(end, sizeof(buf)-(end-buf), "%s",
+                      getstring(u->ni, MEMO_INFO_NOTIFY_OFF));
+            }
+            notice_lang(s_MemoServ, u, MEMO_INFO_NOTIFY,
+                 *buf ? buf : getstring(u->ni, NICK_INFO_OPT_NONE));
+        } /* if (ni) */
 
     } else { /* !name || ni == u->ni */
+        char buf[BUFSIZE], *end;
 
+        notice_lang(s_MemoServ, u, MEMO_INFO_HEAD, s_MemoServ, u->nick);
 	if (!mi->memocount) {
 	    notice_lang(s_MemoServ, u, MEMO_INFO_NO_MEMOS);
 	} else if (mi->memocount == 1) {
@@ -1127,6 +1223,28 @@ static void do_info(User *u)
 	} else {
 	    notice_lang(s_MemoServ, u, MEMO_INFO_NO_LIMIT);
 	}
+        if (u->ni->msg_fullmemo)
+            notice_lang(s_MemoServ, u, MEMO_INFO_MSG_FULLMEMO, u->ni->msg_fullmemo);
+        else
+            notice_lang(s_MemoServ, u, MEMO_INFO_NOT_MSG_FULLMEMO);
+        *buf = 0;
+        end = buf;
+        if ((u->ni->flags & NI_MEMO_SIGNON)
+                          && (u->ni->flags & NI_MEMO_RECEIVE)) {
+          end += snprintf(end, sizeof(buf)-(end-buf), "%s",
+                      getstring(u->ni, MEMO_INFO_NOTIFY_ON));
+        } else if (u->ni->flags & NI_MEMO_SIGNON) {
+          end += snprintf(end, sizeof(buf)-(end-buf), "%s",
+                      getstring(u->ni, MEMO_INFO_NOTIFY_LOGON));
+        } else if (u->ni->flags & NI_MEMO_RECEIVE) {
+          end += snprintf(end, sizeof(buf)-(end-buf), "%s",
+                      getstring(u->ni, MEMO_INFO_NOTIFY_NEW));
+        } else {
+          end += snprintf(end, sizeof(buf)-(end-buf), "%s",
+                      getstring(u->ni, MEMO_INFO_NOTIFY_OFF));
+        }
+        notice_lang(s_MemoServ, u, MEMO_INFO_NOTIFY,
+                *buf ? buf : getstring(u->ni, NICK_INFO_OPT_NONE));
 
     } /* if (name && ni != u->ni) */
 }

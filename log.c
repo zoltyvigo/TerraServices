@@ -1,7 +1,9 @@
 /* Logging routines.
  *
- * Services is copyright (c) 1996-1999 Andy Church.
+ * Services is copyright (c) 1996-1999 Andrew Church.
  *     E-mail: <achurch@dragonfire.net>
+ * Services is copyright (c) 1999-2000 Andrew Kempe.
+ *     E-mail: <theshadow@shadowfire.org>
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  */
@@ -269,7 +271,7 @@ void fatal(const char *fmt, ...)
     if (nofork)
 	fprintf(stderr, "%sFATAL: %s\n", buf, buf2);
     if (servsock >= 0)
-	wallops(NULL, "FATAL ERROR!  %s", buf2);
+	canalopers(NULL, "FATAL ERROR!  %s", buf2);
     exit(1);
 }
 
@@ -308,7 +310,8 @@ void fatal_perror(const char *fmt, ...)
     if (stderr)
 	fprintf(stderr, "%sFATAL: %s: %s\n", buf, buf2, strerror(errno_save));
     if (servsock >= 0)
-	wallops(NULL, "FATAL ERROR!  %s: %s", buf2, strerror(errno_save));
+	canalopers(NULL, "FATAL ERROR!  %s: %s", buf2,
+strerror(errno_save));
     exit(1);
 }
 

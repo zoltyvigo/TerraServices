@@ -1,7 +1,9 @@
 /* Routines to maintain a list of online users.
  *
- * Services is copyright (c) 1996-1999 Andy Church.
+ * Services is copyright (c) 1996-1999 Andrew Church.
  *     E-mail: <achurch@dragonfire.net>
+ * Services is copyright (c) 1999-2000 Andrew Kempe.
+ *     E-mail: <theshadow@shadowfire.org>
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  */
@@ -89,7 +91,7 @@ static void delete_user(User *user)
 {
     struct u_chanlist *c, *c2;
     struct u_chaninfolist *ci, *ci2;
-    Server *server = find_servername(user->server);    
+    Server *server = user->server;
 
     if (debug >= 2)
 	log("debug: delete_user() called");
@@ -104,7 +106,6 @@ static void delete_user(User *user)
     free(user->username);
     free(user->host);
     free(user->realname);
-    free(user->server);
     if (debug >= 2)
 	log("debug: delete_user(): remove from channels");
     c = user->chans;
@@ -150,8 +151,8 @@ void del_users_server(Server *server)
     for (i = 0;i < 1024;i++) {
         user=userlist[i];
         while (user) {
-            if (stricmp(user->server, server->name) != 0) {
-                user=user->next;
+            if (user->server != server) {
+                user = user->next;
                 continue;
             }
             usercnt--;    
@@ -221,8 +222,6 @@ void get_user_stats(long *nusers, long *memuse)
 		mem += strlen(user->host)+1;
 	    if (user->realname)
 		mem += strlen(user->realname)+1;
-	    if (user->server)
-		mem += strlen(user->server)+1;
 	    for (uc = user->chans; uc; uc = uc->next)
 		mem += sizeof(*uc);
 	    for (uci = user->founder_chans; uci; uci = uci->next)
@@ -249,21 +248,25 @@ void send_user_list(User *user)
 	struct u_chanlist *c;
 	struct u_chaninfolist *ci;
 
-	privmsg(s_OperServ, source, "%s!%s@%s +%s%s%s%s%s %ld %s :%s",
+        privmsg(s_OperServ, source, "%s!%s@%s +%s%s%s%s%s%s%s%s%s%s%s %ld %s :%s", 
 		u->nick, u->username, u->host,
 		(u->mode&UMODE_G)?"g":"", (u->mode&UMODE_I)?"i":"",
 		(u->mode&UMODE_O)?"o":"", (u->mode&UMODE_S)?"s":"",
-		(u->mode&UMODE_W)?"w":"", u->signon, u->server, u->realname);
+                (u->mode&UMODE_R)?"r":"", (u->mode&UMODE_K)?"k":"",
+                (u->mode&UMODE_X)?"X":"", (u->mode&UMODE_x)?"x":"",
+                (u->mode&UMODE_H)?"h":"", (u->mode&UMODE_A)?"a":"",
+                (u->mode&UMODE_W)?"w":"", u->signon, u->server->name,
+                 u->realname);
 	buf[0] = 0;
 	s = buf;
 	for (c = u->chans; c; c = c->next)
 	    s += snprintf(s, sizeof(buf)-(s-buf), " %s", c->chan->name);
-	privmsg(s_OperServ, source, "%s%s", u->nick, buf);
+	privmsg(s_OperServ, source, "CHANNELS: %s", buf);
 	buf[0] = 0;
 	s = buf;
 	for (ci = u->founder_chans; ci; ci = ci->next)
 	    s += snprintf(s, sizeof(buf)-(s-buf), " %s", ci->chan->name);
-	notice(s_OperServ, source, "%s%s", u->nick, buf);
+	notice(s_OperServ, source, "FOUNDER: %s", buf);
     }
 }
 
@@ -285,21 +288,25 @@ void send_user_info(User *user)
 		nick ? nick : "(null)");
 	return;
     }
-    privmsg(s_OperServ, source, "%s!%s@%s +%s%s%s%s%s %ld %s :%s",
+    privmsg(s_OperServ, source, "%s!%s@%s +%s%s%s%s%s%s%s%s%s%s%s %ld %s :%s",
 		u->nick, u->username, u->host,
 		(u->mode&UMODE_G)?"g":"", (u->mode&UMODE_I)?"i":"",
 		(u->mode&UMODE_O)?"o":"", (u->mode&UMODE_S)?"s":"",
-		(u->mode&UMODE_W)?"w":"", u->signon, u->server, u->realname);
+                (u->mode&UMODE_R)?"r":"", (u->mode&UMODE_K)?"k":"",
+                (u->mode&UMODE_X)?"X":"", (u->mode&UMODE_x)?"x":"",
+                (u->mode&UMODE_H)?"h":"", (u->mode&UMODE_A)?"a":"",
+                (u->mode&UMODE_W)?"w":"", u->signon, u->server->name,
+                 u->realname);
     buf[0] = 0;
     s = buf;
     for (c = u->chans; c; c = c->next)
 	s += snprintf(s, sizeof(buf)-(s-buf), " %s", c->chan->name);
-    privmsg(s_OperServ, source, "%s%s", u->nick, buf);
+    privmsg(s_OperServ, source, "CHANNELS: %s", buf);
     buf[0] = 0;
     s = buf;
     for (ci = u->founder_chans; ci; ci = ci->next)
 	s += snprintf(s, sizeof(buf)-(s-buf), " %s", ci->chan->name);
-    privmsg(s_OperServ, source, "%s%s", u->nick, buf);
+    privmsg(s_OperServ, source, "FOUNDER: %s", buf);
 }
 
 #endif	/* DEBUG_COMMANDS */
@@ -373,7 +380,6 @@ User *nextuser(void)
 void do_nick(const char *source, int ac, char **av)
 {
     User *user;
-    Server *server;
     
     NickInfo *new_ni;	/* New master nick */
     int ni_changed = 1;	/* Did master nick change? */
@@ -396,20 +402,22 @@ void do_nick(const char *source, int ac, char **av)
 	    return;
 
 #ifdef CYBER
-        /* Now check for session limits */
+        /* Chequeo para el limite de clones
+         * Primero chequea y luego añade el clon
+         */
         if (ControlClones && !add_clones(av[0], av[4]))
             return;
 #endif
 
 	/* Allocate User structure and fill it in. */
-        server = find_servername(av[5]);
 	user = new_user(av[0]);
 	user->signon = atol(av[2]);
 	user->username = sstrdup(av[3]);
 	user->host = sstrdup(av[4]);
-        user->server = sstrdup(server->name);
-        server->users++;	
+        user->server = find_servername(av[5]);
+        user->server->users++;
 	user->realname = sstrdup(av[6]);
+        user->timestamp = user->signon;
 	user->my_signon = time(NULL);
 
 
@@ -433,6 +441,8 @@ void do_nick(const char *source, int ac, char **av)
 	 * my_signon if the nicks aren't the same, case-insensitively. */
 	if (stricmp(av[0], user->nick) != 0)
 	    user->my_signon = time(NULL);
+
+        user->timestamp = atol(av[1]);
 
 	new_ni = findnick(av[0]);
 	if (new_ni)
@@ -502,7 +512,7 @@ void do_join(const char *source, int ac, char **av)
 	    continue;
 	chan_adduser(user, s);
 /* Añadir soporte aviso de MemoServ si hay memos en el canal que entras */
-        if ((ci = cs_findchan(s))) {        
+        if ((ci = cs_findchan(s)) && !(ci->flags & CI_VERBOTEN)) {
          /* Para evitar lag de Reentrada de los bots */      
             if ((ci = cs_findchan(s)) && (time(NULL) - start_time) > (2*60)) {
                  if (ci->flags & CI_SUSPENDED) {
@@ -637,8 +647,9 @@ void do_umode(const char *source, int ac, char **av)
     }
     user = finduser(source);
     if (!user) {
-	log("user: MODE %s for nonexistent nick %s: %s", av[1], source,
-							merge_args(ac, av));
+/* Debido a Cyber, sale siempre a los users killeados */
+//	log("user: MODE %s for nonexistent nick %s: %s", av[1], source,
+//							merge_args(ac, av));
 	return;
     }
     if (debug)
@@ -648,13 +659,6 @@ void do_umode(const char *source, int ac, char **av)
 	switch (*s++) {
 	    case '+': add = 1; break;
 	    case '-': add = 0; break;
-#ifdef IRC_DAL4_4_15
-	    case 'r': 
-	    	if (add && !nick_identified(user)) {
-		    send_cmd(ServerName, "SVSMODE %s -r", av[0]);
-		}
-		break;
-#endif
 	    case 'i': add ? (user->mode |= UMODE_I) : (user->mode &= ~UMODE_I);
 	              break;
 	    case 'w': add ? (user->mode |= UMODE_W) : (user->mode &= ~UMODE_W);
@@ -667,7 +671,7 @@ void do_umode(const char *source, int ac, char **av)
                       break;
             case 'X': add ? (user->mode |= UMODE_X) : (user->mode &= ~UMODE_X);
                       break;
-//            case 'k': add ? (user->mode |= UMODE_K) : (user->mode &= ~UMODE_K);
+            case 'k': add ? (user->mode |= UMODE_K) : (user->mode &= ~UMODE_K);
 //                      break;	              
 //            case 'd': add ? (user->mode |= UMODE_D) : (user->mode &= ~UMODE_D);
 //                      break;                      
@@ -699,7 +703,10 @@ void do_umode(const char *source, int ac, char **av)
                             notice_lang(s_NickServ, user, NICK_IDENTIFY_X_MODE_R, user->nick);
                             if (!(new_ni->status & NS_RECOGNIZED))
                                 check_memos(user);
-//                            check_ip_iline(user);    
+#ifdef CYBER                                
+                            if (new_ni->flags & NI_ADMIN_CYBER)  
+                                check_ip_iline(user);    
+#endif                                
                             strcpy(new_ni->nick, user->nick);                                
                         }
                     } else {
@@ -721,8 +728,14 @@ void do_umode(const char *source, int ac, char **av)
                     user->mode &= ~UMODE_H;
                 }    
                 break;
-            case 'a': add ? (user->mode |= UMODE_A) : (user->mode &= ~UMODE_A);
-                      break;                
+            case 'a':
+                if (add) {
+                    user->mode |= UMODE_A;
+                } else {
+                    user->mode &= ~UMODE_A;
+                }
+                break;
+/* Si es un clon de cyber... dar el VHOST */
 	    case 'o':
 		if (add) {
 		    user->mode |= UMODE_O;
@@ -732,6 +745,7 @@ void do_umode(const char *source, int ac, char **av)
 		    opcnt++;
 		} else {
 		    user->mode &= ~UMODE_O;
+/* Si es un clon de cyber... dar el VHOST */
 		    opcnt--;
 		}
 		break;
@@ -771,6 +785,7 @@ void do_quit(const char *source, int ac, char **av)
 	ni->last_quit = *av[0] ? sstrdup(av[0]) : NULL;
     }
 #ifdef CYBER
+    /* Borrar el clon de la lista */
     if (ControlClones)
         del_clones(user->host);
 #endif
@@ -805,6 +820,7 @@ void do_kill(const char *source, int ac, char **av)
 
     }
 #ifdef CYBER
+    /* Borrar el clon de la lista */
     if (ControlClones)
         del_clones(user->host);
 #endif
@@ -825,11 +841,57 @@ int is_oper(const char *nick)
 
 /*************************************************************************/
 
+/* Tiene el modo +k de anti-op y anti-kick */
+
+int is_ChannelService(User *u)
+{
+    if (!u)
+        return 0;
+
+    if (u->mode & UMODE_K)
+        return 1;
+
+    return 0;
+}
+
+/*************************************************************************/
+
+/* Tiene el modo +x */
+
+int is_hidden(User *u)
+{
+
+    if (!u)
+        return 0;
+
+    if (u->mode & UMODE_x)
+        return 1;
+
+    return 0;
+}
+
+/*************************************************************************/
+
+/* Tiene el modo +X para ver ips REALES */
+
+int is_hiddenview(User *u)
+{
+
+    if (!u)
+        return 0;
+
+    if (u->mode & UMODE_X)
+        return 1;
+
+    return 0;   
+}    
+
+/*************************************************************************/
+
 /* Is the given nick on the given channel? */
 
-int is_on_chan(const char *nick, const char *chan)
+int is_on_chan(User *u, const char *chan)
 {
-    User *u = finduser(nick);
     struct u_chanlist *c;
 
     if (!u)
@@ -845,9 +907,8 @@ int is_on_chan(const char *nick, const char *chan)
 
 /* Is the given nick a channel operator on the given channel? */
 
-int is_chanop(const char *nick, const char *chan)
+int is_chanop(const char *nick, Channel *c)
 {
-    Channel *c = findchan(chan);
     struct c_userlist *u;
 
     if (!c)
@@ -863,9 +924,8 @@ int is_chanop(const char *nick, const char *chan)
 
 /* Is the given nick voiced (channel mode +v) on the given channel? */
 
-int is_voiced(const char *nick, const char *chan)
+int is_voiced(const char *nick, Channel *c)
 {
-    Channel *c = findchan(chan);
     struct c_userlist *u;
 
     if (!c)
@@ -904,6 +964,7 @@ int match_usermask(const char *mask, User *user)
     }
     strlower(host);
     host2 = strlower(sstrdup(user->host));
+//    privmsg(s_ChanServ, user->nick, "DEBUG: IP REAL CALCULADA: %s", host2);
     if (nick) {
 	nick2 = strlower(sstrdup(user->nick));
 	result = match_wild(nick, nick2) &&
@@ -957,7 +1018,7 @@ int match_virtualmask(const char *mask, User *user)
     else 
         host2 = (char *)make_virtualhost(user->host);    
    
-    privmsg(s_ChanServ, user->nick, "DEBUG: IP CIFRADA CALCULADA: %s", host2);    
+//    privmsg(s_ChanServ, user->nick, "DEBUG: IP CIFRADA CALCULADA: %s", host2);    
     if (nick) {
         nick2 = strlower(sstrdup(user->nick));
         result = match_wild(nick, nick2) &&

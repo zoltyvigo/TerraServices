@@ -1,7 +1,3 @@
-Forced nickchanges may cause nick collisions between "Guest" nicks when there
-is a large netburst that is processed extremely quickly by Services. This
-should be fixed in the not-so-distant future.
-
 Clone detection can give false warnings if a user connects and then signs
 off several times in rapid succession.
 

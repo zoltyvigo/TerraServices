@@ -1,7 +1,9 @@
 /* Main header for Services.
  *
- * Services is copyright (c) 1996-1999 Andy Church.
+ * Services is copyright (c) 1996-1999 Andrew Church.
  *     E-mail: <achurch@dragonfire.net>
+ * Services is copyright (c) 1999-2000 Andrew Kempe.
+ *     E-mail: <theshadow@shadowfire.org>
  * This program is free but copyrighted software; see the file COPYING for
  * details.
  */
@@ -83,6 +85,13 @@ extern int toupper(char), tolower(char);
 #define toLower(c)      (NTL_tolower_tab[(c)-CHAR_MIN])
 #define toUpper(c)      (NTL_toupper_tab[(c)-CHAR_MIN])
 
+/* Usamos nuestras propias versiones de strtTok y strToken */
+#undef strtok
+#undef strtoken
+
+#define strtok strTok
+#define strtoken strToken
+
 /* We also have our own encrypt(). */
 #define encrypt encrypt_
 
@@ -128,8 +137,8 @@ extern int toupper(char), tolower(char);
 /* Defino versiones de las DB de forma independiente... :) */
 
 #define AKILL_VERSION   7
-#define CHAN_VERSION    8
-#define NICK_VERSION    9
+#define CHAN_VERSION    9
+#define NICK_VERSION    10
 #define OPER_VERSION    8
 #define NEWS_VERSION    7
 #ifdef CYBER
@@ -150,6 +159,7 @@ struct server_ {
     Server *hijo, *rehijo;
     int padre;
     char *name;
+    time_t ts_join;
     int  users;
     char *numeric;
 };
@@ -199,14 +209,15 @@ struct nickinfo_ {
     char pass[PASSMAX];
     char *url;
     char *email;
-    char *emailreg;           /* Mail de registro del nick */    
+    char *emailreg;             /* Mail de registro del nick */    
+    char *msg_fullmemo;         /* Mensaje de memo lleno */
 
     char *last_usermask;
     char *last_realname;
     char *last_quit;
     time_t time_registered;
     time_t last_seen;
-//    time_t last_used_reg;      /* Ultimo REGISTRA/APOYO en Reg */
+    time_t last_changed_pass;  /* Hora del ultimo cambio de Password */
     int16 status;	/* See NS_* below */
     
     char *suspendby;           /* Quien lo suspendio */
@@ -267,8 +278,7 @@ struct nickinfo_ {
 #define NI_HIDE_QUIT	0x00000200  /* Don't show last quit message in INFO */
 #define NI_KILL_QUICK	0x00000400  /* Kill in 20 seconds instead of 60 */
 #define NI_KILL_IMMED	0x00000800  /* Kill immediately instead of in 60 sec */
-#define NI_REG_IGNORE	0x00001000  /* Nick IGNORADO para los apoyos/registros */
-#define NI_CHANGE_PASS	0x00002000  /* Recordatorio para cambiar la pass */
+#define NI_CHANGE_PASS	0x00001000  /* Recordatorio para cambiar la pass */
 /* Reservado para futuras implementaciones */
 #define NI_CYBER_IPNOF	0x00010000  /* Nick admin con iline dinamica */
 #define NI_ADMIN_CYBER	0x00020000  /* Admin de cyber */
@@ -335,6 +345,7 @@ typedef struct {
     } u;
     char *reason;
     char who[NICKMAX];  /* Nick de quien puso el akick */
+    time_t time;        /* Hora cuando se puso el akick */
 } AutoKick;
 
 typedef struct chaninfo_ ChannelInfo;
@@ -420,6 +431,8 @@ struct chaninfo_ {
 #define CI_UNBANCYBER	0x00010000
 /* Canal Oficial de Terra Networks */
 #define CI_OFICIAL_CHAN	0x00020000
+/* Levels, no permitir deop, devoice, kick a usuarios con nivel = o superior */
+#define CI_LEVELS       0x00040000
 
 /* Indices for cmd_access[]: */
 #define CA_INVITE	0
@@ -455,12 +468,17 @@ struct user_ {
     char nick[NICKMAX];
     NickInfo *ni;			/* Effective NickInfo (not a link) */
     NickInfo *real_ni;			/* Real NickInfo (ni.nick==user.nick) */
+    Server *server;                     /* Server user is on */
     char *username;
     char *host;				/* User's hostname */
     char *realname;
-    char *server;			/* Name of server user is on */
-    time_t signon;			/* Time of signon (NOT nick change) */
-    time_t my_signon;			/* When did _we_ see the user? */
+
+    time_t timestamp;                   /* TS3 - time of signon/last nick change
+                                         * TS8 - time of signon */
+    time_t signon;                      /* Timestamp sent with nick when it was
+                                         * introduced to us. Never changes! */
+    time_t my_signon;                   /* When did _we_ see the user with
+                                         * their current nickname? */
     int32 mode;				/* See below */
     struct u_chanlist {
 	struct u_chanlist *next, *prev;
@@ -484,13 +502,16 @@ struct user_ {
 #define UMODE_R 0x00000020              /* Nick registrado */ 
 #define UMODE_x 0x00000040              /* Ip virtual */
 #define UMODE_X 0x00000080              /* Ver ips virtuales */
-#define UMODE_H 0x00000100              /* Operador de la red */
-#define UMODE_A 0x00000200              /* Administrador de la red */
-#define UMODE_AWAY 0x00000400              /* MODO AWAY */
+#define UMODE_K 0x00000100              /* Modo channel Service */
+#define UMODE_H 0x00000200              /* Operador de la red */
+#define UMODE_A 0x00000400              /* Administrador de la red */
+
+#define AWAY    0x00100000              /* MODO AWAY */
+#define IGNORED 0x00200000              /* Ignore de Oper al usuario */
 
 struct channel_ {
     Channel *next, *prev;
-    char name[CHANMAX];
+    char name[CHANMAX + 1];
     ChannelInfo *ci;			/* Corresponding ChannelInfo */
     time_t creation_time;		/* When channel was created */
 
@@ -525,8 +546,6 @@ struct channel_ {
 #define CMODE_T 0x00000020
 #define CMODE_K 0x00000040		/* These two used only by ChanServ */
 #define CMODE_L 0x00000080
-
-/* The two modes below are for IRC_DAL4_4_15 servers only. */
 #define CMODE_R 0x00000100		/* Only identified users can join */
 #define CMODE_r 0x00000200		/* Set for all registered channels */
 
@@ -559,9 +578,8 @@ struct ilineinfo_ {
     char *comentario;           /* Comentario */
     char *vhost;                /* Virtual host del ciber */
     char operwho[NICKMAX];      /* Admin que puso la iline */
-
-//    char *suspendby;                    /* Quien lo suspendio */
-//    char *suspendreason;                /* Motivo de la suspension */         
+    char *suspendby;            /* Quien lo suspendio */
+    char *suspendreason;        /* Motivo de la suspension */         
     
     int16 limite;               /* Limite Iline */
     time_t time_concesion;
@@ -572,75 +590,6 @@ struct ilineinfo_ {
 };
 #endif
 /*************************************************************************/
-#ifdef CREG
-/* Estructura de peticiones de registro en canales en medio de CregServ */
-
-typedef struct {
-    char nickapoyo[NICKMAX];
-    char *emailapoyo;
-    time_t time_apoyo;
-} ApoyosCreg;
-            
-typedef struct {
-     char nickoper[NICKMAX];
-     char *marca;
-     time_t time_marca;
-} HistoryCreg;
-
-struct creginfo_ {
-    CregInfo *next, *prev;
-    char name[CHANMAX];          /* Nombre del canal */
-    char founder[NICKMAX];       /* Nick del founder */
-    char *desc;                  /* Descripcion del canal */
-    char *email;                 /* Email del founder */
-    time_t time_peticion;        /* Hora de la peticion */
-
-    char nickoper[NICKMAX];      /* Nick del OPER */
-    time_t time_motivo;          /* Hora del cambio de estado del canal */
-    char *motivo;                /* Motivo de la suspension, etc.. */
-            
-    char passapoyo[PASSMAX];     /* Contraseña de apoyo */
-    time_t time_lastapoyo;       /* Hora del ultimo apoyo realizado */
-
-    int32 estado;                /* Estado del canal :) CR_* */
-    
-    int16 apoyoscount;           /* Contador del numero de apoyos */
-    ApoyosCreg *apoyos;          /* Lista de los apoyos realizados */
-            
-    int16 historycount;          /* Contador de Históricos */
-    HistoryCreg *history;        /* Lista historico del canal */
-
-};
-
-/* Estados de las peticiones del canal  */
-/* Canal en proceso de registro */
-#define CR_PROCESO_REG  0x00000001
-/* Canal ha expirado */
-#define CR_EXPIRADO     0x00000002
-/* Canal pendiente de aceptacion */
-#define CR_PENDIENTE    0x00000004
-/* Canal denegado */
-#define CR_DENEGADO     0x00000008
-/* Canal rechazado */
-#define CR_RECHAZADO    0x00000010
-/* Canal prohibido */
-#define CR_PROHIBIDO    0x00000020
-/* Canal dropado */
-#define CR_DROPADO      0x00000040
-/* Canal suspendido */
-#define CR_SUSPENDIDO   0x00000080
-/* Canal en estado desconocido */
-#define CR_DESCONOCIDO  0x00000100
-/* Canal aceptado y registrado en Chanserv */
-#define CR_ACEPTADO     0x00000200
-/* Canal registrado comericial */
-#define CR_COMERCIAL    0x00000400
-/* Canal registrado sin usar a creg */
-#define CR_REGISTRADO   0x00000800
-/* Canal registrado histórico */
-#define CR_HISTORICO    0x00001000
-                                                                                    
-#endif                                                    
 
 
 /* Who sends channel MODE (and KICK) commands? */
