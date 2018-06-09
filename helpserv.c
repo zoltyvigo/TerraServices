@@ -31,7 +31,7 @@ void helpserv(const char *whoami, const char *source, char *buf)
 	    s = "\1";
 	notice(s_HelpServ, source, "\1PING %s", s);
     } else if (cmd && stricmp(cmd, "\1VERSION\1") == 0) {
-        notice(s_HelpServ, source, "\1VERSION ircservices-%s+Tierrared-%s %s -- %s\1",
+        notice(s_HelpServ, source, "\1VERSION ircservices-%s+IRC-Terra-%s %s -- %s\1",
                       version_number, version_terra, s_HelpServ, version_build);
     } else {
 	do_help(whoami, source, topic);

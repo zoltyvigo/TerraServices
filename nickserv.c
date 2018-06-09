@@ -65,6 +65,7 @@ static void do_set_password(User *u, NickInfo *ni, char *param);
 static void do_set_language(User *u, NickInfo *ni, char *param);
 static void do_set_url(User *u, NickInfo *ni, char *param);
 static void do_set_email(User *u, NickInfo *ni, char *param);
+static void do_set_emailreg(User *u, NickInfo *ni, char *param);
 static void do_set_kill(User *u, NickInfo *ni, char *param);
 static void do_set_secure(User *u, NickInfo *ni, char *param);
 static void do_set_private(User *u, NickInfo *ni, char *param);
@@ -130,6 +131,7 @@ static Command cmds[] = {
     { "SET PASSWORD", NULL,    NULL,  NICK_HELP_SET_PASSWORD, -1,-1,-1,-1 },
     { "SET URL",      NULL,    NULL,  NICK_HELP_SET_URL,      -1,-1,-1,-1 },
     { "SET EMAIL",    NULL,    NULL,  NICK_HELP_SET_EMAIL,    -1,-1,-1,-1 },
+    { "SET EMAILREG", NULL,    NULL,  NICK_HELP_SET_EMAIL, -1,-1,-1,-1 },
     { "SET KILL",     NULL,    NULL,  NICK_HELP_SET_KILL,     -1,-1,-1,-1 },
     { "SET CHANGE",   NULL,    NULL,  NICK_HELP_SET_CHANGE,   -1,-1,-1,-1 },
     { "SET SECURE",   NULL,    NULL,  NICK_HELP_SET_SECURE,   -1,-1,-1,-1 },
@@ -156,13 +158,13 @@ static Command cmds[] = {
     { "OPERS",    do_opers,    NULL,  NICK_HELP_OPERS,        -1,-1,-1,-1 },
     { "IRCOPS",   do_opers,    NULL,  NICK_HELP_OPERS,        -1,-1,-1,-1 },
     { "ADMINS",   do_opers,    NULL,  NICK_HELP_OPERS,        -1,-1,-1,-1 },   
-    { "LISTEMAILS", do_listemails, is_services_oper, -1,
+    { "LISTEMAILS", do_listemails, is_services_preoper, -1,
                 -1, NICK_SERVADMIN_HELP_LISTEMAILS,
                 NICK_SERVADMIN_HELP_LISTEMAILS, NICK_SERVADMIN_HELP_LISTEMAILS },
-    { "LISTLINKS",do_listlinks,is_services_oper, -1,
+    { "LISTLINKS",do_listlinks,is_services_preoper, -1,
 		-1, NICK_SERVADMIN_HELP_LISTLINKS,
 		NICK_SERVADMIN_HELP_LISTLINKS, NICK_SERVADMIN_HELP_LISTLINKS },
-    { "SENDPASS", do_sendpass,  is_services_oper,  -1,
+    { "SENDPASS", do_sendpass,  is_services_preoper,  -1,
                 -1, NICK_SERVADMIN_HELP_SENDPASS,
                 NICK_SERVADMIN_HELP_SENDPASS, NICK_SERVADMIN_HELP_SENDPASS },
     { "GETPASS",  do_getpass,  is_services_admin,  -1,
@@ -370,7 +372,7 @@ void nickserv(const char *source, char *buf)
 	    s = "\1";
 	notice(s_NickServ, source, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION\1") == 0) {
-        notice(s_NickServ, source, "\1VERSION ircservices-%s+Tierrared-%s %s -- %s\1",
+        notice(s_NickServ, source, "\1VERSION ircservices-%s+IRC-Terra%s %s -- %s\1",
                    version_number, version_terra, s_NickServ, version_build);
     } else if (skeleton) {
 	notice_lang(s_NickServ, u, SERVICE_OFFLINE, s_NickServ);
@@ -894,8 +896,8 @@ int validate_user(User *u)
 
     if ((u->ni->flags & NI_KILLPROTECT) && !on_access) {
 	if (u->ni->flags & NI_KILL_IMMED) {
-//	    collide(ni, 0);
-            add_ns_timeout(ni, TO_COLLIDE, 1);
+	    collide(ni, 0);
+//            add_ns_timeout(ni, TO_COLLIDE, 1);
 	} else if (u->ni->flags & NI_KILL_QUICK) {
 	    if (NSForceNickChange)
 	    	notice_lang(s_NickServ, u, FORCENICKCHANGE_IN_20_SECONDS);
@@ -1340,11 +1342,11 @@ static void collide(NickInfo *ni, int from_timeout)
 
 #endif
 //        notice_lang(s_NickServ, u, FORCENICKCHANGE_NOW, guestnick);
-        notice_lang(s_NickServ, u, FORCENICKCHANGE_NOW, "ircXXXXXX");
+        notice_lang(s_NickServ, u, FORCENICKCHANGE_NOW, "invXXXXXX");
 
 //	send_cmd(NULL, "SVSNICK %s %s :%ld", ni->nick, guestnick, time(NULL));
         /* Comando SVSNICK de TERRA */
-        send_cmd(ServerName, "SVSNICK %s", ni->nick);        
+        send_cmd(ServerName, "RENAME %s", ni->nick);        
 	ni->status |= NS_GUESTED;
     } else {  
 	notice_lang(s_NickServ, u, DISCONNECT_NOW);
@@ -1540,7 +1542,7 @@ static void do_help(User *u)
 	    notice_help(s_NickServ, u, NICK_HELP, NSExpire/86400);
 	else
 	    notice_help(s_NickServ, u, NICK_HELP_EXPIRE_ZERO);
-	if (is_services_oper(u))
+	if (is_services_preoper(u))
 	    notice_help(s_NickServ, u, NICK_SERVADMIN_HELP);
     } else if (stricmp(cmd, "SET LANGUAGE") == 0) {
 	int i;
@@ -1564,7 +1566,7 @@ static void do_credits(User *u)
 }
 
 /*************************************************************************/
-
+#ifdef  DESACTIVADO
 static int is_domain_allowed(char *email)
 {
     Mail *mail;
@@ -1594,8 +1596,9 @@ static int is_domain_teleline(char *email)
        return 1;
    
    return 0;
+   
 }           
-       
+   #endif    
 /*************************************************************************/
 
 static void do_mail(User *u)
@@ -1677,9 +1680,10 @@ static void do_register(User *u)
         notice_lang(s_NickServ, u, NICK_MAIL_INVALID);
         syntax_error(s_NickServ, u, "REGISTER", NICK_REGISTER_MAIL_SYNTAX);
 
+/*
     } else if (!is_domain_allowed(email)) {
         notice_lang(s_NickServ, u, NICK_MAIL_TERRA, s_NickServ);
-
+*/
     } else {    
         if (!is_oper(u->nick)) {
            strlower(email);
@@ -1791,7 +1795,7 @@ static void do_register(User *u)
                            "Página de Información %s\n",
                   ni->nick, ni->pass, ni->pass, s_NickServ, WebNetwork);
 
-               snprintf(subject, sizeof(subject), "Registro del Nick '%s' en Tierrared", ni->nick);
+               snprintf(subject, sizeof(subject), "Registro del Nick '%s' en iRC-Terra", ni->nick);
                
                send_mail(ni->emailreg, subject, buf);
                exit(0);
@@ -1855,7 +1859,9 @@ static void do_identify(User *u)
         char buf[BUFSIZE];
         struct tm *tm;
         time_t now = time(NULL);
+#ifdef IRC_TERRA
         char **av_umode;        
+#endif                
                 
         last_mask = sstrdup(ni->last_usermask);
         last_login = ni->last_seen;
@@ -1882,6 +1888,7 @@ static void do_identify(User *u)
             notice_lang(s_NickServ, u, NICK_IDENTIFY_SUCCEEDED);
         }	
         ni->status |= NS_IDENTIFIED;
+#ifdef IRC_TERRA        
 /* Doy modos de oper y admin
  * zoltan 30/11/2000
  */
@@ -1902,6 +1909,7 @@ static void do_identify(User *u)
         do_umode(av_umode[0], 2, av_umode);
         free(av_umode[1]);
         free(av_umode);     
+#endif
 
         if (!ni->last_changed_pass)
             notice_lang(s_NickServ, u, NICK_IDENTIFY_FIRST);
@@ -1967,11 +1975,14 @@ static void do_drop(User *u)
 	notice_lang(s_NickServ, u, NICK_IDENTIFY_REQUIRED, s_NickServ);
 
     } else {
+#ifdef IRC_TERRA    
         char **av_umode;
+#endif
 
 	if (readonly)
 	    notice_lang(s_NickServ, u, READ_ONLY_MODE);
 
+#ifdef IRC_TERRA
         if (finduser(nick)) {
             send_cmd(ServerName, "SVSMODE %s -rah", ni->nick);
             av_umode = smalloc(sizeof(char *) * 2);
@@ -1981,11 +1992,12 @@ static void do_drop(User *u)
             free(av_umode[1]);
             free(av_umode);
         } 
+#endif
 
 	delnick(ni);
 	log("%s: %s!%s@%s dropped nickname %s", s_NickServ,
 		u->nick, u->username, u->host, nick ? nick : u->nick);
-	canalopers(s_OperServ, "%s DROPA el nick %s", u->nick, nick ? nick : u->nick);	
+	canalopers(s_OperServ, "%s DROPA el nick %s (%s)", u->nick, nick ? nick : u->nick, reason);	
 	if (nick)
 	    notice_lang(s_NickServ, u, NICK_X_DROPPED, nick);
 	else
@@ -2005,7 +2017,7 @@ static void do_drop(User *u)
                         "Operador:  %s\n\n"
                         "Motivo  :  %s\n",
                         nick ? nick : u->nick, u->nick, reason);
-            snprintf(subject, sizeof(subject), "Drop del Nick '%s' en Tierrared",
+            snprintf(subject, sizeof(subject), "Drop del Nick '%s' en IRC-Terra",
                                  nick);
             send_mail(SendFrom, subject, buf);
             exit(0);
@@ -2060,6 +2072,8 @@ static void do_set(User *u)
 	do_set_url(u, set_nick ? ni : u->real_ni, param);
     } else if (stricmp(cmd, "EMAIL") == 0) {
 	do_set_email(u, set_nick ? ni : u->real_ni, param);
+    } else if ((stricmp(cmd, "EMAILREG") == 0)  && is_servadmin) {
+        do_set_emailreg(u, set_nick ? ni : u->real_ni, param);
     } else if (stricmp(cmd, "KILL") == 0) {
 	do_set_kill(u, ni, param);
     } else if (stricmp(cmd, "CHANGE") == 0) {
@@ -2174,6 +2188,23 @@ static void do_set_email(User *u, NickInfo *ni, char *param)
     } else {
 	ni->email = NULL;
 	notice_lang(s_NickServ, u, NICK_SET_EMAIL_UNSET);
+    }
+}
+
+/*************************************************************************/
+
+static void do_set_emailreg(User *u, NickInfo *ni, char *param)
+{
+    if (!is_services_admin(u))    
+        notice_lang(s_NickServ, u, ACCESS_DENIED);
+    else if (!param)
+        privmsg(s_NickServ, u->nick, "Sintaxis: SET [nick] EMAILREG <correo>");
+    else {
+                            
+        if (ni->emailreg)
+            free(ni->emailreg);
+        ni->emailreg = sstrdup(param);
+        notice_lang(s_NickServ, u, NICK_SET_EMAIL_CHANGED, param);
     }
 }
 
@@ -2636,7 +2667,7 @@ static void do_listlinks(User *u)
 static void do_info(User *u)
 {
     char *nick = strtok(NULL, " ");
-    char *param = strtok(NULL, " ");
+   // char *param = strtok(NULL, " ");
     NickInfo *ni, *real;
 
     if (!nick) {
@@ -2667,9 +2698,10 @@ static void do_info(User *u)
 
         /* Only show hidden fields to owner and sadmins and only when the ALL
 	 * parameter is used. -TheShadow */
-        if (param && stricmp(param, "ALL") == 0 && 
+      //  if (param && stricmp(param, "ALL") == 0 &&
+        if ( 
 			((nick_online && (stricmp(u->nick, nick) == 0)) ||
-                        	is_services_oper(u)))
+                        	is_services_preoper(u)))
             show_all = 1;
 
 	real = getlink(ni);
@@ -2702,10 +2734,14 @@ static void do_info(User *u)
             }
         }                
 
-        if (nick_is_services_admin(ni))
+        if (nick_is_services_root(ni))
+            notice_lang(s_NickServ, u, NICK_INFO_SERVICES_ROOT, ni->nick);
+        else if (nick_is_services_admin(ni))
             notice_lang(s_NickServ, u, NICK_INFO_SERVICES_ADMIN, ni->nick);
         else if (nick_is_services_oper(ni))
             notice_lang(s_NickServ, u, NICK_INFO_SERVICES_OPER, ni->nick);
+        else if (nick_is_services_preoper(ni))
+            notice_lang(s_NickServ, u, NICK_INFO_SERVICES_PREOPER, ni->nick);     
                                                         
 	if (nick_online) {
 //	    if (show_all || !(real->flags & NI_HIDE_MASK))
@@ -2738,10 +2774,12 @@ static void do_info(User *u)
             strftime_lang(buf, sizeof(buf), u, STRFTIME_DATE_TIME_FORMAT, tm);
             notice_lang(s_NickServ, u, NICK_INFO_LAST_PASS_CHANGED, buf);
         }
-	if (is_services_oper(u))
+	if (is_services_preoper(u))
 	    notice_lang(s_NickServ, u, NICK_INFO_EMAIL_REGISTER, ni->emailreg);
 	if (ni->last_quit && (show_all || !(real->flags & NI_HIDE_QUIT)))
 	    notice_lang(s_NickServ, u, NICK_INFO_LAST_QUIT, ni->last_quit);
+	if (!ni->last_quit && (show_all || !(real->flags & NI_HIDE_QUIT)))
+	    notice_lang(s_NickServ, u, NICK_INFO_LAST_QUIT, "NO TENGO ESTA INFO :(");
 	if (ni->url)
 	    notice_lang(s_NickServ, u, NICK_INFO_URL, ni->url);
 	if (ni->email && (show_all || !(real->flags & NI_HIDE_EMAIL)))
@@ -3060,6 +3098,11 @@ static void do_opers(User *u)
     for (i = 0; i < 1024; i++) {
         for (u2 = userlist[i]; u2; u2 = u2->next) {
             if (u2->ni && (u2->ni->status & NS_IDENTIFIED) && !(u2->mode & AWAY)) {     
+                if (is_services_root(u2)) {
+                    privmsg(s_NickServ, u->nick, "%-10s es el 12ROOT de la red", u2->nick);
+                    online++;
+                    break;
+                }    
                 if (is_services_admin(u2)) {
                     privmsg(s_NickServ, u->nick, "%-10s es un 12Administrador de la red", u2->nick);
                     online++;
@@ -3070,6 +3113,11 @@ static void do_opers(User *u)
                     online++;
                     break;
                 }                
+                if (is_services_preoper(u2)) {
+                    privmsg(s_NickServ, u->nick, "%-10s es un 12PreOperador de la red", u2->nick);
+                    online++;
+                    break;
+                }    
                 if (u2->mode & UMODE_O) {
                     privmsg(s_NickServ, u->nick, "%-10s es un 12IRCop de la red", u2->nick);
                     online++;
@@ -3098,11 +3146,13 @@ static void do_listemails(User *u)
                 strchr(email,'@') != strrchr(email,'@') ||
                !strchr(email,'.') || strchr(email,'|') ) {
         notice_lang(s_NickServ, u, NICK_LISTEMAILS_INVALID);
+  /*
     } else if (is_domain_teleline(email)) {
         notice_lang(s_NickServ, u, NICK_LISTEMAILS_TELELINE);
 
     } else if (!is_domain_allowed(email)) {
         notice_lang(s_NickServ, u, NICK_LISTEMAILS_TERRA);
+  */
     } else {
         notice_lang(s_NickServ, u, NICK_LISTEMAILS_HEADER, email);
         strlower(email);
@@ -3145,12 +3195,12 @@ static void do_sendpass(User *u)
              buf = smalloc(sizeof(char *) * 1024);
              sprintf(buf,"\nNick registrado: %s\n"
                          "Password del nick: %s\n\n"
-                         "Para identificarte   -> /IDENTIFY %s\n"
+                         "Para identificarte   -> /msg %s IDENTIFY %s\n"
                          "Para cambio de clave -> /msg %s SET PASSWORD nueva_contraseña\n\n"
                          "Página de Información %s\n",
-                               ni->nick, ni->pass, ni->pass, s_NickServ, WebNetwork);
+                               ni->nick, ni->pass, s_NickServ, ni->pass, s_NickServ, WebNetwork);
                                                                         
-             snprintf(subject, sizeof(subject), "Contraseña solicitada del Nick '%s' en Tierrared", ni->nick);
+             snprintf(subject, sizeof(subject), "Contraseña solicitada del Nick '%s' en iRC-Terra", ni->nick);
 
              send_mail(ni->emailreg, subject, buf);
              exit(0);
@@ -3233,8 +3283,10 @@ static void do_suspend(User *u)
     } else if (nick && nick_is_services_oper(ni) &&
                                        !is_services_admin(u)) {
         notice_lang(s_NickServ, u, PERMISSION_DENIED);
-    } else {        
+    } else {
+#ifdef IRC_TERRA            
         char **av_umode;
+#endif
 
         if (expiry) {
             expires = dotime(expiry);
@@ -3261,6 +3313,7 @@ static void do_suspend(User *u)
                                               u->nick, nick, reason);        
         if (u2) {
             notice_lang(s_NickServ, u2, NICK_SUSPENDED, nick, reason);
+#ifdef IRC_TERRA
             send_cmd(ServerName, "SVSMODE %s -rah", u2->nick);
             av_umode = smalloc(sizeof(char *) * 2);
             av_umode[0] = u2->nick;
@@ -3268,6 +3321,7 @@ static void do_suspend(User *u)
             do_umode(av_umode[0], 2, av_umode);
             free(av_umode[1]);
             free(av_umode);
+#endif            
         }
     }
 }   

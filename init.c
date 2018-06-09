@@ -36,33 +36,33 @@ void introduce_user(const char *user)
 
     if (!user || stricmp(user, s_NickServ) == 0) {
 	NICK(s_NickServ, desc_NickServ);
-	send_cmd(s_NickServ, "MODE %s +dkobB", s_NickServ);
+	send_cmd(s_NickServ, "MODE %s +drkbB", s_NickServ);
         send_cmd(s_NickServ, "JOIN #%s", CanalOpers);
         send_cmd(s_NickServ, "MODE #%s +o %s", CanalOpers, s_NickServ);
     }
     if (!user || stricmp(user, s_ChanServ) == 0) {
 	NICK(s_ChanServ, desc_ChanServ);
-	send_cmd(s_ChanServ, "MODE %s +dkboB", s_ChanServ);
+	send_cmd(s_ChanServ, "MODE %s +rdkbB", s_ChanServ);
         send_cmd(s_ChanServ, "JOIN #%s", CanalOpers);	
         send_cmd(s_ChanServ, "MODE #%s +o %s", CanalOpers, s_ChanServ);        
     }
     if (!user || stricmp(user, s_HelpServ) == 0) {
 	NICK(s_HelpServ, desc_HelpServ);
-        send_cmd(s_HelpServ, "MODE %s +bdk", s_HelpServ);
+        send_cmd(s_HelpServ, "MODE %s +rbdk", s_HelpServ);
         send_cmd(s_HelpServ, "JOIN #%s", CanalHelp);
         send_cmd(ServerName, "MODE #%s +v %s", CanalHelp, s_HelpServ);                        
     }
     if (s_IrcIIHelp && (!user || stricmp(user, s_IrcIIHelp) == 0)) {
 	NICK(s_IrcIIHelp, desc_IrcIIHelp);
-        send_cmd(s_IrcIIHelp, "MODE %s +bdk", s_IrcIIHelp);	
+        send_cmd(s_IrcIIHelp, "MODE %s +rbdk", s_IrcIIHelp);	
     }
     if (!user || stricmp(user, s_MemoServ) == 0) {
 	NICK(s_MemoServ, desc_MemoServ);
-	send_cmd(s_MemoServ, "MODE %s +bkd", s_MemoServ);
+	send_cmd(s_MemoServ, "MODE %s +rbkd", s_MemoServ);
     }
     if (!user || stricmp(user, s_OperServ) == 0) {
 	NICK(s_OperServ, desc_OperServ);
-	send_cmd(s_OperServ, "MODE %s +oikbBd", s_OperServ);
+	send_cmd(s_OperServ, "MODE %s +orikbBd", s_OperServ);
         send_cmd(s_OperServ, "JOIN #%s", CanalOpers);	
         send_cmd(s_OperServ, "MODE #%s +o %s", CanalOpers, s_OperServ);        
         send_cmd(s_OperServ, "JOIN #%s", CanalAdmins);
@@ -70,16 +70,16 @@ void introduce_user(const char *user)
     }
     if (s_DevNull && (!user || stricmp(user, s_DevNull) == 0)) {
 	NICK(s_DevNull, desc_DevNull);
-	send_cmd(s_DevNull, "MODE %s +ibk", s_DevNull);
+	send_cmd(s_DevNull, "MODE %s +irbk", s_DevNull);
     }
     if (!user || stricmp(user, s_GlobalNoticer) == 0) {
 	NICK(s_GlobalNoticer, desc_GlobalNoticer);
-	send_cmd(s_GlobalNoticer, "MODE %s +oibdk", s_GlobalNoticer);
+	send_cmd(s_GlobalNoticer, "MODE %s +robdk", s_GlobalNoticer);
     }
 #ifdef CYBER
     if (!user || stricmp(user, s_CyberServ) == 0) {
         NICK(s_CyberServ, desc_CyberServ);
-        send_cmd(s_CyberServ, "MODE %s +dkboB", s_CyberServ);
+        send_cmd(s_CyberServ, "MODE %s +drkboB", s_CyberServ);
         send_cmd(s_CyberServ, "JOIN #%s", CanalOpers);
         send_cmd(s_CyberServ, "MODE #%s +o %s", CanalOpers, s_CyberServ);
         send_cmd(s_CyberServ, "JOIN #%s", CanalCybers);
@@ -466,6 +466,9 @@ int init(int ac, char **av)
     send_cmd(NULL, "PASS :%s", RemotePassword);
     send_cmd(NULL, "SERVER %s 1 %lu %lu P09 :%s",
 		ServerName, start_time, start_time, ServerDesc);
+/* Compatiblidad deep.space */ 
+   send_cmd(ServerName, "SERVER deep.space 2 %lu %lu P10 :Servidor de compatiblidad",
+          start_time, start_time);
     sgets2(inbuf, sizeof(inbuf), servsock);
     if (strnicmp(inbuf, "ERROR", 5) == 0) {
 	/* Close server socket first to stop wallops, since the other

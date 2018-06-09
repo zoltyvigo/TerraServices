@@ -139,7 +139,7 @@ extern int toupper(char), tolower(char);
 #define AKILL_VERSION   7
 #define CHAN_VERSION    9
 #define NICK_VERSION    10
-#define OPER_VERSION    8
+#define OPER_VERSION    9
 #define NEWS_VERSION    7
 #ifdef CYBER
 #define ILINE_VERSION   1
@@ -284,6 +284,8 @@ struct nickinfo_ {
 #define NI_ADMIN_CYBER	0x00020000  /* Admin de cyber */
 #define NI_OPER_SERV	0x00040000  /* Operador de los servicios */
 #define NI_ADMIN_SERV	0x00080000  /* Administrador de los servicios */
+#define NI_PREOPER_SERV 0x00100000  /* PReoper de los servicios */
+#define NI_ROOT_SERV    0x00200000  /* Root de los servicios */
 
 
 
@@ -571,6 +573,7 @@ struct ilineinfo_ {
     char *host;                 /* Host de la iline */
     char *host2;                /* Host 2º, para la ip numerica si hay Inversa */
     NickInfo *admin;            /* Nick del administrador */
+    char passcyber[PASSMAX];    /* Password de admin de cyber */
     char *nombreadmin;          /* Nombre del admin */
     char *dniadmin;             /* DNI del admin */
     char *email;                /* Email del Admin */

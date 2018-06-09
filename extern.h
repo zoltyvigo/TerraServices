@@ -423,9 +423,12 @@ E void save_os_dbase(void);
 E int is_services_root(User *u);
 E int is_services_admin(User *u);
 E int is_services_oper(User *u);
+E int is_services_preoper(User *u);
 E int is_services_devel(User *u); /* Una paranoia x"D */
+E int nick_is_services_root(NickInfo *ni);
 E int nick_is_services_admin(NickInfo *ni);
 E int nick_is_services_oper(NickInfo *ni);
+E int nick_is_services_preoper(NickInfo *ni);
 E void os_remove_nick(const NickInfo *ni);
 
 E void check_clones(User *user);

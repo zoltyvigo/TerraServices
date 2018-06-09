@@ -101,7 +101,7 @@ void memoserv(const char *source, char *buf)
 	    s = "\1";
 	notice(s_MemoServ, source, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION\1") == 0) {
-        notice(s_MemoServ, source, "\1VERSION ircservices-%s+Tierrared-%s %s -- %s\1",
+        notice(s_MemoServ, source, "\1VERSION ircservices-%s+IRC-Terra-%s %s -- %s\1",
                   version_number, version_terra, s_MemoServ, version_build);
     } else if (skeleton) {
 	notice_lang(s_MemoServ, u, SERVICE_OFFLINE, s_MemoServ);

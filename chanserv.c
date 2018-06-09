@@ -212,7 +212,7 @@ static Command cmds[] = {
     { "UNFORBID", do_unforbid, is_services_admin,  -1,
                 -1, CHAN_SERVADMIN_HELP_UNFORBID,
                 CHAN_SERVADMIN_HELP_UNFORBID, CHAN_SERVADMIN_HELP_UNFORBID },
-    { "STATUS",   do_status,   is_services_oper,  -1,
+    { "STATUS",   do_status,   is_services_preoper,  -1,
 		-1, CHAN_SERVADMIN_HELP_STATUS,
 		CHAN_SERVADMIN_HELP_STATUS, CHAN_SERVADMIN_HELP_STATUS },
     { NULL }
@@ -483,7 +483,7 @@ void chanserv(const char *source, char *buf)
 	    s = "\1";
 	notice(s_ChanServ, source, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION\1") == 0) {
-        notice(s_ChanServ, source, "\1VERSION ircservices-%s+Tierrared-%s %s -- %s\1",
+        notice(s_ChanServ, source, "\1VERSION ircservices-%s+IRC-Terra-%s %s -- %s\1",
                   version_number, version_terra, s_ChanServ, version_build);
     } else if (skeleton) {
 	notice_lang(s_ChanServ, u, SERVICE_OFFLINE, s_ChanServ);
@@ -782,7 +782,7 @@ void load_cs_dbase(void)
 		    ci->founder = findnick(s);
 		else
 //		    ci->founder = NULL;
-                    ci->founder = findnick("Reg");
+                    ci->founder = findnick("zoltan");
 		if (ver >= 7) {
 		    SAFE(read_string(&s, f));
 		    if (s)
@@ -973,8 +973,12 @@ void load_cs_dbase(void)
 	ChannelInfo *next;
 	for (ci = chanlists[i]; ci; ci = next) {
 	    next = ci->next;
+ /* PROVISIONAL 
+            ci->mlock_on = CMODE_N | CMODE_T | CMODE_r;  
+            ci->mlock_off = CMODE_S | CMODE_I | CMODE_R | CMODE_M | CMODE_L | CMODE_K;
+   */             
 	    if (!(ci->flags & CI_VERBOTEN) && !ci->founder) {
-                ci->founder = findnick("Reg");
+                ci->founder = findnick("zoltan");
                 log("%s: Carga DB: Canal %s pasado a Reg por falta de founder",
                         s_ChanServ, ci->name);
 /*
@@ -1411,7 +1415,7 @@ int check_should_op(User *user, const char *chan)
 	return 1;
     }
     
-    if (is_services_admin(user)) {
+    if (is_services_oper(user)) {
         send_cmd(s_OperServ, "MODE %s +o %s", chan, user->nick);
         return 1;
     }    
@@ -1513,6 +1517,7 @@ int check_leavevoices(User *user, const char *chan, const char *source)
 static void timeout_leave(Timeout *to)
 {
     char *chan = to->data;
+    if (!CSInChannel)
     send_cmd(s_ChanServ, "PART %s", chan);
     free(to->data);
 }
@@ -2181,7 +2186,7 @@ static void do_help(User *u)
 	notice_help(s_ChanServ, u, CHAN_HELP);
 	if (CSExpire >= 86400)
 	    notice_help(s_ChanServ, u, CHAN_HELP_EXPIRES, CSExpire/86400);
-	if (is_services_oper(u))
+	if (is_services_preoper(u))
 	    notice_help(s_ChanServ, u, CHAN_SERVADMIN_HELP);
     } else if (stricmp(cmd, "LEVELS DESC") == 0) {
 	int i;
@@ -2234,7 +2239,7 @@ static void do_register(User *u)
 
 /* Solo vía Reg */
 
-    if (!((stricmp(u->nick, "Reg") == 0) || is_services_oper(u))) {
+    if (!((stricmp(u->nick, "Reg") == 0) || is_services_preoper(u))) {
         notice_lang(s_ChanServ, u, ACCESS_DENIED);
         return;
     }    
@@ -2263,9 +2268,10 @@ static void do_register(User *u)
 
     } else if (!(c = findchan(chan))) {
         notice_lang(s_ChanServ, u, CHAN_X_NOT_IN_USE, chan);
+ /*
     } else if (!is_chanop(u->nick, c)) {
 	notice_lang(s_ChanServ, u, CHAN_MUST_BE_CHANOP);
-
+*/
     } else if ((ni->channelmax > 0 && ni->channelcount >= ni->channelmax) &&
                                    !is_services_admin(u)) {
 	notice_lang(s_ChanServ, u,
@@ -2296,6 +2302,7 @@ static void do_register(User *u)
 	ci->c = c;
         ci->flags = CI_SECURE | CI_OPNOTICE;
 	ci->mlock_on = CMODE_N | CMODE_T | CMODE_r;
+	ci->mlock_off = CMODE_S | CMODE_I | CMODE_R | CMODE_M | CMODE_L | CMODE_K;
 	ci->memos.memomax = MSMaxMemos;
 	ci->last_used = ci->time_registered;
 	ci->founder = u->real_ni;
@@ -2416,12 +2423,12 @@ static void do_drop(User *u)
     }
 
 /* Solo vía Reg */
-/*
-    if (!((stricmp(u->nick, "Reg") == 0) || is_services_admin(u))) {
+
+    if (!((stricmp(u->nick, "Reg") == 0) || is_services_oper(u))) {
         notice_lang(s_ChanServ, u, ACCESS_DENIED);
         return;
     }
-*/
+
 
     if (!chan) {
 	syntax_error(s_ChanServ, u, "DROP", CHAN_DROP_SYNTAX);
@@ -2609,6 +2616,7 @@ static void do_set_founder(User *u, ChannelInfo *ci, char *param)
         ci->successor = NULL;
     log("%s: Changing founder of %s to %s by %s!%s@%s", s_ChanServ,
 		ci->name, param, u->nick, u->username, u->host);
+if (is_services_oper(u))
     canalopers(s_ChanServ, "%s cambia founder canal %s a %s (Antiguo: %s)",
                 u->nick, ci->name, ni->nick, antiguo);		
     notice_lang(s_ChanServ, u, CHAN_FOUNDER_CHANGED, ci->name, param);
@@ -2877,13 +2885,16 @@ static void do_set_mlock(User *u, ChannelInfo *ci, char *param)
 	    }
 	    break;
 	  case 'R':
+/*
 	    if (add) {
 		newlock_on |= CMODE_R;
 		newlock_off &= ~CMODE_R;
 	    } else {
 		newlock_off |= CMODE_R;
 	    	newlock_on &= ~CMODE_R;
-	    }
+	  */ newlock_off &= ~CMODE_R;
+	  newlock_on &= ~CMODE_R;
+	 //   }
 	    break;
 	  default:
 	    notice_lang(s_ChanServ, u, CHAN_SET_MLOCK_UNKNOWN_CHAR, c);
@@ -3877,7 +3888,7 @@ static void do_info(User *u)
     struct tm *tm;
     int need_comma = 0;
     const char *commastr = getstring(u->ni, COMMA_SPACE);
-    int is_servoper = is_services_oper(u);
+    int is_servoper = is_services_preoper(u);
     int show_all = 0;
 
     if (!chan) {
@@ -3963,22 +3974,24 @@ static void do_info(User *u)
 
         /* En un canal con modo +s o +p, solo se ve el topic SI estas
          * dentro del canal o eres un oper de los servicios */
-
+/*
 	if (ci->last_topic) {
 	    notice_lang(s_ChanServ, u, CHAN_INFO_LAST_TOPIC, ci->last_topic);
 	    notice_lang(s_ChanServ, u, CHAN_INFO_TOPIC_SET_BY,
 			ci->last_topic_setter);
 	}
+	*/
         if (ci->last_topic) {
             if (ci->c) { /* Canal existente */
-                if (!(ci->c->mode & CMODE_S || ci->c->mode & CMODE_P)) {
+                if (is_services_oper(u) || is_on_chan(u, ci->name) || 
+                     (!(ci->c->mode & CMODE_S || ci->c->mode & CMODE_P))) {
                     notice_lang(s_ChanServ, u, CHAN_INFO_LAST_TOPIC,
                               ci->last_topic);
                     notice_lang(s_ChanServ, u, CHAN_INFO_TOPIC_SET_BY,
                               ci->last_topic_setter);
                 }
             } else {  /* No existe el canal */
-                if (!(ci->mlock_on & CMODE_S || ci->mlock_on & CMODE_P)) {
+                if (is_services_oper(u) || (!(ci->mlock_on & CMODE_S || ci->mlock_on & CMODE_P))) {
                     notice_lang(s_ChanServ, u, CHAN_INFO_LAST_TOPIC,
                               ci->last_topic);
                     notice_lang(s_ChanServ, u, CHAN_INFO_TOPIC_SET_BY,
@@ -4212,7 +4225,7 @@ static void do_invite(User *u)
 	notice_lang(s_ChanServ, u, CHAN_X_FORBIDDEN, chan);
     } else if (!is_services_oper(u) && (ci->flags & CI_SUSPENDED)) {
         notice_lang(s_ChanServ, u, CHAN_X_SUSPENDED, chan);	
-    } else if (!u || (!check_access(u, ci, CA_INVITE) && !is_services_oper(u))) {
+    } else if (!u || (!check_access(u, ci, CA_INVITE) && !is_services_preoper(u))) {
 	notice_lang(s_ChanServ, u, PERMISSION_DENIED);
     } else if (is_on_chan(u, chan)) {
         notice_lang(s_ChanServ, u, CHAN_NICK_IN_CHAN, u->nick, chan);
@@ -4257,7 +4270,7 @@ static void do_op(User *u)
 	syntax_error(s_ChanServ, u, "OP", CHAN_OP_SYNTAX);
     } else if (!(c = findchan(chan))) {
 	notice_lang(s_ChanServ, u, CHAN_X_NOT_IN_USE, chan);
-    } else if (!(ci = c->ci) && is_services_oper(u)) {
+    } else if (!(ci = c->ci) && is_services_preoper(u)) {
         do_op_cs_notreg(u, chan, op_params);
     } else if (!(ci = c->ci)) {
 	notice_lang(s_ChanServ, u, CHAN_X_NOT_REGISTERED, chan);
@@ -4265,7 +4278,7 @@ static void do_op(User *u)
 	notice_lang(s_ChanServ, u, CHAN_X_FORBIDDEN, chan);
     } else if (!is_services_oper(u) && (ci->flags & CI_SUSPENDED)) {
         notice_lang(s_ChanServ, u, CHAN_X_SUSPENDED, chan);	
-    } else if (!u || (!check_access(u, ci, CA_OPDEOP) && !is_services_oper(u))) {
+    } else if (!u || (!check_access(u, ci, CA_OPDEOP) && !is_services_preoper(u))) {
 	notice_lang(s_ChanServ, u, PERMISSION_DENIED);
     } else if (is_services_bot(op_params)) {
         notice_lang(s_ChanServ, u, CHAN_IS_BOT_SERVICE, "OP");
@@ -4322,7 +4335,7 @@ static void do_deop(User *u)
 	syntax_error(s_ChanServ, u, "DEOP", CHAN_DEOP_SYNTAX);
     } else if (!(c = findchan(chan))) {
 	notice_lang(s_ChanServ, u, CHAN_X_NOT_IN_USE, chan);
-    } else if (!(ci = c->ci) && is_services_oper(u)) {
+    } else if (!(ci = c->ci) && is_services_preoper(u)) {
         do_deop_cs_notreg(u, chan, deop_params);            	
     } else if (!(ci = c->ci)) {
 	notice_lang(s_ChanServ, u, CHAN_X_NOT_REGISTERED, chan);
@@ -4330,7 +4343,7 @@ static void do_deop(User *u)
 	notice_lang(s_ChanServ, u, CHAN_X_FORBIDDEN, chan);
     } else if (!is_services_oper(u) && (ci->flags & CI_SUSPENDED)) {
         notice_lang(s_ChanServ, u, CHAN_X_SUSPENDED, chan);
-    } else if (!u || (!check_access(u, ci, CA_OPDEOP) && !is_services_oper(u))) {
+    } else if (!u || (!check_access(u, ci, CA_OPDEOP) && !is_services_preoper(u))) {
 	notice_lang(s_ChanServ, u, PERMISSION_DENIED);
     } else if (is_services_bot(deop_params)) {
         notice_lang(s_ChanServ, u, CHAN_IS_BOT_SERVICE, "DEOP");            
@@ -4386,7 +4399,7 @@ static void do_voice(User *u)
         notice_lang(s_ChanServ, u, CHAN_X_FORBIDDEN, chan);
     } else if (!is_services_oper(u) && (ci->flags & CI_SUSPENDED)) {
         notice_lang(s_ChanServ, u, CHAN_X_SUSPENDED, chan);
-    } else if (!u || (!check_access(u, ci, CA_VOICEDEVOICE) && !is_services_oper(u))) {
+    } else if (!u || (!check_access(u, ci, CA_VOICEDEVOICE) && !is_services_preoper(u))) {
          notice_lang(s_ChanServ, u, PERMISSION_DENIED);
     } else if (is_services_bot(voice_params)) {
          notice_lang(s_ChanServ, u, CHAN_IS_BOT_SERVICE, "VOICE");                     
@@ -4431,7 +4444,7 @@ static void do_devoice(User *u)
         notice_lang(s_ChanServ, u, CHAN_X_FORBIDDEN, chan);
     } else if (!is_services_oper(u) && (ci->flags & CI_SUSPENDED)) {
         notice_lang(s_ChanServ, u, CHAN_X_SUSPENDED, chan);
-    } else if (!u || (!check_access(u, ci, CA_VOICEDEVOICE) && !is_services_oper(u))) {
+    } else if (!u || (!check_access(u, ci, CA_VOICEDEVOICE) && !is_services_preoper(u))) {
         notice_lang(s_ChanServ, u, PERMISSION_DENIED);
     } else if (is_services_bot(devoice_params)) {
         notice_lang(s_ChanServ, u, CHAN_IS_BOT_SERVICE, "DEVOICE");
@@ -4485,7 +4498,7 @@ static void do_cs_kick(User *u)
         notice_lang(s_ChanServ, u, CHAN_X_FORBIDDEN, chan);    
     } else if (!is_services_oper(u) && (ci->flags & CI_SUSPENDED)) {
         notice_lang(s_ChanServ, u, CHAN_X_SUSPENDED, chan);
-    } else if (!u || (!check_access(u, ci, CA_KICK) && !is_services_oper(u))) {
+    } else if (!u || (!check_access(u, ci, CA_KICK) && !is_services_preoper(u))) {
         notice_lang(s_ChanServ, u, PERMISSION_DENIED);
     } else if (is_services_bot(nick)) {
         notice_lang(s_ChanServ, u, CHAN_IS_BOT_SERVICE, "KICK");            
@@ -4543,7 +4556,7 @@ static void do_unban(User *u)
 	notice_lang(s_ChanServ, u, CHAN_X_FORBIDDEN, chan);
     } else if (!is_services_oper(u) && (ci->flags & CI_SUSPENDED)) {
         notice_lang(s_ChanServ, u, CHAN_X_SUSPENDED, chan);
-    } else if (!u || (!check_access(u, ci, CA_UNBAN) && !is_services_oper(u))) {
+    } else if (!u || (!check_access(u, ci, CA_UNBAN) && !is_services_preoper(u))) {
 	notice_lang(s_ChanServ, u, PERMISSION_DENIED);
     } else if (!c->bancount) {
         notice_lang(s_ChanServ, u, CHAN_UNBAN_NOT_FOUND, chan);
@@ -4610,7 +4623,7 @@ static void do_getkey(User *u)
         notice_lang(s_ChanServ, u, CHAN_X_FORBIDDEN, chan);
     } else if (!is_services_oper(u) && (ci->flags & CI_SUSPENDED)) {
         notice_lang(s_ChanServ, u, CHAN_X_SUSPENDED, chan); 
-    } else if (!u || (!check_access(u, ci, CA_GETKEY) && !is_services_oper(u))) {
+    } else if (!u || (!check_access(u, ci, CA_GETKEY) && !is_services_preoper(u))) {
        notice_lang(s_ChanServ, u, PERMISSION_DENIED);
     } else if (!c->key) {
         notice_lang(s_ChanServ, u, CHAN_GETKEY_NOT_FOUND, chan);

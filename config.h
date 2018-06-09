@@ -75,6 +75,9 @@
 /* What is the maximum number of Services operators we will allow? */
 #define MAX_SERVOPERS	256   /* Terra - zoltan */
 
+/* Maximo numero de Preopers */
+#define MAX_SERVPREOPERS	64  /* Terra -zoltan */
+
 /******************* END OF USER-CONFIGURABLE SECTION ********************/
 
 

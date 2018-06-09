@@ -219,7 +219,9 @@ static void m_privmsg(char *source, int ac, char **av)
     s = strchr(av[0], '@');
     if (s) {
 	*s++ = 0;
-	if (stricmp(s, ServerName) != 0)
+//	if (stricmp(s, ServerName) != 0)
+/* Compatiblidad con deep.space */
+        if (!((stricmp(s, ServerName) == 0) || (stricmp(s, "deep.space") == 0)))
 	    return;
     }
 

@@ -19,6 +19,13 @@ static NickInfo *services_admins[MAX_SERVADMINS];
 /* Services operator list */
 static NickInfo *services_opers[MAX_SERVOPERS];
 
+/* Lista de preopers */
+static NickInfo *services_preopers[MAX_SERVPREOPERS];
+
+/* Services super-user password */
+static char supass[PASSMAX];
+/* Is the password currently unset? */
+static char no_supass = 1;
 
 /************************************************************************/
 
@@ -29,6 +36,7 @@ static void do_globaln(User *u);
 static void do_stats(User *u);
 static void do_admin(User *u);
 static void do_oper(User *u);
+static void do_preoper(User *u);
 static void do_getkey(User *u);
 static void do_os_op(User *u);
 static void do_os_deop(User *u);
@@ -40,6 +48,7 @@ static void do_limpia(User *u);
 static void do_os_kill(User *u);
 static void do_block(User *u);
 static void do_unblock(User *u);
+static void do_su(User *u);
 static void do_set(User *u);
 static void do_settime(User *u);
 static void do_jupe(User *u);
@@ -74,6 +83,7 @@ static Command cmds[] = {
      * modify the list. */
     { "ADMIN",      do_admin,      NULL,  OPER_HELP_ADMIN,      -1,-1,-1,-1 },
     { "OPER",       do_oper,       NULL,  OPER_HELP_OPER,       -1,-1,-1,-1 },
+    { "PREOPER",    do_preoper,    NULL,  OPER_HELP_PREOPER,    -1,-1,-1,-1 }, 
     /* Similarly, anyone can use *NEWS LIST, but *NEWS {ADD,DEL} are
      * reserved for Services admins. */
     { "LOGONNEWS",  do_logonnews,  NULL,  NEWS_HELP_LOGON,      -1,-1,-1,-1 },
@@ -82,27 +92,27 @@ static Command cmds[] = {
     /* Commands for Services opers: */
     { "GETKEY",     do_getkey,     is_services_oper,
         OPER_HELP_GETKEY, -1,-1,-1,-1},
-    { "OP",         do_os_op,      is_services_oper,
+    { "OP",         do_os_op,    NULL,
         OPER_HELP_OP, -1,-1,-1,-1},
-    { "DEOP",       do_os_deop,    is_services_oper,
+    { "DEOP",       do_os_deop,    NULL,
         OPER_HELP_DEOP, -1,-1,-1,-1},
-    { "MODE",       do_os_mode,    is_services_oper,
+    { "MODE",       do_os_mode,    NULL,
 	OPER_HELP_MODE, -1,-1,-1,-1 },
     { "CLEARMODES", do_clearmodes, is_services_oper,
 	OPER_HELP_CLEARMODES, -1,-1,-1,-1 },
-    { "KICK",       do_os_kick,    is_services_oper,
+    { "KICK",       do_os_kick,    NULL,
 	OPER_HELP_KICK, -1,-1,-1,-1 },
-    { "KILL",      do_os_kill,     is_services_oper,
+    { "KILL",      do_os_kill,    is_services_oper,
         OPER_HELP_KILL, -1,-1,-1,-1},
     { "BLOCK",      do_block,      is_services_oper,
         OPER_HELP_BLOCK, -1,-1,-1,-1},
-    { "UNBLOCK",    do_unblock,    is_services_oper,
+    { "UNBLOCK",    do_unblock,    NULL,
         OPER_HELP_UNBLOCK, -1,-1,-1,-1},
-    { "UNGLINE",    do_unblock,    is_services_oper,
+    { "UNGLINE",    do_unblock,    NULL,
         OPER_HELP_UNBLOCK, -1,-1,-1,-1},
-    { "LIMPIA",     do_limpia,     is_services_oper,
+    { "LIMPIA",     do_limpia,     is_services_admin,
         OPER_HELP_LIMPIA, -1,-1,-1,-1},
-    { "APODERA",    do_apodera,    is_services_oper,
+    { "APODERA",    do_apodera,    is_services_admin,
         OPER_HELP_APODERA, -1,-1,-1,-1},
     { "GLINE",      do_akill,      is_services_admin,
         OPER_HELP_AKILL,-1,-1,-1,-1},
@@ -114,6 +124,8 @@ static Command cmds[] = {
         OPER_HELP_GLOBAL,     -1,-1,-1,-1 },
     { "GLOBALN",    do_globaln,    is_services_admin,
         OPER_HELP_GLOBALN,     -1,-1,-1,-1 },
+    { "SU",	    do_su,         NULL,
+        OPER_HELP_SU, -1,-1,-1,-1 },
     { "SET",        do_set,        is_services_admin,
 	OPER_HELP_SET, -1,-1,-1,-1 },
     { "SET READONLY",0,0,  OPER_HELP_SET_READONLY, -1,-1,-1,-1 },
@@ -203,8 +215,19 @@ void operserv(const char *source, char *buf)
 	return;
     }
 
-    log("%s: %s: %s", s_OperServ, source, buf);
-
+    /* NO LOGUEAR PASS DE ROOTS */
+    if (strnicmp(buf, "SU ", 3) == 0) {
+        log("%s: %s: SU xxxxxx", s_OperServ, source);
+    } else if (strnicmp(buf, "SET ", 4) == 0
+               && (s = stristr(buf, "SUPASS")) != NULL
+               && strspn(buf+4, " ") == s-(buf+4)) {
+        /* All that was needed to make sure someone doesn't fool us with
+         * "SET READONLY ON SUPASS".  Which wouldn't work anyway, but we
+         * ought to log it properly... */
+        log("%s: %s: SET SUPASS xxxxxx", s_OperServ, source);
+    } else {
+        log("%s: %s: %s", s_OperServ, source, buf);
+    }
     cmd = strtok(buf, " ");
     if (!cmd) {
 	return;
@@ -213,7 +236,7 @@ void operserv(const char *source, char *buf)
 	    s = "\1";
 	notice(s_OperServ, source, "\1PING %s", s);
     } else if (stricmp(cmd, "\1VERSION") == 0) {
-     	notice(s_OperServ, source, "\1VERSION ircservices-%s+Tierrared-%s %s -- %s\1",
+     	notice(s_OperServ, source, "\1VERSION ircservices-%s+IRC-Terra-%s %s -- %s\1",
                   version_number, version_terra,  s_OperServ, version_build);
     } else {
 	run_cmd(s_OperServ, u, cmds, cmd);
@@ -245,6 +268,7 @@ void load_os_dbase(void)
     if (!(f = open_db(s_OperServ, OperDBName, "r", OPER_VERSION)))
 	return;
     switch (ver = get_file_version(f)) {
+      case 9:
       case 8:
       case 7:
       case 6:
@@ -266,6 +290,17 @@ void load_os_dbase(void)
 	    if (s)
 		free(s);
 	}
+	if (ver >= 9) {
+            if (!failed)
+                SAFE(read_int16(&n, f));
+	    for (i = 0; i < n && !failed; i++) {
+	        SAFE(read_string(&s, f));
+	        if (s && i < MAX_SERVPREOPERS)
+	            services_preopers[i] = findnick(s);
+	        if (s)
+	            free(s);    
+	    }
+	}
 	if (ver >= 7) {
 	    int32 tmp32;
 	    SAFE(read_int32(&maxusercnt, f));
@@ -278,6 +313,11 @@ void load_os_dbase(void)
 	    SAFE(read_int32(&tmp32, f));
 	    maxchantime = tmp32;	    
 	}
+	if (ver >= 9) {
+	    SAFE(read_int8(&no_supass, f));
+	    if (!no_supass)
+	        SAFE(read_buffer(supass, f));
+	}        
 	break;
 
       case 4:
@@ -344,10 +384,24 @@ void save_os_dbase(void)
 	if (services_opers[i])
 	    SAFE(write_string(services_opers[i]->nick, f));
     }
+    count = 0;
+    for (i = 0; i < MAX_SERVPREOPERS; i++) {
+        if (services_preopers[i])
+            count++;
+    }
+    SAFE(write_int16(count, f));
+    for (i = 0; i < MAX_SERVPREOPERS; i++) {
+        if (services_preopers[i])
+            SAFE(write_string(services_preopers[i]->nick, f));
+    } 
+            
     SAFE(write_int32(maxusercnt, f));
     SAFE(write_int32(maxusertime, f));
     SAFE(write_int32(maxchancnt, f));
-    SAFE(write_int32(maxchantime, f));            
+    SAFE(write_int32(maxchantime, f));           
+    SAFE(write_int8(no_supass, f));
+    if (!no_supass)
+        SAFE(write_buffer(supass, f));
     close_db(f);
 }
 
@@ -359,6 +413,8 @@ void save_os_dbase(void)
 
 int is_services_root(User *u)
 {
+    if (u->real_ni && (u->real_ni->flags & NI_ROOT_SERV))
+        return 1;
     if (!(u->mode & UMODE_O) || stricmp(u->nick, ServicesRoot) != 0)
 	return 0;
     if (skeleton || nick_identified(u))
@@ -425,11 +481,57 @@ int is_services_oper(User *u)
 
 /*************************************************************************/
 
+/* El usuario es un PRe Oper de los servicios ? */
+
+int is_services_preoper(User *u)
+{
+    int i;
+    
+    if (is_services_oper(u)) 
+        return 1;
+    if (skeleton)
+        return 1;
+        
+    if (u->ni && ((u->ni->flags & NI_PREOPER_SERV) && nick_identified(u)))
+        return 1;
+        
+    for (i = 0; i < MAX_SERVPREOPERS; i++) {
+        if (services_preopers[i] && u->ni == getlink(services_preopers[i])) {
+            if (nick_identified(u))
+                return 1;
+            return 0;
+        }
+     }
+     return 0;
+}
+
+/*************************************************************************/
+
 /* Is the given nick a Services admin/root nick? */
 
 /* NOTE: Do not use this to check if a user who is online is a services admin
  * or root. This function only checks if a user has the ABILITY to be a 
  * services admin. Rather use is_services_admin(User *u). -TheShadow */
+ 
+ 
+/* Nick es root */ 
+ 
+int nick_is_services_root(NickInfo *ni)
+{
+
+    if (!ni)
+        return 0;
+    if (stricmp(ni->nick, ServicesRoot) == 0)
+        return 1;
+    if (ni->flags & NI_ROOT_SERV)
+        return 1;
+    
+    return 0;
+}
+
+/*************************************************************************/
+
+/* Nick de un admin */                
 
 int nick_is_services_admin(NickInfo *ni)
 {
@@ -475,7 +577,32 @@ int nick_is_services_oper(NickInfo *ni)
 
 /*************************************************************************/
 
+/* El nick es de un PreOper */
 
+int nick_is_services_preoper(NickInfo *ni)
+{
+    int i;
+    
+    if (!ni)
+        return 0;
+    if (stricmp(ni->nick, ServicesRoot) == 0)
+        return 1;
+    if (nick_is_services_admin(ni))
+        return 1;
+    if (nick_is_services_oper(ni))
+        return 1;
+    if (ni->flags & NI_PREOPER_SERV)
+        return 1;
+    for (i = 0; i < MAX_SERVPREOPERS; i++) {
+        if (services_preopers[i] && getlink(ni) == getlink(services_preopers[i]))
+            return 1;
+    }
+    return 0;
+}             
+
+
+/*************************************************************************/
+               
 /* Expunge a deleted nick from the Services admin/oper lists. */
 
 void os_remove_nick(const NickInfo *ni)
@@ -489,6 +616,10 @@ void os_remove_nick(const NickInfo *ni)
     for (i = 0; i < MAX_SERVOPERS; i++) {
 	if (services_opers[i] == ni)
 	    services_opers[i] = NULL;
+    }
+    for (i = 0; i < MAX_SERVPREOPERS; i++) {
+        if (services_preopers[i] == ni)
+            services_preopers[i] = NULL;
     }
 }
 
@@ -536,7 +667,7 @@ static void do_global(User *u)
     privmsg(s_GlobalNoticer, "$*", "Mensaje Global: %s", msg);
 #else
 # ifdef NETWORK_DOMAIN
-    privmsg(s_GlobalNoticer, "$*." NETWORK_DOMAIN, "Mensaje Global: %s", msg);
+    privmsg(s_GlobalNoticer, "$*." NETWORK_DOMAIN, "%s", msg);
 # else
     /* Go through all common top-level domains.  If you have others,
      * add them here.
@@ -569,7 +700,7 @@ static void do_globaln(User *u)
     notice(s_GlobalNoticer, "$*", "Mensaje Global: %s", msg);
 #else
 # ifdef NETWORK_DOMAIN
-    notice(s_GlobalNoticer, "$*." NETWORK_DOMAIN, "Mensaje Global: %s", msg);
+    notice(s_GlobalNoticer, "$*." NETWORK_DOMAIN, "%s", msg);
 # else
     /* Go through all common top-level domains.  If you have others,
      * add them here.
@@ -1427,6 +1558,141 @@ static void do_oper(User *u)
     }
 }
 
+
+/*************************************************************************/
+ 
+ /* Services preoper list viewing/modification. */
+ 
+ static void do_preoper(User *u)   
+ {
+     char *cmd, *nick;
+     NickInfo *ni;
+     int i;   
+             
+     if (skeleton) {
+         notice_lang(s_OperServ, u, OPER_PREOPER_SKELETON);
+         return;
+     }
+     cmd = strtok(NULL, " ");
+     if (!cmd)
+         cmd = "";
+                                                     
+     if (stricmp(cmd, "ADD") == 0) {
+         if (!is_services_admin(u)) {
+             notice_lang(s_OperServ, u, PERMISSION_DENIED);
+             return;
+         }
+         nick = strtok(NULL, " ");
+         if (nick) {
+             if (!(ni = findnick(nick))) {
+                 notice_lang(s_OperServ, u, NICK_X_NOT_REGISTERED, nick);
+                 return;
+             }
+             for (i = 0; i < MAX_SERVPREOPERS; i++) {
+                 if (!services_preopers[i] || services_preopers[i] == ni)
+                     break;
+                 }
+                 if (services_preopers[i] == ni) {
+                     notice_lang(s_OperServ, u, OPER_PREOPER_EXISTS, ni->nick);
+                 } else if (i < MAX_SERVPREOPERS) {
+                     services_preopers[i] = ni;
+                     ni->flags |= NI_PREOPER_SERV;
+                     notice_lang(s_OperServ, u, OPER_PREOPER_ADDED, ni->nick);
+                                                                                                                                                                                                                                                                                                                                             canaladmins(s_OperServ, "%s añade a %s como PREOPER", u->nick, ni->nick);
+                                                                                                                                                                                                                                                                                                                                                         } else {
+                                                                                                                                                                                                                                                                                                                                                                         notice_lang(s_OperServ, u, OPER_PREOPER_TOO_MANY, MAX_SERVOPERS);
+                                                                                                                                                                                                                                                                                                                                                                                     }
+                                                                                                                                                                                                                                                                                                                                                                                                 if (readonly)
+                                                                                                                                                                                                                                                                                                                                                                                                                 notice_lang(s_OperServ, u, READ_ONLY_MODE);
+                                                                                                                                                                                                                                                                                                                                                                                                                         } else {
+                                                                                                                                                                                                                                                                                                                                                                                                                                     syntax_error(s_OperServ, u, "PREOPER", OPER_PREOPER_ADD_SYNTAX);
+                                                                                                                                                                                                                                                                                                                                                                                                                                             }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                 } else if (stricmp(cmd, "DEL") == 0) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                         if (!is_services_admin(u)) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                     notice_lang(s_OperServ, u, PERMISSION_DENIED);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 return;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 nick = strtok(NULL, " ");
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         if (nick) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     if (!(ni = findnick(nick))) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     notice_lang(s_OperServ, u, NICK_X_NOT_REGISTERED, nick);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     return;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             for (i = 0; i < MAX_SERVPREOPERS; i++) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             if (services_preopers[i] == ni)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 break;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         if (i < MAX_SERVPREOPERS) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         services_preopers[i] = NULL;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         ni->flags &= ~NI_PREOPER_SERV;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         notice_lang(s_OperServ, u, OPER_PREOPER_REMOVED, ni->nick);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         canaladmins(s_OperServ, "%s borra a %s de PREOPER", u->nick, ni->nick);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         if (readonly)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             notice_lang(s_OperServ, u, READ_ONLY_MODE);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         } else {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         notice_lang(s_OperServ, u, OPER_PREOPER_NOT_FOUND, ni->nick);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             } else {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         syntax_error(s_OperServ, u, "PREOPER", OPER_PREOPER_DEL_SYNTAX);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     } else if (stricmp(cmd, "LIST") == 0) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             notice_lang(s_OperServ, u, OPER_PREOPER_LIST_HEADER);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     for (i = 0; i < MAX_SERVPREOPERS; i++) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 if (services_preopers[i])
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 privmsg(s_OperServ, u->nick, "%s", services_preopers[i]->nick);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             } else {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     syntax_error(s_OperServ, u, "PREOPER", OPER_PREOPER_SYNTAX);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         }
+                                                                  
+                                                                 
+/*************************************************************************/
+
+/* Obtain Services root privileges.  We check permissions here instead of
+ * letting run_cmd() do it for us so we can send out warnings when a
+ * non-admin tries to use the command.
+ */
+   
+static void do_su(User *u)
+{
+    char *password = strtok(NULL, "");
+    int res;
+        
+    if (!is_services_admin(u)) {
+        canaladmins(s_OperServ, "%s!%s@%s intenta usar el SU (no es ADMIN)",
+            	u->nick, u->username, u->host);
+        notice_lang(s_OperServ, u, PERMISSION_DENIED);
+        return;
+    }
+
+    if (!password) {
+    	syntax_error(s_OperServ, u, "SU", OPER_SU_SYNTAX);
+    } else if (skeleton) {
+    	notice_lang(s_OperServ, u, OPER_SKELETON_MODE);
+    } else if (no_supass) {
+    	notice_lang(s_OperServ, u, OPER_SU_NO_PASSWORD);
+    } else if ((res = check_password(password, supass)) < 0) {
+        notice_lang(s_OperServ, u, OPER_SU_FAILED);
+    } else if (res == 0) {
+	log("%s: Failed SU by %s!%s@%s",
+	       s_OperServ, u->nick, u->username, u->host);
+	canaladmins(s_OperServ, "%s!%s@%s ha hecho un SU ERRONEO",
+		    	u->nick, u->username, u->host);
+        bad_password(u);
+    } else {
+	/* The user must be a Services admin to get here so we know they
+         * have a valid NickInfo. */
+ 	u->real_ni->flags |= NI_ROOT_SERV;	
+        canaladmins(s_OperServ,
+	        	"%s!%s@%s obtiene el ROOT de los servicios",
+   				    u->nick, u->username, u->host);
+	notice_lang(s_OperServ, u, OPER_SU_SUCCEEDED);
+    }
+}
+
 /*************************************************************************/
 
 /* Set various Services runtime options. */
@@ -1434,9 +1700,9 @@ static void do_oper(User *u)
 static void do_set(User *u)
 {
     char *option = strtok(NULL, " ");
-    char *setting = strtok(NULL, " ");
+    char *setting = strtok(NULL, "");
 
-    if (!option || !setting) {
+    if (!option || (!setting && stricmp(option, "SUPASS") != 0)) {
 	syntax_error(s_OperServ, u, "SET", OPER_SET_SYNTAX);
 
     } else if (stricmp(option, "IGNORE") == 0) {
@@ -1483,6 +1749,27 @@ static void do_set(User *u)
 	    notice_lang(s_OperServ, u, OPER_SET_DEBUG_ERROR);
 	}
 
+    } else if (stricmp(option, "SUPASS") == 0) {
+        int len;
+        
+        if (!is_services_root(u)) {
+            notice_lang(s_OperServ, u, PERMISSION_DENIED);
+            return;
+        }
+        if (!setting) {
+            no_supass = 1;
+            notice_lang(s_OperServ, u, OPER_SET_SUPASS_NONE);
+            return;
+        }
+        len = strlen(setting);
+        if (len >= PASSMAX) {
+            memset(setting+PASSMAX-1, 0, len-(PASSMAX-1));
+            len = PASSMAX-1;
+            notice_lang(s_OperServ, u, PASSWORD_TRUNCATED, len);
+        }
+        no_supass = 0;
+        strncpy(supass, setting, PASSMAX);
+        notice_lang(s_OperServ, u, OPER_SET_SUPASS_OK); 
     } else {
 	notice_lang(s_OperServ, u, OPER_SET_UNKNOWN_OPTION, option);
     }

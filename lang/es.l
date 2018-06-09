@@ -271,7 +271,7 @@ NICK_IDENTIFY_SYNTAX
 NICK_IDENTIFY_FAILED
 	4Contraseña incorrecta.
 NICK_IDENTIFY_SUCCEEDED
-	3Contraseña aceptada. Bienvenid@ a Tierrared.com ;)
+	3Contraseña aceptada. Bienvenid@ a iRC-Terra.com ;)
 NICK_IDENTIFY_X_MODE_R
 	12%s, has sido AUTOidentificado por tu modo 12+r.
 NICK_IS_IDENTIFIED
@@ -299,7 +299,7 @@ NICK_IDENTIFY_PASSWORD_NO_CHANGED
 
 # DROP responses
 NICK_DROP_SYNTAX
-	12DROP
+	12DROP <nick> <motivo>
 NICK_DROP_DISABLED
 	Lo siento, la cancelación de nicks esta temporalmente deshabilitada.
 NICK_DROP_FORBIDDEN
@@ -488,17 +488,21 @@ NICK_INFO_SYNTAX
 NICK_INFO_SUSPENDED
 	4SUSPENDIDO: 12%s
 NICK_INFO_SUSPEND_DETAILS
-	Suspendido por ^C12%s^C en ^C12%s^C (%s).
+	Suspendido por 12%s en 12%s (%s).
 NICK_INFO_SUSPEND_REASON
-	Motivo: %s
+	Motivo: 12%s
 NICK_INFO_SUSPENDED_DETAILS
 	Suspendido por 12%s en 12%s (%s).
 NICK_INFO_REALNAME
 	Realname de 12%s es 12%s
+NICK_INFO_SERVICES_PREOPER
+	12%s es un 12PREOPER de la RED.
 NICK_INFO_SERVICES_OPER
-	2%s es un 12OPER de la RED.
+	12%s es un 12OPER de la RED.
 NICK_INFO_SERVICES_ADMIN
 	12%s es un ADMIN de la RED.
+NICK_INFO_SERVICES_ROOT
+	12%s es el ROOT de la RED.
 NICK_INFO_ADDRESS
 	Ultima dirección: 12%s
 NICK_INFO_ADDRESS_ONLINE
@@ -1085,7 +1089,7 @@ CHAN_AKICK_VIEW_FORMAT
 CHAN_AKICK_ENFORCE_DONE
 	12AKICK ENFORCE para 12%s completado; 12%d usuarios son afectados.
 CHAN_AKICK_COUNT
-	Numero de AKICKs en el canal %s: ^C12%d^C.
+	Numero de AKICKs en el canal %s: 12%d.
 
 # LEVELS responses
 CHAN_LEVELS_SYNTAX
@@ -1115,7 +1119,7 @@ CHAN_INFO_SYNTAX
 CHAN_INFO_HEADER
 	Información de canal 12%s:
 CHAN_INFO_OFICIAL
-	Es un Canal Oficial de Tierrared
+	Es un Canal Oficial de iRC-Terra.Com
 CHAN_INFO_ACTIVED
 	Estado: 12ACTIVO
 CHAN_INFO_SUSPENDED
@@ -2171,6 +2175,28 @@ OPER_OPER_NOT_FOUND
 OPER_OPER_LIST_HEADER
 	Lista de Operadores de Services:
 
+# PREOPER responses
+OPER_PREOPER_SYNTAX
+	12PREOPER {ADD | DEL | LIST} [nick]
+#OPER_PREOPER_ADD_SYNTAX
+#	12PREOPER ADD <nick>
+OPER_PREOPER_DEL_SYNTAX
+	12PREOPER DEL <nick>
+#OPER_PREOPER_SKELETON
+#	Services esta en modo skeleton; el comando PREOPER no esta disponible.
+OPER_PREOPER_EXISTS
+	12%s ya estaba en la lista de PreOperadores de Services.
+OPER_PREOPER_ADDED
+	12%s agregado a la lista de PreOperadores de Services.
+OPER_PREOPER_TOO_MANY
+	Muchas entradas (12%d) en la lista de PreOperadores de Services; no se pueden agregar mas.
+OPER_PREOPER_REMOVED
+	12%s borrado de la lista de PreOperadores de Services.
+OPER_PREOPER_NOT_FOUND
+	12%s no fue encontrado en la lista de PReOperadores de Services.
+OPER_PREOPER_LIST_HEADER
+	Lista de PreOperadores de Services:
+
 # AKILL responses
 OPER_AKILL_SYNTAX
 	12GLINE {ADD | DEL | LIST | VIEW} [[+expiracion] <mascara> [motivo]]
@@ -2223,6 +2249,19 @@ OPER_AKILL_EXPIRES_D
 OPER_AKILL_EXPIRES_1D
 	expira en 12%d día
 
+# SU responses
+OPER_SU_SYNTAX
+	12SU <contraseña>
+OPER_SU_NO_PASSWORD
+	El comando SU no esta disponible porque ninguna contraseña de root ha sido fijada.
+OPER_SU_SUCCEEDED
+	Usted ahóra tiene privilegios de root con los servicios.
+OPER_SU_FAILED
+	Imposible verificar la contraseña.
+
+OPER_SKELETON_MODE
+	Esta función no esta disponible en modo de esqueleto (skeleton).
+
 # SET responses
 OPER_SET_SYNTAX
 	12SET <opcion> <parametros>
@@ -2246,6 +2285,12 @@ OPER_SET_DEBUG_LEVEL
 	Services esta ahora en modo debug (nivel %d).
 OPER_SET_DEBUG_ERROR
 	Parámetro para DEBUG debe ser ON, OFF, o un numero positivo.
+OPER_SET_SUPASS_FAILED
+	Imposible fijar la contraseña para el root de los servicios.
+OPER_SET_SUPASS_OK
+	Contraseña para el root de los servicios ha sido cambiada.
+OPER_SET_SUPASS_NONE
+	Contraseña para el root de los servicios ha sido dishabilitada.
 OPER_SET_UNKNOWN_OPTION
 	Opción %s desconocida.
 
@@ -2915,6 +2960,7 @@ NICK_SERVADMIN_HELP_DROP
 
 NICK_SERVADMIN_HELP_SET
 	
+	EMAILREG  Para cambiar el mail
 	Los 4Administradores de la RED pueden seleccionar la opción
 	12NOEXPIRE, con la cual se puede prevenir que algunos nicks no
 	expiren. Adicionalmente, los 4Administradores de la RED
@@ -3668,7 +3714,7 @@ CHAN_SERVADMIN_HELP_SET
 CHAN_SERVADMIN_HELP_SET_OFICIAL
 	Sintaxis: 12SET <canal> OFICIAL {ON | OFF}
 	
-	Define si el canal dado es un Canal Oficial de Tierrared o Tierrared.com.
+	Define si el canal dado es un Canal Oficial de iRC-Terra.Com.
 	
 	Limitado a 4Administradores de la RED.
 
@@ -3966,7 +4012,7 @@ CYBER_HELP_CONTRATA
 	etc.. tienen derecho a tener un número de clones (un clon es
 	una conexion a la red). No se necesita IP fija para los clones.
 	Para solicitarlos, tienes que acudir a la siguiente dirección:
-	12http://www.tierrared.com/clones/
+	12http://www.irc-terra.com/clones/
 	Y cubrir el formulario para la solicitud de clones y en menos
 	de 24 horas tendrás los clones concedidos.
 
@@ -4243,6 +4289,7 @@ OPER_HELP
 	
 	    12STATS       Muestra el estado de los servicios y de la red
 	    12SERVERS     Muestra los servidores de la red
+	    12PREOPER LIST Lista todos los Preoperadores de Servicios
 	    12OPER LIST   Lista todos los Operadores de los Servicios
 	    12ADMIN LIST  Lista todos los Administradores de Servicios
 	
@@ -4263,6 +4310,7 @@ OPER_HELP
 	Comandos disponibles solo para los Administradores de
 	Servicios:
 	
+	    12PREOPER     Modifica l lista de PreOperadores de Servicios
 	    12OPER        Modifica la lista de Operadores de Servicios
 	    12LOGONNEWS   Añade un LOGONNEWS
 	    12OPERNEWS   Añade un OPERNEWS
@@ -4272,6 +4320,7 @@ OPER_HELP
 	    12JUPE        "Jupiter" un servidor
 	    12SETTIME     Sincroniza la RED a tiempo real
 	    12RAW         Envía un código RAW al servidor IRC
+	    12SU          PErmite identificar como ROOT.
 	    12SET         Establece varias opciones globales de los
 	                servicios
 	    12UPDATE      Fuerza a la base de datos de los Servicios a
@@ -4324,6 +4373,21 @@ OPER_HELP_STATS
 	por lo tanto no abuse de ella.
 	
 	12UPTIME puede ser utilizado como sinónimo de 12STATS.
+
+OPER_HELP_PREOPER
+	Sintaxis: 12PREOPER ADD <nick>
+	          12PREOPER DEL <nick>
+	          12PREOPER LIST
+	
+	Habilita a los 4Administradores de Servicios para agregar
+	(ADD), borrar (DEL) o listar (LIST) usuarios de la lista de
+	preoperadores. Un usuario que se encuentre en la lista de
+	preoperadores y que se identifique ante 12%s podrá acceder
+	a los comandos de PreOperador de Servicios.
+	
+	Cualquiera de los operadores de IRC (IRCops) puede utilizar
+	el comando 12PREOPER LIST. Todos los otros comandos solo pueden
+	ser utilizados por los 4Administradores de Servicios.
 
 OPER_HELP_OPER
 	Sintaxis: 12OPER ADD <nick>
@@ -4500,6 +4564,22 @@ OPER_HELP_RAW
 
 	Solo disponible para los 4Administradores de Servicios.
 
+
+OPER_HELP_SU
+	Sintaxis: 12SU <contraseña>
+	
+	Permite acceso a funciones que requieren privilegios de
+	root de los servicios.  La contraseña es la misma
+	fijada con el comando 12SU PASS; note que la contraseña
+	debe ser fijada antes de usar este comando.  Privilegios de
+	root solamente duran hasta que usted cambie su apodo
+	o se desconecte de IRC.
+	
+	4AVISO: Si usted ingresa una contraseña incorrecta, los services
+	cantaran en el canal de admins.
+	
+	Solo disponible para los Administradores de Servicios.
+
 OPER_HELP_SET
 	Sintaxis: 12SET <opción> <modo>
 	
@@ -4508,6 +4588,7 @@ OPER_HELP_SET
 	    12READONLY   Establece el modo de "solo-lectura" o
 	                   "lectura-escritura"
 	    12DEBUG      Activa o desactiva el modo depuración
+	    12SUPASS      Fija contraseña para el comando SU
 	
 	Solo disponible para los 4Administradores de Servicios.
 
@@ -4538,6 +4619,16 @@ OPER_HELP_SET_DEBUG
 	
 	Esta opción es equivalente a la opción 12-debug de la
 	línea de comando.
+
+OPER_HELP_SET_SUPASS
+	Sintaxis: 12SET SUPASS [contraseña]
+	
+	Fija la contraseña que se usará para el comando SU.  La
+	contraseña debe ser fijada una vez antes de usar el comando SU
+	por primera vez.  Si no se establece una contraseña, el comando
+	SU no estará disponible.
+	
+	Esta opcion solo puede ser fijada por el root de Servicios. 
 
 OPER_HELP_UPDATE
 	Sintaxis: 12UPDATE
@@ -4949,12 +5040,13 @@ SERVICES_CREDITS_TERRA
 	usando la base de los ircservices-4.3.3 original.
 
 	Miembros del Comite tecnico de developers:
-	   Marcos Rey          TeX         <tex@terra.es>
-	   Daniel Fernandez    FreeMind    <animedes@terra.es>
-	   Toni García         zoltan      <zoltan@terra.es>
-	   Jordi Murgo         |savage|    <savage@apostols.org>
+	   Marcos Rey          FeRRoL      <ferrol@irc-terra.com>
+	   Daniel Fernandez    FreeMind    <freemind@unr.com>
+	   Toni García         zoltan      <zolty@zolty.net>
+#	   Jordi Murgo         |savage|    <savage@apostols.org>
 	y los betateasters:
-	   Antonio Fernandes   KoGe        <koge@terra.es>
-	   Ripe, NiKoLaS y  CarlesBCN
+	   Antonio Fernandes   KoGe        <koge@unr.com>
+	   Ruben Cardenal      NiKoLaS     <nikolas@irc-terra.com>
+	   Command, |kike|, Manowar, etc..
 	Y agradecimientos a los ircops, opers, y usuarios de la red por
 	las sugerencias, criticas... :)

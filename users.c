@@ -442,6 +442,8 @@ void do_nick(const char *source, int ac, char **av)
 	if (stricmp(av[0], user->nick) != 0)
 	    user->my_signon = time(NULL);
 
+        if (user->real_ni)
+            user->real_ni->flags &= ~NI_ROOT_SERV;
         user->timestamp = atol(av[1]);
 
 	new_ni = findnick(av[0]);
@@ -713,7 +715,7 @@ void do_umode(const char *source, int ac, char **av)
                       /* Si no esta registrado, o esta forbid
                        * o suspendido, quitamos el +r */
                        user->mode &= ~UMODE_R;            
-                       send_cmd(ServerName, "SVSMODE %s -r", av[0]);
+//                       send_cmd(ServerName, "SVSMODE %s -r", av[0]);
                     }   
                 } else {
                  /* Pierde el modo */
@@ -778,6 +780,7 @@ void do_quit(const char *source, int ac, char **av)
 	log("debug: %s quits", source);
     if ((ni = user->ni) && (!(ni->status & NS_VERBOTEN)) &&
 			(ni->status & (NS_IDENTIFIED | NS_RECOGNIZED))) {
+        ni->flags &= ~NI_ROOT_SERV;
 	ni = user->real_ni;
 	ni->last_seen = time(NULL);
 	if (ni->last_quit)
@@ -813,6 +816,7 @@ void do_kill(const char *source, int ac, char **av)
     if ((ni = user->ni) && (!(ni->status & NS_VERBOTEN)) &&
 			(ni->status & (NS_IDENTIFIED | NS_RECOGNIZED))) {
 	ni = user->real_ni;
+        ni->flags &= ~NI_ROOT_SERV;
 	ni->last_seen = time(NULL);
 	if (ni->last_quit)
 	    free(ni->last_quit);

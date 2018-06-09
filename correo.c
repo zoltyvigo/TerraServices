@@ -43,7 +43,7 @@ int send_mail(const char * destino, const char *subject, const char *body)
         return 0;
     }
 
-    sputs("HELO services.terra.es\r\n",smtpsock);
+    sputs("HELO services.irc-terra.com\r\n",smtpsock);
     sgets(bufer, sizeof(bufer), smtpsock);
     if (!check_smtp(bufer)) {
         disconn(smtpsock);
@@ -114,7 +114,7 @@ int send_mail(const char * destino, const char *subject, const char *body)
 
     fprintf(p, "From: %s\n", SendFrom);
     fprintf(p, "To: %s\n", destino);
-    fprintf(p, "Return-Patch: %s\n", SendFrom);
+    fprintf(p, "Return-Path: %s\n", SendFrom);
     fprintf(p, "Subject: %s\n", subject);    
     fprintf(p, "%s\n", body);
 

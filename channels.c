@@ -430,9 +430,16 @@ void do_cmode(const char *source, int ac, char **av)
 
 	case 'R':
 	    if (add)
+            {
+            send_cmd(s_ChanServ, "MODE %s -R", chan->name);
+            notice(s_ChanServ, chan->name, "Modo +R no permitido");
+            
+            }
+/*
 		chan->mode |= CMODE_R;
 	    else
 		chan->mode &= ~CMODE_R;
+*/
 	    break;
 
 	case 'r':
